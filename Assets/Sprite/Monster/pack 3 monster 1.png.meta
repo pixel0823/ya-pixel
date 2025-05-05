@@ -1997,7 +1997,82 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      pack 3 monster 1_0: -1963603097434476661
+      pack 3 monster 1_1: -7506057136360572743
+      pack 3 monster 1_10: 2203460668060454376
+      pack 3 monster 1_11: -6991761730915397535
+      pack 3 monster 1_12: 2677483701803868545
+      pack 3 monster 1_13: -367372879572756873
+      pack 3 monster 1_14: 7120400565404605800
+      pack 3 monster 1_15: -6400238622318578877
+      pack 3 monster 1_16: 740185659669472355
+      pack 3 monster 1_17: -6450391221673439038
+      pack 3 monster 1_18: -472910157934301379
+      pack 3 monster 1_19: 6231470647206756205
+      pack 3 monster 1_2: -7793802636429716908
+      pack 3 monster 1_20: -1613512119162690134
+      pack 3 monster 1_21: -6416343779131473827
+      pack 3 monster 1_22: 1009846986639253770
+      pack 3 monster 1_23: -7234840365778283810
+      pack 3 monster 1_24: -4918528526902952783
+      pack 3 monster 1_25: -2540220220319427636
+      pack 3 monster 1_26: -1854892679827270965
+      pack 3 monster 1_27: 6336225953512769719
+      pack 3 monster 1_28: 3834657423423869401
+      pack 3 monster 1_29: 3559796487767227477
+      pack 3 monster 1_3: 5861242332255229442
+      pack 3 monster 1_30: -1837830754053793804
+      pack 3 monster 1_31: 8271399303566011811
+      pack 3 monster 1_32: -8630620567193724759
+      pack 3 monster 1_33: 4820143448502920044
+      pack 3 monster 1_34: 6985574659946823194
+      pack 3 monster 1_35: -1066638413058177048
+      pack 3 monster 1_36: -9138817002794860191
+      pack 3 monster 1_37: 5632317280908023198
+      pack 3 monster 1_38: -2768730401072094025
+      pack 3 monster 1_39: -3284753703869183993
+      pack 3 monster 1_4: -7410728389071272935
+      pack 3 monster 1_40: -4959146208275833913
+      pack 3 monster 1_41: 705586820634384081
+      pack 3 monster 1_42: -781238722032073773
+      pack 3 monster 1_43: 7374558095913685729
+      pack 3 monster 1_44: -3130293623749682137
+      pack 3 monster 1_45: 5284335362575680177
+      pack 3 monster 1_46: -5422216746931528473
+      pack 3 monster 1_47: -5631255835409476448
+      pack 3 monster 1_48: 4978166745780132865
+      pack 3 monster 1_49: 3377242712373548259
+      pack 3 monster 1_5: 4643745208308496485
+      pack 3 monster 1_50: 8057895945753707262
+      pack 3 monster 1_51: 2841235959454361329
+      pack 3 monster 1_52: 8551847313929365766
+      pack 3 monster 1_53: -2532622401773382474
+      pack 3 monster 1_54: 9154791575785490440
+      pack 3 monster 1_55: 4602717705495674903
+      pack 3 monster 1_56: 3950463268403919168
+      pack 3 monster 1_57: -6925278189577700647
+      pack 3 monster 1_58: 5249879347246875158
+      pack 3 monster 1_59: -8596922134099535842
+      pack 3 monster 1_6: 6254885140102675447
+      pack 3 monster 1_60: 696869970357515655
+      pack 3 monster 1_61: -7954140678398876743
+      pack 3 monster 1_62: -4743669181132918934
+      pack 3 monster 1_63: -7987295144969858880
+      pack 3 monster 1_64: 1122402929938642598
+      pack 3 monster 1_65: 5476636535305338875
+      pack 3 monster 1_66: 4534258081790058064
+      pack 3 monster 1_67: -727641722064318928
+      pack 3 monster 1_68: -7886028117232176253
+      pack 3 monster 1_69: 5010388716002350734
+      pack 3 monster 1_7: 4036204691849321548
+      pack 3 monster 1_70: -8131110728789158574
+      pack 3 monster 1_71: -6341765790378608082
+      pack 3 monster 1_72: 7200883901075779388
+      pack 3 monster 1_73: 1325662862069646246
+      pack 3 monster 1_74: 3251887090123866841
+      pack 3 monster 1_8: -8251732450487460546
+      pack 3 monster 1_9: 8821076596781362631
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
