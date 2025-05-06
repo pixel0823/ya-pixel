@@ -5,7 +5,7 @@ public class MainUiAnimation : MonoBehaviour
 {
     public Image targetImage;
     public Sprite[] frames;
-    public float frameTime = 0.1f;
+    public float frameTime = 0.05f;
 
     int currentFrame = 0;
     float timer = 0f;
@@ -26,7 +26,7 @@ public class MainUiAnimation : MonoBehaviour
         timer += Time.deltaTime;
         if (timer >= frameTime)
         {
-            timer = 0f;
+            timer -= frameTime;
             currentFrame = (currentFrame + 1) % frames.Length;
             targetImage.sprite = frames[currentFrame];
         }
