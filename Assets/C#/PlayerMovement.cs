@@ -12,10 +12,14 @@ public class PlayerMovement : MonoBehaviour
     public Rigidbody2D rigid;
     public bool isGrounded = true;
     private float MoveInput;
+    SpriteRenderer spriteRenderer;
+    Animator animator;
 
     void Awake()
     {
-        rigid = GetComponent<Rigidbody2D>();   
+        rigid = GetComponent<Rigidbody2D>();  
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
     }
     void FixedUpdate()
     {
@@ -28,6 +32,17 @@ public class PlayerMovement : MonoBehaviour
         else if (rigid.linearVelocityX < MoveSpeed*(-1))// left max speed
         {
             rigid.linearVelocity = new Vector2(MoveSpeed*(-1), rigid.linearVelocityY);
+        }
+
+        Debug.DrawRay(rigid.position, Vector3.down, new Color(0, 1, 0));
+        RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Platform"));
+
+        if (rayHit.collider != null)
+        {
+            if (rayHit.distance < 0.5f)
+                {
+                    //Debug.Log(rayHit.collider.name);
+                }
         }
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -44,6 +59,13 @@ public class PlayerMovement : MonoBehaviour
             isGrounded = false;
         }
         MoveInput = Input.GetAxisRaw("Horizontal"); 
+        if (Input.GetButtonDown("Horizontal"))
+            spriteRenderer.flipX = MoveInput == -1;
+
+        if (Mathf.Abs(rigid.linearVelocityX) < 0.3)
+            animator.SetBool("isWalking", false);
+        else
+            animator.SetBool("isWalking", true);
     }
 
 
