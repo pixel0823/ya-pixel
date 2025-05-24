@@ -78,7 +78,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 60
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -130,8 +130,8 @@ TextureImporter:
       name: Grass_0
       rect:
         serializedVersion: 2
-        x: 79
-        y: 839
+        x: 319
+        y: 1359
         width: 452
         height: 152
       alignment: 0
@@ -152,8 +152,8 @@ TextureImporter:
       name: Grass_1
       rect:
         serializedVersion: 2
-        x: 549
-        y: 839
+        x: 1099
+        y: 1359
         width: 472
         height: 152
       alignment: 0
@@ -174,10 +174,10 @@ TextureImporter:
       name: Grass_2
       rect:
         serializedVersion: 2
-        x: 1199
-        y: 819
-        width: 402
-        height: 162
+        x: 159
+        y: 879
+        width: 222
+        height: 82
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -196,10 +196,10 @@ TextureImporter:
       name: Grass_3
       rect:
         serializedVersion: 2
-        x: 239
-        y: 609
-        width: 222
-        height: 82
+        x: 639
+        y: 879
+        width: 152
+        height: 62
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -218,9 +218,9 @@ TextureImporter:
       name: Grass_4
       rect:
         serializedVersion: 2
-        x: 239
-        y: 449
-        width: 482
+        x: 959
+        y: 879
+        width: 402
         height: 162
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -240,10 +240,10 @@ TextureImporter:
       name: Grass_5
       rect:
         serializedVersion: 2
-        x: 569
-        y: 609
-        width: 152
-        height: 62
+        x: 1609
+        y: 879
+        width: 282
+        height: 112
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -262,10 +262,10 @@ TextureImporter:
       name: Grass_6
       rect:
         serializedVersion: 2
-        x: 919
-        y: 409
-        width: 602
-        height: 302
+        x: 159
+        y: 559
+        width: 482
+        height: 162
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -284,10 +284,10 @@ TextureImporter:
       name: Grass_7
       rect:
         serializedVersion: 2
-        x: 219
-        y: 159
-        width: 612
-        height: 192
+        x: 1019
+        y: 399
+        width: 582
+        height: 302
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -306,10 +306,10 @@ TextureImporter:
       name: Grass_8
       rect:
         serializedVersion: 2
-        x: 969
-        y: 169
-        width: 192
-        height: 112
+        x: 159
+        y: 79
+        width: 612
+        height: 192
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -328,9 +328,9 @@ TextureImporter:
       name: Grass_9
       rect:
         serializedVersion: 2
-        x: 1239
-        y: 169
-        width: 282
+        x: 1599
+        y: 79
+        width: 192
         height: 112
       alignment: 0
       pivot: {x: 0, y: 0}

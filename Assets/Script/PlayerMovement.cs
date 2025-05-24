@@ -44,6 +44,7 @@ public class PlayerMovement : MonoBehaviour
         {
             StartDash(xInput);
             dashCooldownTimer = dashCooldown;
+            PlayerAnimator.SetInteger("state", 6);
         }
 
         // 쿨타임 타이머
@@ -120,7 +121,7 @@ public class PlayerMovement : MonoBehaviour
     void OnCollisionExit2D(Collision2D collision)
     {
         if(collision.gameObject.name == "Tilemap"){
-        isGrounded = false; // 여기도 수정 필요 - 땅에서 벗어나는 것이므로 false로 설정
+        isGrounded = false; 
         
         // 지상에서 떨어질 때
         if (rigid.linearVelocity.y < 0)
