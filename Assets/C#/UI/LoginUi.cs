@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEditor;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class LoginUi : MonoBehaviour
 {
@@ -15,6 +16,8 @@ public class LoginUi : MonoBehaviour
 
     void Start()
     {
+        GameObject rootObj = transform.root.gameObject;
+        DontDestroyOnLoad(rootObj);
         if (idInput == null) Debug.LogError("idInput이 연결되지 않았습니다");
         if (pwInput == null) Debug.LogError("pwInput이 연결되지 않았습니다!");
         if (loginbtn == null) Debug.LogError("loginbtn이 연결되지 않았습니다!");
@@ -66,12 +69,20 @@ public class LoginUi : MonoBehaviour
 
         loginResultText.gameObject.SetActive(true);
 
-        if (loginRes.result == "success")
+        if (loginRes.code == "SU")
         {
             PlayerPrefs.SetString("jwt_token", loginRes.token);
             PlayerPrefs.Save();
             loginResultText.text = "로그인 성공!";
             Debug.Log("저장된 토큰: " + loginRes.token);
+            SceneManager.LoadScene(1);
+
+            Destroy(transform.root.gameObject);
+        }
+        else
+        {
+            //Debug.LogWarning("로그인 응답이 성공 x :" + response);
+            loginResultText.text = "로그인 실패: " + loginRes.message;
         }
 
     }
@@ -85,8 +96,12 @@ public class LoginUi : MonoBehaviour
     [System.Serializable]
     public class LoginResponse
     {
-        public string result;
+
         public string token;
+        public string code;
+        public string message;
+        public int expirationTime;
+        
     }
 
 
