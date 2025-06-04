@@ -35,5 +35,6 @@ public class PlayerStatus : MonoBehaviour
     public void Attack(float MonsterCurrentHP)
     {
         MonsterCurrentHP -= PlayerDamage;
+        adfsdfsdfdsafasdfasd
     }
 }
