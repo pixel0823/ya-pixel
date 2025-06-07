@@ -10,11 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2356d184dcad6f044ab4119cf07cfdb5, type: 3}
-  m_Name: ProjectileSkill
+  m_Name: AreaAttackSkill
   m_EditorClassIdentifier: 
   skillName: 
   icon: {fileID: 0}
   cooldown: 0
   manaCost: 0
-  effectPrefab: {fileID: 3230706010332385229, guid: d868742a86e5bb54eb35b3981d71b954, type: 3}
-  speed: 10
+  effectPrefab: {fileID: 0}
+  areaRadius: 2.5
+  damage: 10
+  areaEffectPrefab: {fileID: 3230706010332385229, guid: d868742a86e5bb54eb35b3981d71b954, type: 3}

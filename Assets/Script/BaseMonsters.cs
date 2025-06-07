@@ -18,7 +18,7 @@ public class BaseMonsters : MonoBehaviour
     protected SpriteRenderer spriteRenderer;
 
     [Header("몬스터 기본 능력치")]
-    public float hp = 3f;
+    public float EnemyHp = 3f;
     public float moveSpeed = 1f;
     public float chaseRange = 5f;
     public float dodgeDistance = 5f;

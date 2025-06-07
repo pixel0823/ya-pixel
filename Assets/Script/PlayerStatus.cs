@@ -5,7 +5,7 @@ public class PlayerStatus : MonoBehaviour
     private float PlayerMaxHP = 100;
     private float PlayerDamage = 10;
 
-    private float PlayCurrentHP;
+    private float PlayerCurrentHP;
 
 
 
@@ -26,7 +26,7 @@ public class PlayerStatus : MonoBehaviour
         PlayerCurrentHP -= MonsterDamage;
         // 주인공 맞는 모션
 
-        if (PlayCurrentHP <= 0)
+        if (PlayerCurrentHP <= 0)
         {
             //죽는 모션 넣을거임
         }
@@ -35,6 +35,5 @@ public class PlayerStatus : MonoBehaviour
     public void Attack(float MonsterCurrentHP)
     {
         MonsterCurrentHP -= PlayerDamage;
-        adfsdfsdfdsafasdfasd
     }
 }
