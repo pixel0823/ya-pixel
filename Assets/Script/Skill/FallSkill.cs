@@ -5,7 +5,7 @@ public class FallSkill : SkillBase
 {
     
     [Header("낙하 설정")]
-    public float height = 1f;     // 생성 높이
+    public float height = 2f;     // 생성 높이
     public float fallSpeed = 20f;  // 낙하 속도
     public float duration = 3f;    //지속 시간
 

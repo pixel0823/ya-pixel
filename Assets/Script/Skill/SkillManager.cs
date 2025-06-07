@@ -11,6 +11,10 @@ public class SkillManager : MonoBehaviour
     [HideInInspector] public Transform sSkillButtonParent;
     public List<string> selectedSkills;
 
+    public FallSkill yellowSkill;
+    public AttackSkill greenSkill;
+    public AoESkill navySkill;
+
     string[] skillColors = { "Red", "Orange", "Yellow", "Green", "Blue", "Navy", "Purple" };
 
     public void ShowAllSkills()
@@ -37,7 +41,7 @@ public class SkillManager : MonoBehaviour
             }
         }
     }
-    
+
     public void ShowSelectedSkills()
     {
         // 기존에 생성된 선택된 스킬 슬롯(버튼) 모두 삭제
@@ -84,20 +88,52 @@ public class SkillManager : MonoBehaviour
             default: return Color.white;
         }
     }
-    
+
     string GetSkillDescription(string colorName)
     {
         switch (colorName)
         {
-            case "Red":    return "\n레드";
+            case "Red": return "\n레드";
             case "Orange": return "\n오렌지";
             case "Yellow": return "\n옐로우";
-            case "Green":  return "\n그린";
-            case "Blue":   return "\n블루";
-            case "Navy":   return "\n네이비";
+            case "Green": return "\n그린";
+            case "Blue": return "\n블루";
+            case "Navy": return "\n네이비";
             case "Purple": return "\n퍼플";
-            default:       return "\n알 수 없는 스킬입니다.";
+            default: return "\n알 수 없는 스킬입니다.";
         }
     }
 
+    public void UseSkill(string skillColor, GameObject player)
+    {
+        // 1. 플레이어의 자식 오브젝트 중 "AttackPoint"를 찾음
+        Transform attackPoint = player.transform.Find("AttackPoint");
+        // 가장 가까운 적을 찾아 타겟으로 전달
+        GameObject closest = FindClosestEnemy.FindClosestEnemyObject(transform.position);
+
+        switch (skillColor)
+        {
+            case "Yellow":
+                if (yellowSkill != null) yellowSkill.Activate(player, closest.transform);
+                break;
+            case "Green":
+                if (greenSkill != null) greenSkill.Activate(player, attackPoint);
+                break;
+            case "Navy":
+                if (navySkill != null) navySkill.Activate(player, closest.transform);
+                break;
+                // case "Red":
+                //     IncreaseHealth();
+                //     break;
+                // case "Orange":
+                //     IncreaseDefense();
+                //     break;
+                // case "Blue":
+                //     ReduceCooldown();
+                //     break;
+                // case "Purple":
+                //     UnknownSkill();
+                //     break;
+        }
+    }
 }

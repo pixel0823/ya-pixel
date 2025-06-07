@@ -7,6 +7,7 @@ public class SkillSelectDirector : MonoBehaviour
     public GameObject skillSelectedPanelPrefab; //SkillSelectedPanel 프리팹
     public Transform canvasTransform;          // Canvas 오브젝트
     public SkillManager skillManager;        // ColorSelect 오브젝트의 SkillManager
+    public PlayerSkillController playerSkillController;
 
     public List<string> selectedSkills = new List<string>();
 
@@ -60,6 +61,7 @@ public class SkillSelectDirector : MonoBehaviour
         // 3. 씬에 이미 존재하는 SkillManager에 skillButtonParent와 selectedSkills 할당
         skillManager.sSkillButtonParent = sSkillButtonParent;
         skillManager.selectedSkills = selectedSkills;
+        playerSkillController.selectedSkills = selectedSkills;
 
         // 4. 스킬 버튼 생성
         skillManager.ShowSelectedSkills();
