@@ -17,7 +17,12 @@ public class PlayerMovement : MonoBehaviour
     private float dashTimer = 0f;
     private float dashCooldownTimer = 0f;
 
-    private float xInput = 0f; // 좌우 입력 저장
+    private float xInput = 0f;
+
+    // 콤보 공격 관련 변수
+    private int clickCount = 0;
+    private float clickTimer = 0f;
+    private float comboDelay = 0.5f;
 
     void Awake()
     {
@@ -27,7 +32,6 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        // 좌우 입력 저장
         xInput = Input.GetAxisRaw("Horizontal");
 
         // 점프 입력
@@ -39,7 +43,7 @@ public class PlayerMovement : MonoBehaviour
             PlayerAnimator.SetInteger("state", 2);
         }
 
-        // 대쉬 (LeftShift, 쿨타임 적용)
+        // 대쉬 입력
         if (Input.GetKeyDown(KeyCode.LeftShift) && dashCooldownTimer <= 0f)
         {
             StartDash(xInput);
@@ -47,16 +51,37 @@ public class PlayerMovement : MonoBehaviour
             PlayerAnimator.SetInteger("state", 6);
         }
 
-        // 쿨타임 타이머
         if (dashCooldownTimer > 0f)
         {
             dashCooldownTimer -= Time.deltaTime;
+        }
+
+        // 콤보 공격 입력
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            clickCount++;
+            clickTimer = comboDelay;
+
+            PlayerAnimator.SetInteger("attackClick", clickCount);
+
+            if (clickCount == 1)
+                PlayerAnimator.Play("attack1"); // 애니메이션 이름은 Animator에 맞게 설정
+        }
+
+        if (clickTimer > 0)
+        {
+            clickTimer -= Time.deltaTime;
+        }
+        else
+        {
+            // 시간 초과 시 초기화
+            clickCount = 0;
+            PlayerAnimator.SetInteger("attackClick", 0);
         }
     }
 
     void FixedUpdate()
     {
-        // 대쉬 중이면 일반 이동 안 함
         if (isDashing)
         {
             dashTimer += Time.fixedDeltaTime;
@@ -68,29 +93,24 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        // 좌우 이동
         rigid.linearVelocity = new Vector2(xInput * speed, rigid.linearVelocity.y);
 
-        // 방향에 따라 캐릭터 뒤집기
         if (xInput > 0)
-            transform.localScale = new Vector3(1, 1, 1); // 오른쪽 방향
+            transform.localScale = new Vector3(1, 1, 1);
         else if (xInput < 0)
-            transform.localScale = new Vector3(-1, 1, 1); // 왼쪽 방향
-        
-        // 애니메이션 상태 설정
+            transform.localScale = new Vector3(-1, 1, 1);
+
         if (!isGrounded)
         {
-            // 공중에 있을 때
             if (rigid.linearVelocity.y < -0.1f)
-                PlayerAnimator.SetInteger("state", 4); // Fall
+                PlayerAnimator.SetInteger("state", 4);
         }
         else
         {
-            // 땅에 있을 때
             if (Mathf.Abs(xInput) > 0.1f)
-                PlayerAnimator.SetInteger("state", 1); // Run
+                PlayerAnimator.SetInteger("state", 1);
             else
-                PlayerAnimator.SetInteger("state", 0); // Idle
+                PlayerAnimator.SetInteger("state", 0);
         }
     }
 
@@ -102,32 +122,28 @@ public class PlayerMovement : MonoBehaviour
         rigid.linearVelocity = new Vector2(direction * dashPower, 0f);
         isDashing = true;
         dashTimer = 0f;
-
-        
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.contacts[0].normal.y > 0.7f)
         {
-            
             isGrounded = true;
             jumpCount = 0;
-            // 착지시 Land 애니메이션
-            PlayerAnimator.SetInteger("state", 5); // Land
+            PlayerAnimator.SetInteger("state", 5);
         }
     }
 
     void OnCollisionExit2D(Collision2D collision)
     {
-        if(collision.gameObject.name == "Tilemap"){
-        isGrounded = false; 
-        
-        // 지상에서 떨어질 때
-        if (rigid.linearVelocity.y < 0)
-            PlayerAnimator.SetInteger("state", 4); // Fall
-        else
-            PlayerAnimator.SetInteger("state", 3); // Transition
+        if (collision.gameObject.name == "Tilemap")
+        {
+            isGrounded = false;
+
+            if (rigid.linearVelocity.y < 0)
+                PlayerAnimator.SetInteger("state", 4);
+            else
+                PlayerAnimator.SetInteger("state", 3);
         }
     }
 }
