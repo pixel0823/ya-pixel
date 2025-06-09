@@ -16,7 +16,6 @@ MonoBehaviour:
   icon: {fileID: 0}
   cooldown: 0
   manaCost: 0
-  effectPrefab: {fileID: 0}
+  effectPrefab: {fileID: 3230706010332385229, guid: d868742a86e5bb54eb35b3981d71b954, type: 3}
   areaRadius: 2.5
   damage: 10
-  areaEffectPrefab: {fileID: 3230706010332385229, guid: d868742a86e5bb54eb35b3981d71b954, type: 3}
