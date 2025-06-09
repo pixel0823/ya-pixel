@@ -11,7 +11,7 @@ public class PlayerStatus : MonoBehaviour
 
     void Awake()
     {
-        PlayerCurrentHP = PlayerMaxHP;
+        // PlayerCurrentHP = PlayerMaxHP;
     }
 
 
@@ -23,7 +23,7 @@ public class PlayerStatus : MonoBehaviour
 
     public void GetDamage(float MonsterDamage)
     {
-        PlayerCurrentHP -= MonsterDamage;
+        // PlayerCurrentHP -= MonsterDamage;
         // 주인공 맞는 모션
 
         if (PlayCurrentHP <= 0)
@@ -35,6 +35,6 @@ public class PlayerStatus : MonoBehaviour
     public void Attack(float MonsterCurrentHP)
     {
         MonsterCurrentHP -= PlayerDamage;
-        adfsdfsdfdsafasdfasd
+
     }
 }
