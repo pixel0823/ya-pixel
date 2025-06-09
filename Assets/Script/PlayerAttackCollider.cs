@@ -7,10 +7,10 @@ public class PlayerAttackCollider : MonoBehaviour
     [Tooltip("공격 데미지 (PlayerAttack에서 동적으로 설정됨)")]
     [SerializeField]
     private float damage = 25f;
-    
+
     [Tooltip("한 번의 공격으로 여러 몬스터를 맞출지")]
     public bool canHitMultiple = true;
-    
+
     [Tooltip("공격 효과음")]
     public AudioClip attackSound;
 
@@ -28,8 +28,8 @@ public class PlayerAttackCollider : MonoBehaviour
         //audioSource = GetComponent<AudioSource>();
         //if (audioSource == null && attackSound != null)
         //{
-            //audioSource = gameObject.AddComponent<AudioSource>();
-            //audioSource.playOnAwake = false;
+        //audioSource = gameObject.AddComponent<AudioSource>();
+        //audioSource.playOnAwake = false;
         //}
 
         // 콜라이더 컴포넌트 가져오기
@@ -62,7 +62,7 @@ public class PlayerAttackCollider : MonoBehaviour
         hasHit = false;                     // 타격 상태 리셋
         isActive = true;                    // 공격 활성화
         gameObject.SetActive(true);         // 콜라이더 오브젝트 활성화
-        
+
         Debug.Log("공격 콜라이더 활성화!");
     }
 
@@ -75,8 +75,40 @@ public class PlayerAttackCollider : MonoBehaviour
         isActive = false;                   // 공격 비활성화
         gameObject.SetActive(false);        // 콜라이더 오브젝트 비활성화
         hasHit = false;                     // 타격 상태 리셋
-        
+
         Debug.Log("공격 콜라이더 비활성화!");
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        // 공격이 활성화되지 않았으면 무시
+        if (!isActive) return;
+        
+        // 이미 맞혔고 다중 공격이 불가능하면 무시
+        if (hasHit && !canHitMultiple) return;
+        
+        // 몬스터의 Body Collider에 닿았을 때
+        if (other.CompareTag("Monster"))
+        {
+            // 몬스터 컴포넌트 찾기
+            BaseMonster monster = other.GetComponent<BaseMonster>();
+            if (monster != null && !monster.IsDead())
+            {
+                // 데미지 전달
+                monster.TakeDamage(damage);
+                
+                // 공격 성공 표시
+                hasHit = true;
+                
+                Debug.Log($"플레이어가 {other.name}에게 {damage:F1} 데미지!");
+                
+                // 단일 공격이면 즉시 비활성화
+                if (!canHitMultiple)
+                {
+                    EndAttack();
+                }
+            }
+        }
     }
 
 
