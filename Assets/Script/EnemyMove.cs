@@ -1,191 +1,152 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 
-public class EnemyMove : MonoBehaviour
+public class EnenmyMove : MonoBehaviour
 {
-
-    public enum State { Idle, Patrol, Chase, Attack, Dodge, Dead }
-    private State currentState = State.Patrol;
-    public EnemyGenerator generator;
-    
-    public float hp = 3f;
     public float moveSpeed = 2f;
     public float chaseRange = 5f;
-    public float attackRange = 1f;
-    public float dodgeDistance = 2f;
+    public float attackRange = 1.5f;
+    public int maxHealth = 100;
+    private int currentHealth;
 
-    private Rigidbody2D rigid;
-    private Animator anim;
-    private SpriteRenderer spriteRenderer;
     private Transform player;
+    private Animator animator;
+    private Rigidbody2D rb;
 
-    [SerializeField] private Collider2D attackHitbox;
-    
+    private enum State { Idle, Move, Attack, Hit, Dead }
+    private State currentState = State.Move;
 
-    void Awake()
+    private bool isFacingRight = true;
+
+    private void Start()
     {
-        rigid = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
         player = GameObject.FindGameObjectWithTag("Player").transform;
-
-        if (attackHitbox != null) attackHitbox.enabled = false;
-
-        Invoke("Think", Random.Range(2f, 5f));
+        animator = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody2D>();
+        currentHealth = maxHealth;
     }
 
-    void Update()
+    private void Update()
     {
-        if (currentState != State.Dead)
-        {
-            StateHandler();
-        }   
-    }
+        if (currentState == State.Dead) return;
 
-    void EnableAttackHitbox()
-    {
-        if (attackHitbox != null) attackHitbox.enabled = true;
-    }
+        float distance = Vector2.Distance(transform.position, player.position);
 
-    void DisableAttackHitbox()
-    {
-        if (attackHitbox != null) attackHitbox.enabled = false;
-    }
-
-    void StateHandler()
-    {
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         switch (currentState)
         {
-            case State.Patrol:
-                Patrol();
-                if (distanceToPlayer < chaseRange)
-                {
-                    currentState = State.Chase;
-                }
-                break;
-            case State.Chase:
-                chasePlayer();
-                if (distanceToPlayer < attackRange)
+            case State.Move:
+                animator.SetBool("isMoving", true);
+                if (distance < attackRange)
                 {
                     currentState = State.Attack;
                 }
-                else if (distanceToPlayer > chaseRange)
+                else if (distance < chaseRange)
                 {
-                    currentState = State.Patrol;
+                    ChasePlayer();
+                }
+                else
+                {
+                    Patrol();
                 }
                 break;
+
             case State.Attack:
-                AttackPlayer();
-                if (distanceToPlayer > attackRange)
+                animator.SetBool("isMoving", false);
+                animator.SetBool("isAttacking", true);
+                rb.linearVelocity = Vector2.zero;
+                LookAtPlayer();
+
+                if (distance > attackRange)
                 {
-                    currentState = State.Chase;
+                    animator.SetBool("isAttacking", false);
+                    currentState = State.Move;
                 }
                 break;
-            case State.Dodge:
-                Dodge();
-                currentState = State.Patrol;
-                break;
+
+            case State.Hit:
+                break; // 애니메이션 이벤트 후 상태 전환
+
             case State.Idle:
-                rigid.linearVelocity = Vector2.zero;
+                animator.SetBool("isMoving", false);
                 break;
         }
     }
 
-    void Patrol()
+    private void Patrol()
     {
-        rigid.linearVelocity = new Vector2(nextMove, rigid.linearVelocityY);
-
-        Vector2 frontVec = new Vector2(rigid.position.x + nextMove * 0.2f, rigid.position.y);
-        Debug.DrawRay(frontVec, Vector3.down, Color.green);
-        RaycastHit2D rayHit = Physics2D.Raycast(frontVec, Vector3.down, 1, LayerMask.GetMask("Platform"));
-        if (rayHit.collider == null)
+        // 간단한 좌우 패트롤
+        Vector2 direction = isFacingRight ? Vector2.right : Vector2.left;
+        rb.linearVelocity = direction * moveSpeed;
+        if (HitWall())
         {
-            Turn();
-        }
-
-        anim.SetInteger("WalkSpeed", nextMove);
-        spriteRenderer.flipX = nextMove != 1;
-    }
-
-    void chasePlayer()
-    {
-        Vector2 direction = (player.position - transform.position).normalized;
-        rigid.linearVelocity = new Vector2(direction.x * moveSpeed, rigid.linearVelocityY);
-        spriteRenderer.flipX = direction.x < 0;
-        anim.SetInteger("WalkSpeed", (int)Mathf.Sign(direction.x));
-    }
-
-    void AttackPlayer()
-    {
-        anim.SetTrigger("Attack");
-        rigid.linearVelocity = Vector2.zero;
-    }
-
-    void Dodge()
-    {
-        Vector2 dodgeDir = (transform.position - player.position).normalized;
-        rigid.AddForce(dodgeDir * dodgeDistance, ForceMode2D.Impulse);
-        anim.SetTrigger("Dodge");
-    }
-
-    int nextMove = 0;
-
-    void Think()
-    {
-        nextMove = Random.Range(-1, 2);
-        float nextThinkTime = Random.Range(2f, 5f);
-        Invoke("Think", nextThinkTime);
-    }
-
-    void Turn()
-    {
-        nextMove *= -1;
-        spriteRenderer.flipX = nextMove != 1;
-
-        CancelInvoke();
-        Invoke("Think", 2);
-    }
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("PlayerAttack") && currentState != State.Dead)
-        {
-            hp--;
-            if (hp <= 0)
-            {
-                Die();
-            }
-            else
-            {
-                currentState = State.Dodge;
-            }
-
-            if (attackHitbox != null && attackHitbox.enabled && other.CompareTag("Player"))
-            {
-                // other.GetComponent<PlayerHp>()?.TackeDamage(1);
-            }
+            Flip();
         }
     }
 
-    void Die()
+    private void ChasePlayer()
     {
-        currentState = State.Dead;
-        anim.SetTrigger("Die");
+        Vector2 dir = (player.position - transform.position).normalized;
+        rb.linearVelocity = dir * moveSpeed;
+        LookAtPlayer();
+    }
 
-        rigid.linearVelocity = Vector2.zero;
-        rigid.bodyType = RigidbodyType2D.Kinematic;
-        GetComponent<Collider2D>().enabled = false;
+    private void LookAtPlayer()
+    {
+        if (player.position.x > transform.position.x && !isFacingRight)
+            Flip();
+        else if (player.position.x < transform.position.x && isFacingRight)
+            Flip();
+    }
 
-        Destroy(gameObject, 1f);
+    private void Flip()
+    {
+        isFacingRight = !isFacingRight;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+    }
 
-        if (gameObject.CompareTag("Boss"))
+    private bool HitWall()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, isFacingRight ? Vector2.right : Vector2.left, 0.2f, LayerMask.GetMask("Ground"));
+        return hit.collider != null;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        if (currentState == State.Dead) return;
+
+        currentHealth -= damage;
+        animator.SetTrigger("isHit");
+
+        if (currentHealth <= 0)
         {
-            //generator.GetComponent<BossGenerator>().OnBossDefeated();
+            Die();
         }
         else
         {
-            generator.OnEnemyDefeated();
+            currentState = State.Hit;
+        }
+    }
+
+    public void OnHitEnd() // 애니메이션 이벤트에서 호출
+    {
+        currentState = State.Move;
+    }
+
+    private void Die()
+    {
+        currentState = State.Dead;
+        rb.linearVelocity = Vector2.zero;
+        animator.SetBool("isDead", true);
+        GetComponent<Collider2D>().enabled = false;
+    }
+
+    public void OnAttackHit() // 애니메이션 이벤트에서 공격 판정
+    {
+        float dist = Vector2.Distance(transform.position, player.position);
+        if (dist < attackRange)
+        {
+            // player.GetComponent<PlayerHealth>().TakeDamage(10); // 예시
         }
     }
 }
