@@ -9,6 +9,7 @@ TagManager:
   - SkillPanel
   - SelectedSkillButton
   - SelectedSkillPanel
+  - Platform
   layers:
   - Default
   - TransparentFX
