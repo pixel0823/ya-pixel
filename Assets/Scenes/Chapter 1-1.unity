@@ -3733,7 +3733,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -3854,6 +3854,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1485245133}
   - component: {fileID: 1485245134}
+  - component: {fileID: 1485245135}
   m_Layer: 0
   m_Name: GameDirector
   m_TagString: Untagged
@@ -3894,6 +3895,21 @@ MonoBehaviour:
   skillManager: {fileID: 2032046761}
   playerSkillController: {fileID: 163874879}
   selectedSkills: []
+--- !u!114 &1485245135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1485245132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c622d6a328ea6574ab30271a971cf0b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panelPrefab: {fileID: 7761413513142980276, guid: 3676866988ea09b4aa819bc837c9f1b2, type: 3}
+  buttonPrefab: {fileID: 5242734937060898961, guid: 4cdc0e37f2f23c7488239c35249bc018, type: 3}
+  canvasTransform: {fileID: 1325739006}
 --- !u!1 &1545961530
 GameObject:
   m_ObjectHideFlags: 0
