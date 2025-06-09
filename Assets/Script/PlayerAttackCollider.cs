@@ -45,6 +45,8 @@ public class PlayerAttackCollider : MonoBehaviour
     {
         // 기본적으로 비활성화 상태
         gameObject.SetActive(false);
+
+        isActive = true;
     }
 
     public void SetDamage(float newDamage)
@@ -81,18 +83,29 @@ public class PlayerAttackCollider : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        Debug.Log($"충돌 감지! 오브젝트: {other.name}, 태그: {other.tag}");
+        Debug.Log($"isActive: {isActive}, hasHit: {hasHit}");
+        
         // 공격이 활성화되지 않았으면 무시
-        if (!isActive) return;
+        if (!isActive) 
+        {
+            Debug.Log("공격이 비활성화 상태라서 무시");
+            return;
+        }
         
         // 이미 맞혔고 다중 공격이 불가능하면 무시
-        if (hasHit && !canHitMultiple) return;
+        if (hasHit && !canHitMultiple) 
+        {
+            Debug.Log("이미 맞혔고 다중공격 불가");
+            return;
+        }
         
         // 몬스터의 Body Collider에 닿았을 때
         if (other.CompareTag("Monster"))
         {
             // 몬스터 컴포넌트 찾기
-            BaseMonster monster = other.GetComponent<BaseMonster>();
-            if (monster != null && !monster.IsDead())
+            EnemyMove monster = other.GetComponent<EnemyMove>();
+            if (monster != null)
             {
                 // 데미지 전달
                 monster.TakeDamage(damage);

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public enum State { Idle, Patrol, Chase, Attack, Dead }
 
-public class EnenmyMove : MonoBehaviour
+public class EnemyMove : MonoBehaviour
 {
     public float hp = 100f;
     public float moveSpeed = 2f;
@@ -39,7 +39,7 @@ public class EnenmyMove : MonoBehaviour
             case State.Patrol: Patrol(); break;
             case State.Attack: Attack(); break;
             case State.Chase: Chase(); break;
-            case State.Dead: Dead(); break;
+            //case State.Dead: Dead(); break;
         }
 
         if (hp <= 0 && currentState != State.Dead)
@@ -71,10 +71,29 @@ public class EnenmyMove : MonoBehaviour
         }
     }
 
-    public void Dead()
+    // 플레이어 공격에서 호출할 TakeDamage 함수
+    public void TakeDamage(float damage)
     {
-
+        if (currentState == State.Dead) return;
+        
+        hp -= damage;
+        hp = Mathf.Clamp(hp, 0f, 100f);
+        
+        Debug.Log($"{gameObject.name}이(가) {damage} 데미지를 받았습니다. 현재 HP: {hp}");
+        
+        // 피격 시 플레이어를 추적하도록 상태 변경
+        if (currentState == State.Patrol || currentState == State.Idle)
+        {
+            currentState = State.Chase;
+        }
+        
+        //if (hp <= 0)
+        //{
+            //Die();
+        //}
     }
+
+   
     public void Attack()
     {
         if (isAttacking) return;
@@ -98,9 +117,30 @@ public class EnenmyMove : MonoBehaviour
             anim.SetBool("isAttacking", isAttacking);
             Invoke("BackToChase", 0.25f);
         }
-
-
     }
+
+    void ActivateMonsterAttack()
+    {
+        MonsterAttackCollider attackCollider = GetComponentInChildren<MonsterAttackCollider>();
+        if (attackCollider != null)
+        {
+            attackCollider.SetDamage(10f); // 몬스터 공격력
+            attackCollider.StartAttack();
+            
+            // 0.2초 후 비활성화
+            Invoke("DeactivateMonsterAttack", 0.2f);
+        }
+    }
+
+    void DeactivateMonsterAttack()
+    {
+        MonsterAttackCollider attackCollider = GetComponentInChildren<MonsterAttackCollider>();
+        if (attackCollider != null)
+        {
+            attackCollider.EndAttack();
+        }
+    }
+
     private void BackToChase()
     {
         isAttacking = false;
