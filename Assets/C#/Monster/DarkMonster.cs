@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 public class DarkMonster : BaseMonster
 {
 
+    private Rigidbody2D rigid;
     private SpriteRenderer spriteRenderer;
     private float patrolTimer = 0f;
     private float changeDirectionTime = 2f;
@@ -17,12 +18,13 @@ public class DarkMonster : BaseMonster
     {
         base.Start();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        rigid = GetComponent<Rigidbody2D>();
     }
 
-    protected override void Update()
+    protected override void FixedUpdate()
     {
         if (currentState == State.Dead) return;
-        base.Update();
+        base.FixedUpdate();
 
         if (currentState == State.Attack)
         {

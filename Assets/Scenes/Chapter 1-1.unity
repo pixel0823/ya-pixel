@@ -4586,7 +4586,7 @@ Transform:
   m_GameObject: {fileID: 1538925906}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 36.758186, y: 2.52, z: 0}
+  m_LocalPosition: {x: 6.5, y: 1.5, z: -0.277}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4982,7 +4982,7 @@ GameObject:
   - component: {fileID: 1859742820}
   m_Layer: 8
   m_Name: Tilemap
-  m_TagString: Untagged
+  m_TagString: Platform
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -13940,6 +13940,8 @@ SceneRoots:
   - {fileID: 30688015}
   - {fileID: 163874876}
   - {fileID: 1538925909}
+  - {fileID: 209161061}
+  - {fileID: 1004152885}
   - {fileID: 1067840826}
   - {fileID: 502277410}
   - {fileID: 90618787}
