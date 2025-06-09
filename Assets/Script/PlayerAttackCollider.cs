@@ -25,12 +25,12 @@ public class PlayerAttackCollider : MonoBehaviour
     void Awake()
     {
         // 오디오 소스 가져오기 (없으면 추가)
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null && attackSound != null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-            audioSource.playOnAwake = false;
-        }
+        //audioSource = GetComponent<AudioSource>();
+        //if (audioSource == null && attackSound != null)
+        //{
+            //audioSource = gameObject.AddComponent<AudioSource>();
+            //audioSource.playOnAwake = false;
+        //}
 
         // 콜라이더 컴포넌트 가져오기
         attackCollider = GetComponent<Collider2D>();

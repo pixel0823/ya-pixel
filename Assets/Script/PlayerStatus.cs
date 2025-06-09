@@ -132,8 +132,6 @@ public class PlayerStatus : MonoBehaviour
             movement.enabled = false;
         }
 
-        
-
         // Rigidbody2D 정지
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
