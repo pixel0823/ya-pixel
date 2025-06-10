@@ -131,31 +131,20 @@ public class DarkMonster : BaseMonster
         if (spriteRenderer != null)
             spriteRenderer.flipX = dir.x > 0;
     }
-
     protected override void Dead()
     {
         base.Dead();
 
+        GameObject[] existingPanels = GameObject.FindGameObjectsWithTag("SkillPanel");
+        if (existingPanels.Length > 0) return;
+
         SkillSelectDirector director = FindFirstObjectByType<SkillSelectDirector>();
         if (director != null)
         {
-            // SkillManagerPanel이 이미 존재하는지 검사
-            bool panelExists = false;
-            foreach (Transform child in director.canvasTransform)
-            {
-                if (child.name.Contains("SkillManagerPanel")) // 프리팹 이름 또는 고유 이름
-                {
-                    panelExists = true;
-                    break;
-                }
-            }
-
-            if (!panelExists)
-            {
-                director.ShowSkillSelectPanel();
-            }
+            director.ShowSkillSelectPanel();
         }
     }
+
 
 
 

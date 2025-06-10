@@ -13,7 +13,7 @@ public class SkillDamageDealer : MonoBehaviour
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, areaRadius);
             foreach (var hit in hits)
             {
-                if (hit.CompareTag("Enemy"))
+                if (hit.CompareTag("Monster"))
                 {
                     IDamageable damageable = hit.GetComponent<IDamageable>();
                     if (damageable != null)
@@ -26,7 +26,7 @@ public class SkillDamageDealer : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (areaRadius > 0f) return;
-        if (collision.CompareTag("Enemy"))
+        if (collision.CompareTag("Monster"))
         {
             IDamageable damageable = collision.GetComponent<IDamageable>();
             if (damageable != null)
