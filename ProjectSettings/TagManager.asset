@@ -9,6 +9,9 @@ TagManager:
   - SkillPanel
   - SelectedSkillButton
   - SelectedSkillPanel
+  - PlayerAttack
+  - Monster
+  - MosterAttack
   layers:
   - Default
   - TransparentFX
@@ -19,7 +22,7 @@ TagManager:
   - Monster
   - 
   - Platform
-  - 
+  - Structure
   - 
   - 
   - 

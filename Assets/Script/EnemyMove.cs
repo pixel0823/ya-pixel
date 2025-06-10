@@ -1,191 +1,246 @@
 using UnityEngine;
-using UnityEngine.UIElements;
+
+public enum State { Idle, Patrol, Chase, Attack, Dead }
 
 public class EnemyMove : MonoBehaviour
 {
-
-    public enum State { Idle, Patrol, Chase, Attack, Dodge, Dead }
-    private State currentState = State.Patrol;
-    public EnemyGenerator generator;
-    
-    public float hp = 3f;
+    public float hp = 100f;
     public float moveSpeed = 2f;
-    public float chaseRange = 5f;
-    public float attackRange = 1f;
-    public float dodgeDistance = 2f;
+    public float attackRange = 1.5f; // 공격 가능 거리
+    public float chaseRange = 3f;    // 추적 가능 거리
+    Rigidbody2D rigid;
+    Animator anim;
+    SpriteRenderer spriteRenderer;
+    public int nextMove;
 
-    private Rigidbody2D rigid;
-    private Animator anim;
-    private SpriteRenderer spriteRenderer;
-    private Transform player;
+    public State currentState;
+    public Transform target;
 
-    [SerializeField] private Collider2D attackHitbox;
-    
+    private bool isAttacking = false;
+    private float attackCooldown = 1.5f;
+    private float lastAttackTime = -Mathf.Infinity;
 
     void Awake()
     {
+        currentState = State.Patrol;
+        if (target == null)
+        {
+            target = GameObject.FindGameObjectWithTag("Player").transform;
+        }
         rigid = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-
-        if (attackHitbox != null) attackHitbox.enabled = false;
-
-        Invoke("Think", Random.Range(2f, 5f));
+        Invoke("Think", 5);
     }
 
     void Update()
     {
-        if (currentState != State.Dead)
+        // 상태 전환 조건 체크
+        if (hp <= 0 && currentState != State.Dead)
         {
-            StateHandler();
-        }   
+            currentState = State.Dead;
+            anim.SetTrigger("Dead");
+            return;
+        }
+
+        if (currentState == State.Dead) return;
+
+        float dist = Vector2.Distance(transform.position, target.position);
+
+        // 상태 전환 로직
+        if (currentState == State.Attack)
+        {
+            if (dist > attackRange)
+            {
+                if (dist > chaseRange)
+                    currentState = State.Patrol;
+                else
+                    currentState = State.Chase;
+            }
+        }
+        else if (currentState == State.Chase)
+        {
+            if (dist > chaseRange)
+                currentState = State.Patrol;
+            else if (dist <= attackRange)
+                currentState = State.Attack;
+        }
+        else if (currentState == State.Patrol)
+        {
+            if (dist <= chaseRange)
+                currentState = State.Chase;
+        }
+
+        // 애니메이션 파라미터 동기화
+        anim.SetBool("isChasing", currentState == State.Chase);
+        anim.SetBool("isAttacking", currentState == State.Attack);
+        anim.SetBool("isPatrolling", currentState == State.Patrol);
     }
 
-    void EnableAttackHitbox()
+    void FixedUpdate()
     {
-        if (attackHitbox != null) attackHitbox.enabled = true;
-    }
-
-    void DisableAttackHitbox()
-    {
-        if (attackHitbox != null) attackHitbox.enabled = false;
-    }
-
-    void StateHandler()
-    {
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        // 상태별 동작(이동, 공격 등)
         switch (currentState)
         {
-            case State.Patrol:
-                Patrol();
-                if (distanceToPlayer < chaseRange)
-                {
-                    currentState = State.Chase;
-                }
-                break;
-            case State.Chase:
-                chasePlayer();
-                if (distanceToPlayer < attackRange)
-                {
-                    currentState = State.Attack;
-                }
-                else if (distanceToPlayer > chaseRange)
-                {
-                    currentState = State.Patrol;
-                }
-                break;
-            case State.Attack:
-                AttackPlayer();
-                if (distanceToPlayer > attackRange)
-                {
-                    currentState = State.Chase;
-                }
-                break;
-            case State.Dodge:
-                Dodge();
-                currentState = State.Patrol;
-                break;
-            case State.Idle:
-                rigid.linearVelocity = Vector2.zero;
-                break;
+            case State.Idle: Idle(); break;
+            case State.Patrol: Patrol(); break;
+            case State.Attack: Attack(); break;
+            case State.Chase: Chase(); break;
+            //case State.Dead: Dead(); break;
         }
     }
 
-    void Patrol()
+    public void Chase()
     {
-        rigid.linearVelocity = new Vector2(nextMove, rigid.linearVelocityY);
+        if (target == null) return;
+        float dist = Vector2.Distance(transform.position, target.position);
 
-        Vector2 frontVec = new Vector2(rigid.position.x + nextMove * 0.2f, rigid.position.y);
-        Debug.DrawRay(frontVec, Vector3.down, Color.green);
-        RaycastHit2D rayHit = Physics2D.Raycast(frontVec, Vector3.down, 1, LayerMask.GetMask("Platform"));
+        if (dist <= 3f)
+        {
+            if (Time.time >= lastAttackTime + attackCooldown)
+            {
+                currentState = State.Attack;
+                return;
+            }
+            if (dist > 4f)
+            {
+                currentState = State.Patrol;
+                return;
+            }
+
+
+        }
+    }
+
+    // 플레이어 공격에서 호출할 TakeDamage 함수
+    public void TakeDamage(float damage)
+    {
+        if (currentState == State.Dead) return;
+        
+        hp -= damage;
+        hp = Mathf.Clamp(hp, 0f, 100f);
+        
+        Debug.Log($"{gameObject.name}이(가) {damage} 데미지를 받았습니다. 현재 HP: {hp}");
+        
+        // 피격 시 플레이어를 추적하도록 상태 변경
+        if (currentState == State.Patrol || currentState == State.Idle)
+        {
+            currentState = State.Chase;
+        }
+        
+        //if (hp <= 0)
+        //{
+            //Die();
+        //}
+    }
+
+   
+    public void Attack()
+    {
+        if (isAttacking) return;
+        if (Time.time < lastAttackTime + attackCooldown) return;
+
+        isAttacking = true;
+        lastAttackTime = Time.time;
+
+        if (target != null)
+        {
+            Vector2 dir = (target.position - transform.position).normalized;
+            spriteRenderer.flipX = dir.x > 0;
+            anim.SetBool("isAttacking", isAttacking);
+            Invoke("BackToChase", 0.25f);
+        }
+    }
+
+    void ActivateMonsterAttack()
+    {
+        MonsterAttackCollider attackCollider = GetComponentInChildren<MonsterAttackCollider>();
+        if (attackCollider != null)
+        {
+            attackCollider.SetDamage(10f); // 몬스터 공격력
+            attackCollider.StartAttack();
+            
+            // 0.2초 후 비활성화
+            Invoke("DeactivateMonsterAttack", 0.2f);
+        }
+    }
+
+    void DeactivateMonsterAttack()
+    {
+        MonsterAttackCollider attackCollider = GetComponentInChildren<MonsterAttackCollider>();
+        if (attackCollider != null)
+        {
+            attackCollider.EndAttack();
+        }
+    }
+
+    private void BackToChase()
+    {
+        isAttacking = false;
+        float dist = Vector2.Distance(transform.position, target.position);
+        if (dist <= attackRange)
+            currentState = State.Attack;
+        else if (dist <= chaseRange)
+            currentState = State.Chase;
+        else
+            currentState = State.Patrol;
+    }
+
+    public void Patrol()
+    {
+        rigid.linearVelocity = new Vector2(nextMove * moveSpeed, rigid.linearVelocityY);
+        Vector2 frontVec = new Vector2(rigid.position.x + nextMove, rigid.position.y);
+        float rayLength = 3f;
+        Debug.DrawRay(frontVec, Vector2.down * rayLength, Color.green);
+        RaycastHit2D rayHit = Physics2D.Raycast(frontVec, Vector2.down, rayLength, LayerMask.GetMask("Platform"));
+
         if (rayHit.collider == null)
         {
-            Turn();
+            nextMove *= -1;
+            spriteRenderer.flipX = nextMove == 1;
+            CancelInvoke();
+            Invoke("Think", 5);
         }
 
-        anim.SetInteger("WalkSpeed", nextMove);
-        spriteRenderer.flipX = nextMove != 1;
+        spriteRenderer.flipX = nextMove == 1;
     }
 
-    void chasePlayer()
+    public bool PlayerInRange(float range)
     {
-        Vector2 direction = (player.position - transform.position).normalized;
-        rigid.linearVelocity = new Vector2(direction.x * moveSpeed, rigid.linearVelocityY);
-        spriteRenderer.flipX = direction.x < 0;
-        anim.SetInteger("WalkSpeed", (int)Mathf.Sign(direction.x));
+        if (target == null) return false;
+        float distance = Vector2.Distance(transform.position, target.position);
+        return distance <= range;
     }
 
-    void AttackPlayer()
+    public void Idle()
     {
-        anim.SetTrigger("Attack");
         rigid.linearVelocity = Vector2.zero;
     }
 
-    void Dodge()
+    public void Dead()
     {
-        Vector2 dodgeDir = (transform.position - player.position).normalized;
-        rigid.AddForce(dodgeDir * dodgeDistance, ForceMode2D.Impulse);
-        anim.SetTrigger("Dodge");
+        rigid.linearVelocity = Vector2.zero;
+        anim.SetTrigger("Dead");
+        Invoke("DestroyEnemy", 3f); // 3초 후 DestroyEnemy 호출
     }
 
-    int nextMove = 0;
+    private void DestroyEnemy()
+    {
+        Destroy(gameObject);
+    }
+
 
     void Think()
     {
-        nextMove = Random.Range(-1, 2);
+        nextMove = Random.Range(-1, 2); // -1, 0, 1 중 하나
         float nextThinkTime = Random.Range(2f, 5f);
+
         Invoke("Think", nextThinkTime);
-    }
+        anim.SetInteger("WalkSpeed", nextMove);
 
-    void Turn()
-    {
-        nextMove *= -1;
-        spriteRenderer.flipX = nextMove != 1;
-
-        CancelInvoke();
-        Invoke("Think", 2);
-    }
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("PlayerAttack") && currentState != State.Dead)
+        if (nextMove != 0)
         {
-            hp--;
-            if (hp <= 0)
-            {
-                Die();
-            }
-            else
-            {
-                currentState = State.Dodge;
-            }
-
-            if (attackHitbox != null && attackHitbox.enabled && other.CompareTag("Player"))
-            {
-                // other.GetComponent<PlayerHp>()?.TackeDamage(1);
-            }
-        }
-    }
-
-    void Die()
-    {
-        currentState = State.Dead;
-        anim.SetTrigger("Die");
-
-        rigid.linearVelocity = Vector2.zero;
-        rigid.bodyType = RigidbodyType2D.Kinematic;
-        GetComponent<Collider2D>().enabled = false;
-
-        Destroy(gameObject, 1f);
-
-        if (gameObject.CompareTag("Boss"))
-        {
-            //generator.GetComponent<BossGenerator>().OnBossDefeated();
-        }
-        else
-        {
-            generator.OnEnemyDefeated();
+            spriteRenderer.flipX = nextMove == 1;
         }
     }
 }

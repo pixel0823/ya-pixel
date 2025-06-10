@@ -4,7 +4,7 @@ public static class FindClosestEnemy // static 클래스로 변경
 {
     public static GameObject FindClosestEnemyObject(Vector2 fromPosition)
     {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Monster");
         GameObject closest = null;
         float minDist = Mathf.Infinity;
 

@@ -3,7 +3,8 @@ using UnityEngine.EventSystems;
 
 public class DarkMonster : BaseMonster
 {
-    
+
+    private Rigidbody2D rigid;
     private SpriteRenderer spriteRenderer;
     private float patrolTimer = 0f;
     private float changeDirectionTime = 2f;
@@ -11,20 +12,34 @@ public class DarkMonster : BaseMonster
     private bool isAttacking = false;
     private float attackCooldown = 1.5f;
     private float lastAttackTime = -Mathf.Infinity;
-    
+
 
     protected override void Start()
     {
         base.Start();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        rigid = GetComponent<Rigidbody2D>();
     }
 
-    protected override void Update()
+    protected override void FixedUpdate()
     {
-        if (currentState == State.Dead) return;
-        base.Update();
+        if (currentState == State.Dead)
+        {
+            Dead();
+            return;
+        }
 
-        if (currentState == State.Attack) 
+        if (currentState == State.Attack)
+        {
+            if (!isAttacking)
+            {
+                Attack();
+            }
+            return;
+        }
+        base.FixedUpdate();
+
+        if (currentState == State.Attack)
         {
             if (!isAttacking)
             {
@@ -32,7 +47,7 @@ public class DarkMonster : BaseMonster
             }
             else
             {
-                if (IsAnimationFinished("attack 1") || IsAnimationFinished("attack 2") || IsAnimationFinished("hit"))
+                if (IsAnimationFinished("Attack") || IsAnimationFinished("Attack") || IsAnimationFinished("Hit"))
                 {
                     isAttacking = false;
                     currentState = State.Chase;
@@ -47,14 +62,14 @@ public class DarkMonster : BaseMonster
 
     private void MoveTowardsTarget()
     {
-        if (target == null) return;
+        if (target == null || isAttacking) return;
 
         Vector2 direction = (target.position - transform.position).normalized;
         transform.position += (Vector3)direction * moveSpeed * Time.deltaTime;
 
         if (spriteRenderer != null)
         {
-            spriteRenderer.flipX = direction.x <0;
+            spriteRenderer.flipX = direction.x > 0;
         }
     }
     private bool IsAnimationFinished(string animationName)
@@ -63,7 +78,7 @@ public class DarkMonster : BaseMonster
         return stateInfo.IsName(animationName) && stateInfo.normalizedTime >= 1.0f;
     }
 
-  
+
     protected override void Attack()
     {
 
@@ -74,30 +89,14 @@ public class DarkMonster : BaseMonster
         lastAttackTime = Time.time;
         int randomAttack = Random.Range(0, 10);
 
-        if (randomAttack < 4)
-        {
-            animator.Play("hit");
-            Debug.Log("hit 공격");
-            Invoke(nameof(BackToChase), 0.500f);
 
-        }
-        else 
-        {
-            int normalAttack = Random.Range(0, 2);
-            if (normalAttack == 0){
-                animator.Play("attack 1");
-                Debug.Log("Attack1 공격");
-                Invoke(nameof(BackToChase), 1.200f);
-            }
-            else {
-                animator.Play("attack 2");
-                Debug.Log("attack 2 공격");
-                Invoke(nameof(BackToChase), 1.500f);
-            }
-        }
+        animator.Play("Attack");
+        Debug.Log("attack 2 공격");
+        Invoke(nameof(BackToChase), 1.500f);
+
         Debug.Log("공격");
 
-        
+
     }
 
     private void BackToChase()
@@ -108,20 +107,20 @@ public class DarkMonster : BaseMonster
 
     protected override void Chase()
     {
-        if (target == null) return;
+        if (target == null || isAttacking) return;
         float dist = Vector2.Distance(transform.position, target.position);
         Debug.Log($"[Chase] dist = {dist:F2}");
 
-        if (dist <= 3f)
+        if (dist <= 5f)
         {
-           if (Time.time >= lastAttackTime + attackCooldown)
-           {
-                 currentState = State.Attack;
+            if (Time.time >= lastAttackTime + attackCooldown)
+            {
+                currentState = State.Attack;
                 Debug.Log("→ State changed to Attack");
                 return;
-           }
+            }
         }
-        if (dist > 4f)
+        if (dist > 7f)
         {
             currentState = State.Patrol;
             return;
@@ -130,25 +129,34 @@ public class DarkMonster : BaseMonster
         Vector2 dir = (target.position - transform.position).normalized;
         transform.Translate(dir * moveSpeed * Time.deltaTime);
         if (spriteRenderer != null)
-            spriteRenderer.flipX = dir.x < 0;
+            spriteRenderer.flipX = dir.x > 0;
     }
-
     protected override void Dead()
     {
-        animator.Play("death");
-        Debug.Log("사망");
-        
+        base.Dead();
+
+        GameObject[] existingPanels = GameObject.FindGameObjectsWithTag("SkillPanel");
+        if (existingPanels.Length > 0) return;
+
+        SkillSelectDirector director = FindFirstObjectByType<SkillSelectDirector>();
+        if (director != null)
+        {
+            director.ShowSkillSelectPanel();
+        }
     }
+
+
+
 
     protected override void Idle()
     {
-        animator.Play("idle");
+        animator.Play("Idle");
 
     }
 
     protected override void Patrol()
     {
-        animator.Play("walk");
+        animator.Play("Move");
 
         patrolTimer += Time.deltaTime;
         if (patrolTimer >= changeDirectionTime)
@@ -160,10 +168,32 @@ public class DarkMonster : BaseMonster
         Vector2 moveDir = new Vector2(moveDirection, 0);
         transform.Translate(moveDir * moveSpeed * Time.deltaTime);
 
-        if (spriteRenderer != null) 
+        if (spriteRenderer != null)
         {
-            spriteRenderer.flipX = moveDir.x < 0;
+            spriteRenderer.flipX = moveDir.x > 0;
         }
         if (PlayerInRange(3f)) currentState = State.Chase;
+    }
+
+    protected override void Hit()
+    {
+        Debug.Log("몬스터 피격");
+        animator.Play("Hit");
+
+        CancelInvoke(nameof(BackToChase));
+        Invoke(nameof(BackToChase), 0.5f);
+
+
+    }
+    public override void TakeDamage(float damage)
+    {
+        if (currentState == State.Dead) return;
+
+        base.TakeDamage(damage);
+
+        if (hp > 0)
+        {
+            currentState = State.Hit;
+        }
     }
 }
