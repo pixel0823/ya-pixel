@@ -85,36 +85,36 @@ public class PlayerAttackCollider : MonoBehaviour
     {
         Debug.Log($"충돌 감지! 오브젝트: {other.name}, 태그: {other.tag}");
         Debug.Log($"isActive: {isActive}, hasHit: {hasHit}");
-        
+
         // 공격이 활성화되지 않았으면 무시
-        if (!isActive) 
+        if (!isActive)
         {
             Debug.Log("공격이 비활성화 상태라서 무시");
             return;
         }
-        
+
         // 이미 맞혔고 다중 공격이 불가능하면 무시
-        if (hasHit && !canHitMultiple) 
+        if (hasHit && !canHitMultiple)
         {
             Debug.Log("이미 맞혔고 다중공격 불가");
             return;
         }
-        
+
         // 몬스터의 Body Collider에 닿았을 때
         if (other.CompareTag("Monster"))
         {
             // 몬스터 컴포넌트 찾기
-            EnemyMove monster = other.GetComponent<EnemyMove>();
+            DarkMonster monster = other.GetComponent<DarkMonster>();
             if (monster != null)
             {
                 // 데미지 전달
                 monster.TakeDamage(damage);
-                
+
                 // 공격 성공 표시
                 hasHit = true;
-                
+
                 Debug.Log($"플레이어가 {other.name}에게 {damage:F1} 데미지!");
-                
+
                 // 단일 공격이면 즉시 비활성화
                 if (!canHitMultiple)
                 {

@@ -130,10 +130,15 @@ public class DarkMonster : BaseMonster
 
     protected override void Dead()
     {
-        animator.Play("Dead");
-        Debug.Log("사망");
+        base.Dead();
 
+        SkillSelectDirector director = FindFirstObjectByType<SkillSelectDirector>();
+        if (director != null)
+        {
+            director.ShowSkillSelectPanel();
+        }
     }
+
 
     protected override void Idle()
     {
@@ -172,19 +177,15 @@ public class DarkMonster : BaseMonster
 
 
     }
-    public void TakeDamage(float damage)
+    public override void TakeDamage(float damage)
     {
         if (currentState == State.Dead) return;
 
-        hp -= damage;
+        base.TakeDamage(damage);
 
         if (hp > 0)
         {
             currentState = State.Hit;
-        }
-        else
-        {
-            currentState = State.Dead;
         }
     }
 }

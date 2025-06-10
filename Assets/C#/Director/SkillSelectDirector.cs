@@ -15,7 +15,6 @@ public class SkillSelectDirector : MonoBehaviour
 
     void Start()
     {
-        ShowSkillSelectPanel();
         ShowSkillSelectedPanel();
     }
 
