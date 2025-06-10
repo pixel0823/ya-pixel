@@ -5,6 +5,11 @@ TagManager:
   serializedVersion: 3
   tags:
   - Enemy
+  - SkillButton
+  - SkillPanel
+  - SelectedSkillButton
+  - SelectedSkillPanel
+  - Platform
   layers:
   - Default
   - TransparentFX
@@ -14,8 +19,8 @@ TagManager:
   - UI
   - Monster
   - 
-  - 
-  - 
+  - Platform
+  - Structure
   - 
   - 
   - 
