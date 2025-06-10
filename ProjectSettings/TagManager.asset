@@ -5,6 +5,10 @@ TagManager:
   serializedVersion: 3
   tags:
   - Enemy
+  - SkillButton
+  - SkillPanel
+  - SelectedSkillButton
+  - SelectedSkillPanel
   - PlayerAttack
   - Monster
   - MosterAttack
@@ -18,7 +22,7 @@ TagManager:
   - Monster
   - 
   - Platform
-  - 
+  - Structure
   - 
   - 
   - 

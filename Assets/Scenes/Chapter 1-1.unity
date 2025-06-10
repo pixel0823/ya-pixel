@@ -403,6 +403,7 @@ GameObject:
   - component: {fileID: 163874878}
   - component: {fileID: 163874879}
   - component: {fileID: 163874880}
+  - component: {fileID: 163874881}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -617,6 +618,20 @@ MonoBehaviour:
   comboResetTime: 5
   attackCollider: {fileID: 1369018589}
   animator: {fileID: 163874874}
+--- !u!114 &163874881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 163874871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 104ffad0b8c49e0449c4a820aafc3450, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skillManager: {fileID: 498675813}
+  selectedSkills: []
 --- !u!1 &237949518
 GameObject:
   m_ObjectHideFlags: 0
@@ -742,6 +757,58 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &498675812
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 498675814}
+  - component: {fileID: 498675813}
+  m_Layer: 0
+  m_Name: ColorSelect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &498675813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 498675812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbcd0f80be899a045ad1096e790eb637, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skillButtonPrefab: {fileID: 0}
+  sSkillButtonPrefab: {fileID: 0}
+  skillButtonParent: {fileID: 0}
+  sSkillButtonParent: {fileID: 0}
+  selectedSkills: []
+  yellowSkill: {fileID: 0}
+  greenSkill: {fileID: 0}
+  navySkill: {fileID: 0}
+--- !u!4 &498675814
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 498675812}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2124591846}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &502277409
 GameObject:
   m_ObjectHideFlags: 0
@@ -4701,6 +4768,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hp: 100
   moveSpeed: 2
+  attackRange: 1.5
+  chaseRange: 3
   nextMove: 0
   currentState: 0
   target: {fileID: 0}
@@ -13967,6 +14036,73 @@ Transform:
   m_Children: []
   m_Father: {fileID: 502277410}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2124591843
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2124591846}
+  - component: {fileID: 2124591845}
+  - component: {fileID: 2124591844}
+  m_Layer: 0
+  m_Name: GameDirector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2124591844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2124591843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c622d6a328ea6574ab30271a971cf0b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panelPrefab: {fileID: 7761413513142980276, guid: 3676866988ea09b4aa819bc837c9f1b2, type: 3}
+  buttonPrefab: {fileID: 5242734937060898961, guid: 4cdc0e37f2f23c7488239c35249bc018, type: 3}
+  canvasTransform: {fileID: 2025487624}
+--- !u!114 &2124591845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2124591843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc44b1ffa86d5874f964fbba92c3e039, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skillManagerPanelPrefab: {fileID: 6237582779139285103, guid: 2307bf48ea3170746b4c4b2ae4bbef8d, type: 3}
+  skillSelectedPanelPrefab: {fileID: 7816206812872293426, guid: 1a35120f3b5e799488b1800fd205a8ca, type: 3}
+  canvasTransform: {fileID: 2025487624}
+  skillManager: {fileID: 498675813}
+  playerSkillController: {fileID: 163874881}
+  selectedSkills: []
+--- !u!4 &2124591846
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2124591843}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 17.241957, y: 8.385435, z: -0.20175485}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 498675814}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -13979,3 +14115,4 @@ SceneRoots:
   - {fileID: 90618787}
   - {fileID: 2025487624}
   - {fileID: 1029067016}
+  - {fileID: 2124591846}

@@ -24,6 +24,15 @@ public class DarkMonster : BaseMonster
     protected override void FixedUpdate()
     {
         if (currentState == State.Dead) return;
+
+        if (currentState == State.Attack)
+        {
+            if (!isAttacking)
+            {
+                Attack();
+            }
+            return;
+        }
         base.FixedUpdate();
 
         if (currentState == State.Attack)
@@ -49,7 +58,7 @@ public class DarkMonster : BaseMonster
 
     private void MoveTowardsTarget()
     {
-        if (target == null) return;
+        if (target == null || isAttacking) return;
 
         Vector2 direction = (target.position - transform.position).normalized;
         transform.position += (Vector3)direction * moveSpeed * Time.deltaTime;
@@ -76,29 +85,11 @@ public class DarkMonster : BaseMonster
         lastAttackTime = Time.time;
         int randomAttack = Random.Range(0, 10);
 
-        if (randomAttack < 4)
-        {
-            animator.Play("Hit");
-            Debug.Log("hit 공격");
-            Invoke(nameof(BackToChase), 0.500f);
 
-        }
-        else
-        {
-            int normalAttack = Random.Range(0, 2);
-            if (normalAttack == 0)
-            {
-                animator.Play("Attack");
-                Debug.Log("Attack1 공격");
-                Invoke(nameof(BackToChase), 1.200f);
-            }
-            else
-            {
-                animator.Play("Attack");
-                Debug.Log("attack 2 공격");
-                Invoke(nameof(BackToChase), 1.500f);
-            }
-        }
+        animator.Play("Attack");
+        Debug.Log("attack 2 공격");
+        Invoke(nameof(BackToChase), 1.500f);
+
         Debug.Log("공격");
 
 
@@ -112,11 +103,11 @@ public class DarkMonster : BaseMonster
 
     protected override void Chase()
     {
-        if (target == null) return;
+        if (target == null || isAttacking) return;
         float dist = Vector2.Distance(transform.position, target.position);
         Debug.Log($"[Chase] dist = {dist:F2}");
 
-        if (dist <= 3f)
+        if (dist <= 5f)
         {
             if (Time.time >= lastAttackTime + attackCooldown)
             {
@@ -125,7 +116,7 @@ public class DarkMonster : BaseMonster
                 return;
             }
         }
-        if (dist > 4f)
+        if (dist > 7f)
         {
             currentState = State.Patrol;
             return;
@@ -139,10 +130,15 @@ public class DarkMonster : BaseMonster
 
     protected override void Dead()
     {
-        animator.Play("Dead");
-        Debug.Log("사망");
+        base.Dead();
 
+        SkillSelectDirector director = FindFirstObjectByType<SkillSelectDirector>();
+        if (director != null)
+        {
+            director.ShowSkillSelectPanel();
+        }
     }
+
 
     protected override void Idle()
     {
@@ -169,5 +165,27 @@ public class DarkMonster : BaseMonster
             spriteRenderer.flipX = moveDir.x > 0;
         }
         if (PlayerInRange(3f)) currentState = State.Chase;
+    }
+
+    protected override void Hit()
+    {
+        Debug.Log("몬스터 피격");
+        animator.Play("Hit");
+
+        CancelInvoke(nameof(BackToChase));
+        Invoke(nameof(BackToChase), 0.5f);
+
+
+    }
+    public override void TakeDamage(float damage)
+    {
+        if (currentState == State.Dead) return;
+
+        base.TakeDamage(damage);
+
+        if (hp > 0)
+        {
+            currentState = State.Hit;
+        }
     }
 }
