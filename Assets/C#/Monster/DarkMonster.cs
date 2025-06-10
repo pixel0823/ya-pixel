@@ -23,7 +23,11 @@ public class DarkMonster : BaseMonster
 
     protected override void FixedUpdate()
     {
-        if (currentState == State.Dead) return;
+        if (currentState == State.Dead)
+        {
+            Dead();
+            return;
+        }
 
         if (currentState == State.Attack)
         {
@@ -135,9 +139,24 @@ public class DarkMonster : BaseMonster
         SkillSelectDirector director = FindFirstObjectByType<SkillSelectDirector>();
         if (director != null)
         {
-            director.ShowSkillSelectPanel();
+            // SkillManagerPanel이 이미 존재하는지 검사
+            bool panelExists = false;
+            foreach (Transform child in director.canvasTransform)
+            {
+                if (child.name.Contains("SkillManagerPanel")) // 프리팹 이름 또는 고유 이름
+                {
+                    panelExists = true;
+                    break;
+                }
+            }
+
+            if (!panelExists)
+            {
+                director.ShowSkillSelectPanel();
+            }
         }
     }
+
 
 
     protected override void Idle()

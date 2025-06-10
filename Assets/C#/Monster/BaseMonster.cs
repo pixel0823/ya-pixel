@@ -32,7 +32,7 @@ public abstract class BaseMonster : MonoBehaviour, IDamageable
             case State.Chase: Chase(); break;
             case State.Attack: break;
             case State.Hit: Hit(); break;
-            case State.Dead: Dead(); break;
+            case State.Dead: break;
         }
 
         if (hp <= 0 && currentState != State.Dead)
