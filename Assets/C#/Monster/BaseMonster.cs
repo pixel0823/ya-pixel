@@ -9,7 +9,7 @@ public abstract class BaseMonster : MonoBehaviour
     protected Animator animator;
     SpriteRenderer spriteRenderer;
 
-    protected enum State { Idle, Patrol, Chase, Attack, Dead }
+    protected enum State { Idle, Patrol, Chase, Attack, Dead, Hit }
     protected State currentState;
 
     protected virtual void Start()
@@ -31,6 +31,7 @@ public abstract class BaseMonster : MonoBehaviour
             case State.Patrol: Patrol(); break;
             case State.Chase: Chase(); break;
             case State.Attack: break;
+            case State.Hit: break;
             case State.Dead: Dead(); break;
         }
 
@@ -45,6 +46,7 @@ public abstract class BaseMonster : MonoBehaviour
     protected abstract void Chase();
     protected abstract void Attack();
     protected abstract void Dead();
+    protected abstract void Hit();
 
     protected bool PlayerInRange(float range)
     {
