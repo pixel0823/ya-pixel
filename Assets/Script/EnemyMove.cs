@@ -86,18 +86,55 @@ public class EnemyMove : MonoBehaviour
             case State.Patrol: Patrol(); break;
             case State.Attack: Attack(); break;
             case State.Chase: Chase(); break;
-            case State.Dead: Dead(); break;
+            //case State.Dead: Dead(); break;
         }
     }
 
     public void Chase()
     {
         if (target == null) return;
-        Vector2 dir = (target.position - transform.position).normalized;
-        rigid.linearVelocity = new Vector2(dir.x * moveSpeed, rigid.linearVelocityY);
-        spriteRenderer.flipX = dir.x > 0;
+        float dist = Vector2.Distance(transform.position, target.position);
+
+        if (dist <= 3f)
+        {
+            if (Time.time >= lastAttackTime + attackCooldown)
+            {
+                currentState = State.Attack;
+                return;
+            }
+            if (dist > 4f)
+            {
+                currentState = State.Patrol;
+                return;
+            }
+
+
+        }
     }
 
+    // 플레이어 공격에서 호출할 TakeDamage 함수
+    public void TakeDamage(float damage)
+    {
+        if (currentState == State.Dead) return;
+        
+        hp -= damage;
+        hp = Mathf.Clamp(hp, 0f, 100f);
+        
+        Debug.Log($"{gameObject.name}이(가) {damage} 데미지를 받았습니다. 현재 HP: {hp}");
+        
+        // 피격 시 플레이어를 추적하도록 상태 변경
+        if (currentState == State.Patrol || currentState == State.Idle)
+        {
+            currentState = State.Chase;
+        }
+        
+        //if (hp <= 0)
+        //{
+            //Die();
+        //}
+    }
+
+   
     public void Attack()
     {
         if (isAttacking) return;
@@ -106,12 +143,35 @@ public class EnemyMove : MonoBehaviour
         isAttacking = true;
         lastAttackTime = Time.time;
 
-        rigid.linearVelocity = Vector2.zero;
-        Vector2 dir = (target.position - transform.position).normalized;
-        spriteRenderer.flipX = dir.x > 0;
-        anim.SetTrigger("Attack");
+        if (target != null)
+        {
+            Vector2 dir = (target.position - transform.position).normalized;
+            spriteRenderer.flipX = dir.x > 0;
+            anim.SetBool("isAttacking", isAttacking);
+            Invoke("BackToChase", 0.25f);
+        }
+    }
 
-        Invoke("BackToChase", 0.25f);
+    void ActivateMonsterAttack()
+    {
+        MonsterAttackCollider attackCollider = GetComponentInChildren<MonsterAttackCollider>();
+        if (attackCollider != null)
+        {
+            attackCollider.SetDamage(10f); // 몬스터 공격력
+            attackCollider.StartAttack();
+            
+            // 0.2초 후 비활성화
+            Invoke("DeactivateMonsterAttack", 0.2f);
+        }
+    }
+
+    void DeactivateMonsterAttack()
+    {
+        MonsterAttackCollider attackCollider = GetComponentInChildren<MonsterAttackCollider>();
+        if (attackCollider != null)
+        {
+            attackCollider.EndAttack();
+        }
     }
 
     private void BackToChase()
