@@ -72,6 +72,8 @@
 
 ---
 발표자료 PPT
+[pixel.pptx](https://github.com/user-attachments/files/20685539/pixel.pptx)
+
 
 시연영상
 https://youtu.be/_d9NowQWINE
