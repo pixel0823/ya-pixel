@@ -71,11 +71,15 @@
 💬 **문의 사항은 Issue로 남겨주세요!**  
 
 ---
-발표자료 PPT
+**프로젝트 발표 ppt**
+[프로젝트 계획서.pptx](https://github.com/user-attachments/files/20877732/default.pptx)
+
+
+**발표자료 PPT**
 [pixel.pptx](https://github.com/user-attachments/files/20685539/pixel.pptx)
 
 
-시연영상
+**시연영상**
 https://youtu.be/_d9NowQWINE
 
 ---
