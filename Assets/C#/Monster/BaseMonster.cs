@@ -22,7 +22,7 @@ public abstract class BaseMonster : MonoBehaviour
 
     protected virtual void Update()
     {
-        
+
         switch (currentState)
         {
             case State.Idle: Idle(); break;
