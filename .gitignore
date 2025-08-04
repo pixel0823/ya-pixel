@@ -1,0 +1,116 @@
+# 이 .gitignore 파일은 Unity 프로젝트의 루트 디렉터리에 위치해야 합니다
+# 최신 버전은 아래에서 확인 가능: https://github.com/github/gitignore/blob/main/Unity.gitignore
+
+# ─────────────────────────────
+# Unity에서 자동 생성되는 불필요한 폴더 및 파일 무시
+# ─────────────────────────────
+
+/[Ll]ibrary/              # 임시 임포트된 에셋 캐시, 빌드에 불필요
+/[Tt]emp/                 # 임시 파일 저장소
+/[Oo]bj/                  # 중간 빌드 결과물
+/[Bb]uild/                # 빌드 출력 폴더
+/[Bb]uilds/               # 커스텀 빌드 폴더 (사용자 정의인 경우)
+/[Ll]ogs/                 # 에디터 로그 파일
+/[Uu]ser[Ss]ettings/      # 사용자 설정 (개인 설정으로 공유 불필요)
+
+# ─────────────────────────────
+# 디버깅, 기록 관련 용량 큰 파일/민감한 정보 무시
+# ─────────────────────────────
+
+/[Mm]emoryCaptures/       # 메모리 캡처(메모리 스냅샷) 파일
+/[Rr]ecordings/           # Unity Recorder로 생성한 동영상, 이미지 등
+
+# ─────────────────────────────
+# Unity Asset Store 관련 (필요 시 주석 해제)
+/[ Aa]ssets/AssetStoreTools*   # Unity Asset Store 도구 (원할 경우만 커밋)
+
+# ─────────────────────────────
+# JetBrains Rider에서 자동 생성되는 파일
+/[Aa]ssets/Plugins/Editor/JetBrains*
+
+# ─────────────────────────────
+# IDE 관련 캐시 및 설정 무시 (VS, Rider, Consulo 등)
+
+.vs/                     # Visual Studio 캐시
+.gradle/                 # Gradle 캐시 (Android 빌드 시 사용)
+ExportedObj/             # Unity 외부 툴용 오브젝트 캐시
+.consulo/                # Consulo IDE 설정
+
+# 프로젝트 설정 파일들 (.sln, .csproj 등 자동 생성)
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+
+# .env 파일: 환경 변수 (API Key 등 민감한 정보 포함, 절대 업로드 금지)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# 디버깅 관련 파일
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity에서 생성하는 메타 파일들
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Unity 크래시 리포트 관련
+sysinfo.txt
+
+# ─────────────────────────────
+# 빌드 결과물 무시
+# ─────────────────────────────
+
+*.apk                    # Android 앱 패키지
+*.aab                    # Android App Bundle
+*.unitypackage           # Unity 내보내기 패키지
+*.app                    # macOS 앱
+
+# ─────────────────────────────
+# Firebase Crashlytics 빌드 정보
+crashlytics-build.properties
+
+# ─────────────────────────────
+# Addressables 관련 임시 파일
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+
+# Android Addressables 임시 파일
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# ─────────────────────────────
+# 추가 추천: Visual Studio Code 관련 무시 파일
+.vscode/                 # VSCode 설정 (협업 시 커밋 원하지 않을 경우)
+
+# Unity Collaborate 캐시 (사용하지 않으면 무시)
+/.collab/
+
+# Rider IDE 사용자 설정 무시
+.idea/
+
+# Unity Plastic SCM (사용하지 않으면 무시)
+/.PlasticSCM/
+
+# ─────────────────────────────
+# 빌드 시 자동 생성된 Scene Preview 등 무시
+*.ScenePreview
+
+# ─────────────────────────────
+# 테스트 또는 AI 코드 자동 생성기에서 생길 수 있는 파일 무시
+*.generated.cs
+
+# .DS_Store: macOS에서 자동 생성되는 파일 (버전 관리 불필요)
+.DS_Store
+Library/
