@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-{}trackSelection = true
-=======
 trackSelection = true
->>>>>>> upstream/sjw
 refreshSearchWindowsInPlayMode = false
 pickerAdvancedUI = false
 fetchPreview = true
