@@ -3,8 +3,12 @@
   "WorkspaceRootPath": "D:\\DD\\GitHub\\ya-pixel\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B9ABAC2D-23D6-5CBF-DE9C-2199528B6A5F}|Assembly-CSharp.csproj|d:\\dd\\github\\ya-pixel\\assets\\script\\playermovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B9ABAC2D-23D6-5CBF-DE9C-2199528B6A5F}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\playermovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B9ABAC2D-23D6-5CBF-DE9C-2199528B6A5F}|Assembly-CSharp.csproj|d:\\dd\\github\\ya-pixel\\assets\\script\\player\\playermovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B9ABAC2D-23D6-5CBF-DE9C-2199528B6A5F}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\player\\playermovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\DD\\GitHub\\ya-pixel\\Assets\\Script\\PlayerMovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Script\\PlayerMovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -20,14 +24,25 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "PlayerMovement.cs",
+              "DocumentMoniker": "D:\\DD\\GitHub\\ya-pixel\\Assets\\Script\\Player\\PlayerMovement.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Player\\PlayerMovement.cs",
+              "ToolTip": "D:\\DD\\GitHub\\ya-pixel\\Assets\\Script\\Player\\PlayerMovement.cs",
+              "RelativeToolTip": "Assets\\Script\\Player\\PlayerMovement.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T07:05:32.157Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PlayerMovement.cs",
               "DocumentMoniker": "D:\\DD\\GitHub\\ya-pixel\\Assets\\Script\\PlayerMovement.cs",
               "RelativeDocumentMoniker": "Assets\\Script\\PlayerMovement.cs",
               "ToolTip": "D:\\DD\\GitHub\\ya-pixel\\Assets\\Script\\PlayerMovement.cs",
               "RelativeToolTip": "Assets\\Script\\PlayerMovement.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-02T11:46:07.575Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-02T11:46:07.575Z"
             }
           ]
         }
