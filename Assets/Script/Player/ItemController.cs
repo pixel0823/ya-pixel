@@ -2,59 +2,41 @@ using UnityEngine;
 using Photon.Pun;
 
 /// <summary>
-/// 플레이어의 아이템 '드랍' 기능을 관리합니다. (줍는 기능은 PlayerInteraction으로 이전)
+/// 플레이어의 입력을 받아 Inventory를 제어합니다. (아이템 드랍 등)
 /// </summary>
 public class ItemController : MonoBehaviourPunCallbacks
 {
     private Animator animator;
+    private Inventory inventory; // 인벤토리 컴포넌트 참조
 
     void Awake()
     {
         animator = GetComponent<Animator>();
+        inventory = GetComponent<Inventory>(); // 동일한 게임오브젝트에 있는 Inventory 컴포넌트를 가져옵니다.
     }
 
     void Update()
     {
-        bool canControl = false;
-        if (PhotonNetwork.InRoom)
+        // 자신의 캐릭터가 아니면 조작할 수 없습니다.
+        if (photonView != null && !photonView.IsMine && PhotonNetwork.InRoom)
         {
-            if (photonView.IsMine) canControl = true;
-        }
-        else
-        {
-            canControl = true;
-        }
-
-        if (!canControl) return;
-
-        // --- 아이템 드랍 테스트 ---
-        if (Input.GetKeyDown(KeyCode.Alpha1)) DropItem("PotionItem");
-        if (Input.GetKeyDown(KeyCode.Alpha2)) DropItem("SwordItem");
-        // --- 테스트 끝 ---
-    }
-
-    private void DropItem(string itemPrefabName)
-    {
-        // 드랍 위치를 플레이어의 발밑보다 약간 위로 설정
-        float yOffset = 0.5f; // Y축 오프셋 값, 필요에 따라 조절하세요.
-        Vector3 dropPosition = transform.position + new Vector3(0, yOffset, 0);
-
-        GameObject itemPrefab = Resources.Load<GameObject>(itemPrefabName);
-
-        if (itemPrefab == null)
-        {
-            Debug.LogError($"{itemPrefabName} 프리팹을 Resources 폴더에서 찾을 수 없습니다.");
             return;
         }
 
-        if (PhotonNetwork.InRoom)
+        // 'Q' 키를 누르면 아이템을 드랍합니다.
+        // (현재는 테스트를 위해 첫 번째 아이템을 드랍합니다. 나중에 선택된 아이템을 드랍하도록 변경해야 합니다.)
+        if (Input.GetKeyDown(KeyCode.Q))
         {
-            PhotonNetwork.Instantiate(itemPrefabName, dropPosition, Quaternion.identity);
+            if (inventory != null && inventory.items.Count > 0)
+            {
+                // 인벤토리의 첫 번째 아이템을 드랍합니다.
+                Debug.Log($"Attempting to drop: {inventory.items[0].itemName}");
+                inventory.DropItem(inventory.items[0]);
+            }
+            else
+            {
+                Debug.Log("Inventory is empty or could not be found.");
+            }
         }
-        else
-        {
-            Instantiate(itemPrefab, dropPosition, Quaternion.identity);
-        }
-        Debug.Log($"{itemPrefabName} 아이템을 드랍했습니다.");
     }
 }
