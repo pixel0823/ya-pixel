@@ -7,22 +7,27 @@ using UnityEngine.SceneManagement;
 
 public class ConnectionManager : MonoBehaviourPunCallbacks
 {
+    public GameObject MainMenuUI;
+    public GameObject MultiUI;
 
     void Start()
     {
-        PhotonNetwork.ConnectUsingSettings();
+        // We will connect on button click, not on start
+        // PhotonNetwork.ConnectUsingSettings();
     }
 
-    public virtual void OnConnected()
+    public void Connect()
     {
-        base.OnConnected();
-        print(System.Reflection.MethodBase.GetCurrentMethod().Name);
+        if (MainMenuUI != null) MainMenuUI.SetActive(false);
+        if (MultiUI != null) MultiUI.SetActive(true);
+        
+        PhotonNetwork.ConnectUsingSettings();
     }
 
     public override void OnConnectedToMaster() // 포톤 서버 (마스터 서버)에 접속
     {
         base.OnConnectedToMaster();
-        print(System.Reflection.MethodBase.GetCurrentMethod().Name);
+        print("Connected to Master Server");
 
         // 로비 진입 요청
         PhotonNetwork.JoinLobby();
@@ -31,7 +36,7 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     public override void OnJoinedLobby() // 로비 접속
     {
         base.OnJoinedLobby();
-        print(System.Reflection.MethodBase.GetCurrentMethod().Name);
+        print("Joined Lobby");
 
         SceneManager.LoadScene("Multi");
     }
@@ -39,7 +44,7 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     public override void OnLeftLobby() // 로비 퇴장
     {
         base.OnLeftLobby();
-        print(System.Reflection.MethodBase.GetCurrentMethod().Name);    
+        print("Left Lobby");    
 
         SceneManager.LoadScene("MainMenu");
     }
@@ -47,18 +52,12 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
         base.OnRoomListUpdate(roomList);
-        print(System.Reflection.MethodBase.GetCurrentMethod().Name);
+        print("Room list updated");
 
         foreach (RoomInfo r in roomList)
         {
             print("Room Name: " + r.Name + " Player Count: " + r.PlayerCount + "/" + r.MaxPlayers); 
             
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 }
