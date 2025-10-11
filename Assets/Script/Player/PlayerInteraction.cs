@@ -27,7 +27,7 @@ public class PlayerInteraction : MonoBehaviourPunCallbacks
         if (photonView != null && !photonView.IsMine) return;
 
         // 상호작용 키를 눌렀고, 주변에 상호작용할 오브젝트가 있다면
-        if (Input.GetKeyDown(KeyCode.E) && nearbyInteractables.Count > 0)
+        if (Input.GetKeyDown(KeyCode.F) && nearbyInteractables.Count > 0)
         {
             // 가장 가까운 오브젝트를 찾아서 상호작용 실행
             IInteractable closest = FindClosestInteractable();
