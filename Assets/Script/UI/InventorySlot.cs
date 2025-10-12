@@ -2,59 +2,70 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-// 인벤토리의 각 슬롯을 제어하는 클래스
+// 인벤토리의 각 슬롯을 제어하는 클래스 (구조 변경 버전)
 public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
 {
-    public Image icon;
+    private Image slotImage;
+    private Sprite defaultSprite;
+
     [HideInInspector]
     public Item item;
     [HideInInspector]
     public Inventory inventory;
     [HideInInspector]
-    public int slotIndex; // 슬롯의 인덱스
+    public int slotIndex;
 
-    private bool isMouseOver = false; // 개별 슬롯의 마우스 오버 상태
-    private static GameObject dragIcon; // 드래그 중인 아이콘
-    private static Item draggedItem; // 드래그 중인 아이템
-    private static InventorySlot originalSlot; // 드래그 시작 슬롯
-    private static bool dropSuccessful; // 드롭 성공 여부
+    private bool isMouseOver = false;
+
+    void Awake()
+    {
+        slotImage = GetComponent<Image>();
+        if (slotImage == null)
+        {
+            Debug.LogError($"인벤토리 슬롯 '{gameObject.name}'에 Image 컴포넌트가 없습니다!", gameObject);
+            return;
+        }
+        defaultSprite = slotImage.sprite;
+    }
 
     void Update()
     {
-        // 이 슬롯 위에 마우스가 있고, 'Q' 키가 눌렸다면
         if (isMouseOver && Input.GetKeyDown(KeyCode.Q))
         {
             if (item != null && inventory != null)
             {
-                inventory.DropItem(item);
+                inventory.DropItem(slotIndex);
             }
         }
     }
 
-    public void AddItem(Item newItem)
+    public void UpdateSlotUI()
     {
-        item = newItem;
+        if (slotImage == null) return;
 
-        // icon이 할당되지 않았을 경우, 오류를 기록하고 함수를 종료합니다.
-        if (icon == null)
-        { 
-            Debug.LogError($"인벤토리 슬롯 '{gameObject.name}'에 아이콘(Image) 컴포넌트가 할당되지 않았습니다!", gameObject);
-            return;
-        }
-
-        icon.sprite = newItem?.icon;
-        icon.enabled = newItem != null;
-    }
-
-    public void ClearSlot()
-    {
-        item = null;
-        if (icon != null)
+        if (item != null)
         {
-            icon.sprite = null;
-            icon.enabled = false;
+            slotImage.sprite = item.icon;
+            slotImage.color = Color.white;
+        }
+        else
+        {
+            slotImage.sprite = defaultSprite;
+            slotImage.color = Color.white;
         }
     }
+
+    // 드래그 상태에 따라 UI를 변경합니다.
+    public void SetDragState(bool isDragging)
+    {
+        if (slotImage != null)
+        {
+            // isDragging이 true이면 투명하게, false이면 불투명하게 만듭니다.
+            slotImage.color = isDragging ? Color.clear : Color.white;
+        }
+    }
+
+    // --- IPointer 인터페이스 구현 ---
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -66,78 +77,37 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         isMouseOver = false;
     }
 
+    // --- IDrag & IDrop 인터페이스 구현 ---
+
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (item != null)
+        if (item != null && inventory != null)
         {
-            originalSlot = this;
-            draggedItem = item;
-            dropSuccessful = false;
-
-            // 드래그 아이콘 생성
-            dragIcon = new GameObject("Drag Icon");
-            var rt = dragIcon.AddComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(50, 50);
-            var img = dragIcon.AddComponent<Image>();
-            img.sprite = item.icon;
-            dragIcon.transform.SetParent(transform.root);
-            dragIcon.transform.SetAsLastSibling();
-            img.raycastTarget = false;
-
-            // 원래 슬롯 아이콘 숨김
-            icon.enabled = false;
+            inventory.OnBeginDrag(this);
         }
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (dragIcon != null)
+        if (inventory != null && inventory.IsDragging())
         {
-            dragIcon.transform.position = eventData.position;
+            inventory.OnDrag(eventData);
         }
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        Destroy(dragIcon);
-
-        // OnDrop이 호출되지 않았다면(즉, 유효한 슬롯에 드롭되지 않았다면)
-        // 아이템을 월드에 버리는 것으로 처리합니다.
-        if (!dropSuccessful)
+        if (inventory != null && inventory.IsDragging())
         {
-            if (inventory != null && draggedItem != null)
-            {
-                inventory.DropItem(draggedItem);
-            }
-            else
-            {
-                // 인벤토리나 아이템 정보가 없으면, 원래 슬롯으로 아이콘을 복원합니다.
-                if (originalSlot != null) originalSlot.icon.enabled = true;
-            }
+            inventory.OnEndDrag();
         }
-
-        // static 변수 초기화
-        draggedItem = null;
-        originalSlot = null;
-        dropSuccessful = false; // 다음 드래그를 위해 리셋
     }
 
     public void OnDrop(PointerEventData eventData)
     {
-        // 드롭된 아이템의 원본 슬롯 정보를 가져옵니다.
-        InventorySlot draggedSlot = originalSlot;
-
-        // 자기 자신에게 드롭했거나, 원본 슬롯 정보가 없거나, 인벤토리 정보가 없으면 무시합니다.
-        if (draggedSlot == null || draggedSlot == this || inventory == null)
+        if (inventory != null)
         {
-            return;
+            inventory.OnDrop(this);
         }
-
-        // 인벤토리의 SwapItems 메서드를 호출하여 아이템 위치를 바꿉니다.
-        // 이 때, 각 슬롯의 인덱스 정보를 사용합니다.
-        inventory.SwapItems(draggedSlot.slotIndex, this.slotIndex);
-
-        // 드롭이 성공적으로 완료되었음을 표시합니다.
-        dropSuccessful = true;
     }
 }

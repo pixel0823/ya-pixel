@@ -11988,6 +11988,18 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4133113003117785462, guid: e23a95f1150e39a4398793d8fbb30c01, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5611476792495212408, guid: e23a95f1150e39a4398793d8fbb30c01, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5873791658742023787, guid: e23a95f1150e39a4398793d8fbb30c01, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7942981955885326050, guid: e23a95f1150e39a4398793d8fbb30c01, type: 3}
       propertyPath: m_Name
       value: InventorySlot1
@@ -12874,7 +12886,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 961787380297230084, guid: 80607e79f9f1a6a48bbc415c0cfae4da, type: 3}
       propertyPath: m_Name
-      value: Player 1
+      value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 5142205996672738869, guid: 80607e79f9f1a6a48bbc415c0cfae4da, type: 3}
       propertyPath: sceneViewId

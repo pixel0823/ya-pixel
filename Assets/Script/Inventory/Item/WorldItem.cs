@@ -30,7 +30,7 @@ public class WorldItem : MonoBehaviour, IInteractable, IPunInstantiateMagicCallb
         }
 
         // 인벤토리에 아이템을 추가합니다.
-        if (inventory.Add(itemData))
+        if (inventory.Add(itemData) != -1)
         {
             // 아이템 추가에 성공하면, 네트워크를 통해 이 오브젝트를 파괴합니다.
             string itemName = itemData != null ? itemData.itemName : "알 수 없는 아이템";

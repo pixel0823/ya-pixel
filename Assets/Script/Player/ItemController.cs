@@ -25,25 +25,6 @@ public class ItemController : MonoBehaviourPunCallbacks
             return;
         }
 
-        // 'Q' 키를 누르면 현재 선택된 아이템을 드랍합니다.
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            if (inventory != null && inventoryUI != null)
-            {
-                // UI에서 현재 선택된 아이템을 가져옵니다.
-                Item selectedItem = inventoryUI.GetSelectedItem();
 
-                // 선택된 아이템이 있으면 드랍합니다.
-                if (selectedItem != null)
-                {
-                    Debug.Log($"Attempting to drop: {selectedItem.itemName}");
-                    inventory.DropItem(selectedItem);
-                }
-                else
-                {
-                    Debug.Log("No item selected.");
-                }
-            }
-        }
     }
 }

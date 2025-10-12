@@ -40,8 +40,11 @@ public class ItemDropTester : MonoBehaviour
             {
                 if (itemToDrop != null)
                 {
-                    targetInventory.Add(itemToDrop);
-                    targetInventory.DropItem(itemToDrop);
+                    int addedIndex = targetInventory.Add(itemToDrop);
+                    if (addedIndex != -1)
+                    {
+                        targetInventory.DropItem(addedIndex);
+                    }
                 }
             }
         }
