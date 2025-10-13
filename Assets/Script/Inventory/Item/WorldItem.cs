@@ -64,7 +64,7 @@ public class WorldItem : MonoBehaviour, IInteractable, IPunInstantiateMagicCallb
         int itemIndex = (int)instantiationData[0];
 
         // Resources 폴더에서 ItemDatabase를 로드합니다.
-        ItemDatabase database = Resources.Load<ItemDatabase>("GlobalItemDatabase");
+        ItemDatabase database = Resources.Load<ItemDatabase>("Items/GlobalItemDatabase");
         if (database != null)
         {
             // 인덱스를 사용하여 아이템 데이터를 가져와 설정합니다.

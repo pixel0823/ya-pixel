@@ -8,4 +8,13 @@ public class Item : ScriptableObject
     public string itemName = "New Item"; // 아이템 이름 (데이터 식별자)
     public string description = "Item Description"; // 아이템 설명
     public Sprite icon = null; // 아이템 아이콘
+
+    public Item GetCopy()
+    {
+        Item copy = CreateInstance<Item>();
+        copy.itemName = itemName;
+        copy.description = description;
+        copy.icon = icon;
+        return copy;
+    }
 }

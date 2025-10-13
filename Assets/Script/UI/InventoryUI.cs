@@ -17,18 +17,8 @@ public class InventoryUI : MonoBehaviour
 
     void Start()
     {
-        inventory = FindObjectOfType<Inventory>();
-        if (inventory != null)
-        {
-            inventory.onItemChangedCallback += UpdateUI;
-        }
-
         hotbarSlots = hotbarPanel.GetComponentsInChildren<InventorySlot>();
         inventorySlots = inventoryPanel.GetComponentsInChildren<InventorySlot>();
-
-        // 각 슬롯에 인벤토리 참조와 고유 인덱스를 설정합니다.
-        AssignSlotDetails(hotbarSlots);
-        AssignSlotDetails(inventorySlots);
 
         // 핫바 패널에 ScrollRect가 있다면 비활성화하여 스크롤 입력을 가로채지 못하게 합니다.
         var scrollRect = hotbarPanel.GetComponent<UnityEngine.UI.ScrollRect>();
@@ -48,10 +38,29 @@ public class InventoryUI : MonoBehaviour
         }
 
         selectedSlot = 0;
-        UpdateUI();
 
-        Canvas.ForceUpdateCanvases();
-        UpdateSelectionVisual();
+        // Try to find the inventory immediately
+        TryInitializeInventory();
+    }
+
+    void TryInitializeInventory()
+    {
+        // 이미 초기화되었으면 실행하지 않음
+        if (inventory != null) return;
+
+        inventory = FindObjectOfType<Inventory>();
+        if (inventory != null)
+        {
+            inventory.onItemChangedCallback += UpdateUI;
+
+            // 각 슬롯에 인벤토리 참조와 고유 인덱스를 설정합니다.
+            AssignSlotDetails(hotbarSlots);
+            AssignSlotDetails(inventorySlots);
+
+            UpdateUI();
+            Canvas.ForceUpdateCanvases();
+            UpdateSelectionVisual();
+        }
     }
 
     // 슬롯들에 인벤토리 참조와 인덱스를 할당하는 도우미 함수
@@ -61,7 +70,7 @@ public class InventoryUI : MonoBehaviour
         {
             if (slots[i] != null)
             {
-                slots[i].inventory = inventory;
+                slots[i].inventory = inventory; // 이 시점에는 inventory가 null이 아니어야 합니다.
                 slots[i].slotIndex = i;
             }
         }
@@ -69,6 +78,14 @@ public class InventoryUI : MonoBehaviour
 
     void Update()
     {
+        // 인벤토리를 아직 찾지 못했다면 계속 찾습니다.
+        if (inventory == null)
+        {
+            TryInitializeInventory();
+            // 여전히 찾지 못했다면 에러 방지를 위해 Update를 종료합니다.
+            if (inventory == null) return;
+        }
+
         if (Input.GetKeyDown(KeyCode.E))
         {
             bool isInventoryOpen = !inventoryPanel.activeSelf;

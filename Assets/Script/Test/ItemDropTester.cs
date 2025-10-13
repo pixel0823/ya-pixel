@@ -20,6 +20,12 @@ public class ItemDropTester : MonoBehaviour
         // 지정된 테스트 키가 눌렸는지 확인
         if (Input.GetKeyDown(testKey))
         {
+            // 타겟 인벤토리가 할당되지 않았다면, 씬에서 찾아봅니다.
+            if (targetInventory == null)
+            {
+                targetInventory = FindObjectOfType<Inventory>();
+            }
+
             // 할당된 아이템과 인벤토리가 있는지 확인
             if (itemsToDrop == null || itemsToDrop.Length == 0)
             {
@@ -28,7 +34,7 @@ public class ItemDropTester : MonoBehaviour
             }
             if (targetInventory == null)
             {
-                Debug.LogError("타겟 인벤토리가 지정되지 않았습니다!");
+                Debug.LogError("타겟 인벤토리를 찾을 수 없습니다! 씬에 플레이어가 생성되었는지 확인해주세요.");
                 return;
             }
 

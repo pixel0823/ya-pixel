@@ -23,6 +23,10 @@ public class Inventory : MonoBehaviour
     [Tooltip("UI의 최상위 Canvas Transform. 드래그 아이콘을 표시할 때 사용됩니다.")]
     public Transform rootCanvas;
 
+    [Header("아이템 드랍 설정")]
+    [Tooltip("플레이어로부터 아이템이 드랍될 거리")]
+    public float dropOffset = 1.0f;
+
     // 인벤토리 아이템 리스트.
     public List<Item> items;
 
@@ -58,7 +62,7 @@ public class Inventory : MonoBehaviour
 
         if (emptyIndex != -1)
         {
-            items[emptyIndex] = item;
+            items[emptyIndex] = item.GetCopy();
             onItemChangedCallback?.Invoke();
             return emptyIndex;
         }
@@ -101,18 +105,28 @@ public class Inventory : MonoBehaviour
 
         Remove(slotIndex);
 
+        // --- 드랍 위치 계산 로직 ---
+        Vector3 spawnPosition = transform.position;
+        if (itemToDrop.icon != null)
+        {
+            // 아이템 스프라이트의 절반 높이만큼 y 위치를 올려서, 아이템의 바닥이 플레이어 발에 오도록 합니다.
+            float verticalOffset = itemToDrop.icon.bounds.extents.y;
+            spawnPosition += new Vector3(0, verticalOffset, 0);
+        }
+        // --- 드랍 위치 계산 로직 끝 ---
+
         object[] instantiationData = new object[] { itemIndexInDB };
 
         if (PhotonNetwork.InRoom)
         {
-            PhotonNetwork.Instantiate("WorldItem", transform.position + transform.forward, Quaternion.identity, 0, instantiationData);
+            PhotonNetwork.Instantiate("WorldItem", spawnPosition, Quaternion.identity, 0, instantiationData);
         }
         else
         {
             GameObject worldItemPrefab = Resources.Load<GameObject>("WorldItem");
             if (worldItemPrefab != null)
             {
-                GameObject worldItemObject = Instantiate(worldItemPrefab, transform.position + transform.forward, Quaternion.identity);
+                GameObject worldItemObject = Instantiate(worldItemPrefab, spawnPosition, Quaternion.identity);
                 WorldItem worldItem = worldItemObject.GetComponent<WorldItem>();
                 if (worldItem != null)
                 {
