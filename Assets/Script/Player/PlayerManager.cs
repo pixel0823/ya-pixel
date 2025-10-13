@@ -1,15 +1,17 @@
 using UnityEngine;
 using Photon.Pun;
 
-public class GameManager : MonoBehaviour
+public class PlayerManager : MonoBehaviour
 {
+    public GameObject playerPrefab;
+
     void Start()
     {
         // Check if we are in a room
         if (PhotonNetwork.InRoom)
         {
-            // Instantiate the player prefab located in the "Resources" folder
-            PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity);
+            // 인스펙터에서 할당한 프리팹의 이름 사용
+            PhotonNetwork.Instantiate(playerPrefab.name, Vector3.zero, Quaternion.identity);
             Debug.Log("Player instantiated.");
         }
         else

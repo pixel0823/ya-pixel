@@ -9,13 +9,49 @@ public class WorldItem : MonoBehaviour, IInteractable, IPunInstantiateMagicCallb
 {
     [Tooltip("이 아이템의 데이터. Item 컴포넌트를 참조합니다.")]
     public Item itemData;
+    [Tooltip("아이템 개수")]
+    public int count = 1;
+
+    /// <summary>
+    /// 아이템 데이터와 개수를 기반으로 월드 아이템을 초기화합니다.
+    /// </summary>
+    /// <param name="data">설정할 아이템의 데이터</param>
+    /// <param name="amount">설정할 아이템의 개수</param>
+    public void Initialize(Item data, int amount)
+    {
+        this.itemData = data;
+        this.count = amount;
+
+        if (this.itemData != null)
+        {
+            gameObject.name = this.itemData.itemName + " (World)";
+            var spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = this.itemData.icon;
+            }
+        }
+        else
+        {
+            Debug.LogError("월드 아이템 초기화에 사용된 Item 데이터가 null입니다.");
+            // 데이터가 없으면 아이템을 즉시 파괴하여 오류 상태로 남지 않도록 함
+            if (PhotonNetwork.InRoom)
+            {
+                PhotonNetwork.Destroy(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
+    }
 
     #region IInteractable 구현
     public string GetInteractText()
     {
         // itemData가 할당되지 않았을 경우를 대비하여 널 체크를 합니다.
         string itemName = itemData != null ? itemData.itemName : "알 수 없는 아이템";
-        return $"'F' 키를 눌러 {itemName} 줍기";
+        return $"'F' 키를 눌러 {itemName} {(count > 1 ? $"{count}개" : "")} 줍기";
     }
 
     public void Interact(GameObject interactor)
@@ -29,12 +65,12 @@ public class WorldItem : MonoBehaviour, IInteractable, IPunInstantiateMagicCallb
             return;
         }
 
-        // 인벤토리에 아이템을 추가합니다.
-        if (inventory.Add(itemData) != -1)
+        // [수정됨] 인벤토리에 아이템을 추가하고, 성공 여부를 bool로 받습니다.
+        if (inventory.Add(itemData, count))
         {
             // 아이템 추가에 성공하면, 네트워크를 통해 이 오브젝트를 파괴합니다.
             string itemName = itemData != null ? itemData.itemName : "알 수 없는 아이템";
-            Debug.Log($"{interactor.name}이(가) {itemName} 아이템을 주웠습니다.");
+            Debug.Log($"{interactor.name}이(가) {itemName} 아이템을 {count}개 주웠습니다.");
 
             if (PhotonNetwork.InRoom)
             {
@@ -59,31 +95,22 @@ public class WorldItem : MonoBehaviour, IInteractable, IPunInstantiateMagicCallb
     #region Photon 콜백
     public void OnPhotonInstantiate(PhotonMessageInfo info)
     {
-        // PhotonNetwork.Instantiate의 instantiationData에서 아이템 인덱스를 읽어옵니다.
+        // PhotonNetwork.Instantiate의 instantiationData에서 아이템 인덱스와 개수를 읽어옵니다.
         object[] instantiationData = info.photonView.InstantiationData;
         int itemIndex = (int)instantiationData[0];
+        int amount = (int)instantiationData[1];
 
-        // Resources 폴더에서 ItemDatabase를 로드합니다.
+        // [중요] Resources 폴더 안의 경로가 정확해야 합니다.
         ItemDatabase database = Resources.Load<ItemDatabase>("Items/GlobalItemDatabase");
         if (database != null)
-        {
-            // 인덱스를 사용하여 아이템 데이터를 가져와 설정합니다.
-            itemData = database.GetItem(itemIndex);
-
-            // 아이템 이름과 아이콘 업데이트 (선택적이지만, 씬에서 바로 확인하기 좋음)
-            if (itemData != null)
-            {
-                gameObject.name = itemData.itemName + " (World)";
-                var spriteRenderer = GetComponent<SpriteRenderer>();
-                if (spriteRenderer != null)
-                {
-                    spriteRenderer.sprite = itemData.icon;
-                }
-            }
+        {   
+            Item data = database.GetItem(itemIndex);
+            // 공용 초기화 메서드를 호출하여 아이템 정보를 설정합니다.
+            Initialize(data, amount);
         }
         else
         {
-            Debug.LogError("GlobalItemDatabase를 Resources 폴더에서 찾을 수 없습니다.");
+            Debug.LogError("'Items/GlobalItemDatabase' 경로에서 ItemDatabase를 찾을 수 없습니다. Resources 폴더와 경로를 확인해주세요.");
         }
     }
     #endregion

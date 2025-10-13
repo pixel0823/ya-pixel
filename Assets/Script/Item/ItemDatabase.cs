@@ -20,11 +20,16 @@ public class ItemDatabase : ScriptableObject
     // 아이템으로 인덱스를 찾는 함수
     public int GetIndex(Item item)
     {
-        int index = allItems.IndexOf(item);
-        if (index == -1)
+        if (item == null) return -1;
+        for (int i = 0; i < allItems.Count; i++)
         {
-            Debug.LogWarning($"{item.itemName} 아이템이 데이터베이스에 없습니다.");
+            if (allItems[i] != null && allItems[i].itemName == item.itemName)
+            {
+                return i;
+            }
         }
-        return index;
+
+        Debug.LogWarning($"{item.itemName} 아이템이 데이터베이스에 없습니다.");
+        return -1;
     }
 }

@@ -2,7 +2,7 @@ using UnityEngine;
 using Photon.Pun;
 
 /// <summary>
-/// 플레이어의 입력을 받아 Inventory 및 InventoryUI와 상호작용합니다.
+/// 나중에 아이템 사용 관련 로직 구현 예정
 /// </summary>
 public class ItemController : MonoBehaviourPunCallbacks
 {

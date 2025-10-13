@@ -339,6 +339,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemDatabase: {fileID: 11400000, guid: e44ff360004b6a4488a21ca8472d2dbc, type: 2}
   space: 20
-  rootCanvas: {fileID: 0}
-  dropOffset: 1
   items: []

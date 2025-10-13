@@ -1020,7 +1020,7 @@ Transform:
   m_GameObject: {fileID: 436676085}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10656,7 +10656,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -11641,7 +11641,7 @@ GameObject:
   - component: {fileID: 723729381}
   - component: {fileID: 723729380}
   m_Layer: 0
-  m_Name: InventoryUIDirector
+  m_Name: InventoryManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11662,6 +11662,7 @@ MonoBehaviour:
   hotbarPanel: {fileID: 1516052750}
   inventoryPanel: {fileID: 516955579}
   selectionHighlight: {fileID: 27476035}
+  rootCanvas: {fileID: 515349245}
 --- !u!4 &723729381
 Transform:
   m_ObjectHideFlags: 0
@@ -12003,6 +12004,10 @@ PrefabInstance:
     - target: {fileID: 7942981955885326050, guid: e23a95f1150e39a4398793d8fbb30c01, type: 3}
       propertyPath: m_Name
       value: InventorySlot1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8608017523078155181, guid: e23a95f1150e39a4398793d8fbb30c01, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 100
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -13247,7 +13252,7 @@ GameObject:
   - component: {fileID: 1986479945}
   - component: {fileID: 1986479944}
   m_Layer: 0
-  m_Name: GameManager
+  m_Name: PlayerManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13265,6 +13270,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c65909a687dace4ba55380f34f53eb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerPrefab: {fileID: 961787380297230084, guid: 80607e79f9f1a6a48bbc415c0cfae4da, type: 3}
 --- !u!4 &1986479945
 Transform:
   m_ObjectHideFlags: 0
@@ -13698,5 +13704,5 @@ SceneRoots:
   - {fileID: 1525014086}
   - {fileID: 515349245}
   - {fileID: 723729381}
-  - {fileID: 1865480979}
   - {fileID: 1986479945}
+  - {fileID: 1865480979}

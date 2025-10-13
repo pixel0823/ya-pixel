@@ -19,33 +19,14 @@ public class Inventory : MonoBehaviour
     [Tooltip("인벤토리 최대 공간")]
     public int space = 20;
 
-    [Header("UI (드래그 기능에 필요)")]
-    [Tooltip("UI의 최상위 Canvas Transform. 드래그 아이콘을 표시할 때 사용됩니다.")]
-    public Transform rootCanvas;
-
-    [Header("아이템 드랍 설정")]
-    [Tooltip("플레이어로부터 아이템이 드랍될 거리")]
-    public float dropOffset = 1.0f;
-
     // 인벤토리 아이템 리스트.
     public List<Item> items;
-
-    // --- 드래그 앤 드롭 상태 관리 변수 ---
-    private GameObject dragIcon;      // 드래그 시 따라다니는 아이콘
-    private InventorySlot originalSlot; // 드래그를 시작한 슬롯
-    private bool dropSuccessful;      // 드롭 성공 여부
 
     void Awake()
     {
         if (itemDatabase == null)
         {
             Debug.LogError("ItemDatabase가 Inventory 컴포넌트에 할당되지 않았습니다!", this);
-        }
-        if (rootCanvas == null)
-        {
-            rootCanvas = FindObjectOfType<Canvas>()?.transform;
-            if (rootCanvas == null)
-                Debug.LogError("Root Canvas가 Inventory 컴포넌트에 할당되지 않았습니다! 드래그 기능이 작동하지 않습니다.", this);
         }
 
         items = new List<Item>(space);
@@ -55,22 +36,76 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    // 아이템을 인벤토리의 첫 번째 빈 슬롯에 추가하고, 성공 시 해당 인덱스를, 실패 시 -1을 반환합니다.
-    public int Add(Item item)
-    {
-        int emptyIndex = items.IndexOf(null);
 
-        if (emptyIndex != -1)
+    // 아이템 추가 로직 (스태킹, 슬롯 분할 등 전체 기능 수정)
+    // itemTemplate: 원본 아이템 정보, amount: 추가할 개수
+    // 성공 시 true, 인벤토리가 가득 차 실패 시 false 반환
+    public bool Add(Item itemTemplate, int amount)
+    {
+        if (itemTemplate == null || amount <= 0) return false;
+
+        int amountToAdd = amount;
+
+        // 1. 스택 가능한 아이템의 경우, 기존 스택에 합치기 시도
+        if (itemTemplate.isStackable)
         {
-            items[emptyIndex] = item.GetCopy();
-            onItemChangedCallback?.Invoke();
-            return emptyIndex;
+            for (int i = 0; i < space; i++)
+            {
+                if (items[i] != null && items[i].itemName == itemTemplate.itemName && items[i].amount < items[i].maxStackSize)
+                {
+                    int spaceLeftInStack = items[i].maxStackSize - items[i].amount;
+                    int amountToMove = Mathf.Min(amountToAdd, spaceLeftInStack);
+
+                    items[i].amount += amountToMove;
+                    amountToAdd -= amountToMove;
+
+                    if (amountToAdd <= 0)
+                    {
+                        onItemChangedCallback?.Invoke();
+                        return true; // 모든 아이템 추가 완료
+                    }
+                }
+            }
         }
-        else
+
+        // 2. 남은 아이템을 새 슬롯에 추가 (스택 불가능 아이템은 바로 여기로)
+        while (amountToAdd > 0)
         {
-            Debug.Log("인벤토리에 공간이 부족합니다.");
-            return -1;
+            int emptySlotIndex = -1;
+            for (int i = 0; i < space; i++)
+            {
+                if (items[i] == null)
+                {
+                    emptySlotIndex = i;
+                    break;
+                }
+            }
+
+            if (emptySlotIndex != -1)
+            {
+                items[emptySlotIndex] = itemTemplate.GetCopy();
+                int amountForNewStack = Mathf.Min(amountToAdd, itemTemplate.maxStackSize);
+                items[emptySlotIndex].amount = amountForNewStack;
+                amountToAdd -= amountForNewStack;
+            }
+            else
+            {
+                // 빈 슬롯이 더 이상 없음
+                Debug.Log("인벤토리가 가득 찼습니다. 남은 아이템 " + amountToAdd + "개는 추가할 수 없습니다.");
+                onItemChangedCallback?.Invoke();
+                return false; // 추가 실패
+            }
         }
+
+        onItemChangedCallback?.Invoke();
+        return true; // 모든 아이템 추가 성공
+    }
+
+    // 호환성을 위한 오버로드. Item 객체에 담긴 amount만큼 추가 시도
+    public bool Add(Item item)
+    {
+        if (item == null) return false;
+        return Add(item, item.amount);
     }
 
     // 인벤토리에서 특정 인덱스의 아이템을 제거(null로 설정)합니다.
@@ -83,19 +118,33 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    // 아이템을 인벤토리에서 제거하고 월드에 생성(드랍)합니다. (인덱스 기반으로 변경)
-    public void DropItem(int slotIndex)
+    // 아이템 드랍 (단일/전체 드랍 기능 구현)
+    public void DropItem(int slotIndex, bool dropAll = false)
     {
         if (slotIndex < 0 || slotIndex >= space || items[slotIndex] == null) return;
 
-        Item itemToDrop = items[slotIndex];
+        Item itemInSlot = items[slotIndex];
+        Item itemToDrop = itemInSlot.GetCopy(); // 복사본 생성
 
-        if (itemDatabase == null)
+        // 드랍할 수량 결정 및 인벤토리 잔여 수량 조절
+        if (!itemInSlot.isStackable || dropAll)
         {
-            Debug.LogError("ItemDatabase가 할당되지 않아 아이템을 드랍할 수 없습니다.");
-            return;
+            itemToDrop.amount = itemInSlot.amount; // 전체 수량 드랍
+            Remove(slotIndex); // 인벤토리에서 아이템 완전히 제거
+        }
+        else // 1개만 드랍
+        {
+            itemToDrop.amount = 1;
+            itemInSlot.amount--;
+            if (itemInSlot.amount <= 0)
+            {
+                Remove(slotIndex); // 수량이 0이 되면 제거
+            }
         }
 
+        onItemChangedCallback?.Invoke();
+
+        // --- 네트워크 드랍 처리 ---
         int itemIndexInDB = itemDatabase.GetIndex(itemToDrop);
         if (itemIndexInDB == -1)
         {
@@ -103,19 +152,11 @@ public class Inventory : MonoBehaviour
             return;
         }
 
-        Remove(slotIndex);
-
-        // --- 드랍 위치 계산 로직 ---
+        // 아이템을 플레이어의 현재 위치(발밑)에 바로 생성합니다.
         Vector3 spawnPosition = transform.position;
-        if (itemToDrop.icon != null)
-        {
-            // 아이템 스프라이트의 절반 높이만큼 y 위치를 올려서, 아이템의 바닥이 플레이어 발에 오도록 합니다.
-            float verticalOffset = itemToDrop.icon.bounds.extents.y;
-            spawnPosition += new Vector3(0, verticalOffset, 0);
-        }
-        // --- 드랍 위치 계산 로직 끝 ---
 
-        object[] instantiationData = new object[] { itemIndexInDB };
+        // 월드 아이템 생성 시, 아이템 DB 인덱스와 '개수'를 함께 전달
+        object[] instantiationData = new object[] { itemIndexInDB, itemToDrop.amount };
 
         if (PhotonNetwork.InRoom)
         {
@@ -123,6 +164,7 @@ public class Inventory : MonoBehaviour
         }
         else
         {
+            // 오프라인 상태일 경우, 로컬에서만 아이템을 생성합니다.
             GameObject worldItemPrefab = Resources.Load<GameObject>("WorldItem");
             if (worldItemPrefab != null)
             {
@@ -130,10 +172,8 @@ public class Inventory : MonoBehaviour
                 WorldItem worldItem = worldItemObject.GetComponent<WorldItem>();
                 if (worldItem != null)
                 {
-                    worldItem.itemData = itemToDrop;
-                    worldItemObject.name = itemToDrop.itemName + " (World)";
-                    var spriteRenderer = worldItemObject.GetComponent<SpriteRenderer>();
-                    if (spriteRenderer != null) spriteRenderer.sprite = itemToDrop.icon;
+                    // WorldItem.cs에 추가된 공용 초기화 메서드를 호출하여 아이템 정보를 설정합니다.
+                    worldItem.Initialize(itemDatabase.GetItem(itemIndexInDB), itemToDrop.amount);
                 }
                 else
                 {
@@ -148,88 +188,36 @@ public class Inventory : MonoBehaviour
         }
     }
 
+
     // 두 인덱스에 해당하는 슬롯의 아이템을 서로 바꿉니다.
     public void SwapItems(int index1, int index2)
     {
         if (index1 >= 0 && index1 < space && index2 >= 0 && index2 < space)
         {
-            Item temp = items[index1];
-            items[index1] = items[index2];
-            items[index2] = temp;
+            // 같은 아이템이고 스택 가능하면 합치기
+            if (items[index1] != null && items[index2] != null && items[index1].itemName == items[index2].itemName && items[index1].isStackable)
+            {
+                int spaceLeftInStack = items[index2].maxStackSize - items[index2].amount;
+                int amountToMove = Mathf.Min(items[index1].amount, spaceLeftInStack);
 
-            onItemChangedCallback?.Invoke();
+                items[index2].amount += amountToMove;
+                items[index1].amount -= amountToMove;
+
+                if (items[index1].amount <= 0)
+                {
+                    items[index1] = null;
+                }
+                onItemChangedCallback?.Invoke();
+            }
+            else // 다른 아이템이면 그냥 스왑
+            {
+                Item temp = items[index1];
+                items[index1] = items[index2];
+                items[index2] = temp;
+                onItemChangedCallback?.Invoke();
+            }
         }
     }
 
-    // --- 드래그 앤 드롭 로직 (InventorySlot에서 호출) ---
 
-    public bool IsDragging()
-    {
-        return originalSlot != null;
-    }
-
-    public void OnBeginDrag(InventorySlot slot)
-    {
-        if (slot.item == null || rootCanvas == null) return;
-
-        originalSlot = slot;
-        dropSuccessful = false;
-
-        dragIcon = new GameObject("Drag Icon");
-        var rt = dragIcon.AddComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(50, 50);
-        var img = dragIcon.AddComponent<Image>();
-        img.sprite = originalSlot.item.icon;
-        img.raycastTarget = false;
-
-        dragIcon.transform.SetParent(rootCanvas);
-        dragIcon.transform.SetAsLastSibling();
-
-        originalSlot.SetDragState(true); // 드래그 시작 슬롯을 투명하게 만듭니다.
-    }
-
-    public void OnDrag(PointerEventData eventData)
-    {
-        if (dragIcon != null)
-        {
-            dragIcon.transform.position = eventData.position;
-        }
-    }
-
-    public void OnDrop(InventorySlot dropSlot)
-    {
-        if (originalSlot == null || originalSlot == dropSlot) return;
-
-        SwapItems(originalSlot.slotIndex, dropSlot.slotIndex);
-        dropSuccessful = true;
-    }
-
-    public void OnEndDrag()
-    {
-        if (originalSlot == null) return;
-
-        if (!dropSuccessful)
-        {
-            DropItem(originalSlot.slotIndex);
-        }
-        else
-        {
-            // 성공적으로 스왑되었으므로, 원래 아이콘을 다시 켤 필요가 없습니다.
-            // onItemChangedCallback에 의해 UI가 업데이트되기 때문입니다.
-        }
-
-        if (dragIcon != null)
-        {
-            Destroy(dragIcon);
-        }
-        dragIcon = null;
-
-        // 드래그가 실패했거나 취소되었을 때만 원래 슬롯의 모습을 복구합니다.
-        if (!dropSuccessful)
-        {
-            originalSlot.SetDragState(false);
-        }
-
-        originalSlot = null;
-    }
 }
