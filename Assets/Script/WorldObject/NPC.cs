@@ -10,7 +10,7 @@ public class NPC : MonoBehaviour, IInteractable
 
     public string GetInteractText()
     {
-        return $"'E' 키를 눌러 {npcName}에게 말 걸기";
+        return $"'F' 키를 눌러 {npcName}에게 말 걸기";
     }
 
     public void Interact(GameObject interactor)

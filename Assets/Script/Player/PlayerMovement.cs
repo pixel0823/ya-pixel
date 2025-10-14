@@ -5,7 +5,7 @@ using Photon.Pun;
 
 public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
 {
-    private PhotonView photonView;
+    //private PhotonView photonView;
     private Animator animator; // 애니메이터 컴포넌트
     public float moveSpeed = 5f;
     private Vector3 networkPosition;
@@ -20,7 +20,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
 
     void Awake()
     {
-        photonView = GetComponent<PhotonView>();
         animator = GetComponent<Animator>(); // 애니메이터 컴포넌트 가져오기
         if (photonView == null)
         {
