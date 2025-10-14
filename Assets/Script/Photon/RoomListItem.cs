@@ -29,7 +29,9 @@ public class RoomListItem : MonoBehaviour
         
         if (privateIcon != null)
         {
-            privateIcon.SetActive(!roomInfo.IsOpen);
+            // "password" 커스텀 프로퍼티가 있고, 그 값이 비어있지 않다면 비공개 방으로 취급
+            bool isPrivate = roomInfo.CustomProperties.ContainsKey("password") && !string.IsNullOrEmpty((string)roomInfo.CustomProperties["password"]);
+            privateIcon.SetActive(isPrivate);
         }
     }
 }
