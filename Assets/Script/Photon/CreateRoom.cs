@@ -74,16 +74,15 @@ public class CreateRoom : MonoBehaviourPunCallbacks
         roomOptions.IsVisible = true;
         roomOptions.IsOpen = true;
 
-        roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
-        
-        string password = ""; // 우선 비밀번호를 빈 문자열로 초기화
-        // 비공개 토글이 켜져 있을 때만 비밀번호 입력 필드의 값을 가져옴
+        roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();        
+        // 비공개 토글이 켜져 있고, 비밀번호가 입력되었을 때만 "password" 프로퍼티를 추가합니다.
         if (privateRoomToggle != null && privateRoomToggle.isOn)
         {
-            password = passwordInput.text;
+            string password = passwordInput.text;
+            if (!string.IsNullOrEmpty(password)) {
+                roomOptions.CustomRoomProperties.Add("password", password);
+            }
         }
-
-        roomOptions.CustomRoomProperties.Add("password", password);
         
         // 중요: 커스텀 속성을 로비에 공개할 때, "password" 외에 다른 기본 정보(예: "maxPlayers")를 함께 공개하여
         // 방 정보가 누락되는 것을 방지합니다.
