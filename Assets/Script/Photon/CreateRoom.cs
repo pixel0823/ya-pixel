@@ -84,10 +84,14 @@ public class CreateRoom : MonoBehaviourPunCallbacks
         }
 
         roomOptions.CustomRoomProperties.Add("password", password);
-        roomOptions.CustomRoomPropertiesForLobby = new string[] { "password" };
+        
+        // 중요: 커스텀 속성을 로비에 공개할 때, "password" 외에 다른 기본 정보(예: "maxPlayers")를 함께 공개하여
+        // 방 정보가 누락되는 것을 방지합니다.
+        // "maxPlayers"는 RoomInfo.MaxPlayers로 이미 접근 가능하지만, 명시적으로 공개 목록에 추가하여 안정성을 높입니다.
+        roomOptions.CustomRoomPropertiesForLobby = new string[] { "password", "maxPlayers" };
 
         Debug.Log($"방 생성 시도: '{roomName}', 최대 인원: {selectedPlayerCount}명");
-        PhotonNetwork.CreateRoom(roomName, roomOptions);
+        PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
     }
 
     public override void OnCreatedRoom()
