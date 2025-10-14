@@ -20,6 +20,12 @@ public class ItemDropTester : MonoBehaviour
         // 지정된 테스트 키가 눌렸는지 확인
         if (Input.GetKeyDown(testKey))
         {
+            // 타겟 인벤토리가 할당되지 않았다면, 씬에서 찾아봅니다.
+            if (targetInventory == null)
+            {
+                targetInventory = FindObjectOfType<Inventory>();
+            }
+
             // 할당된 아이템과 인벤토리가 있는지 확인
             if (itemsToDrop == null || itemsToDrop.Length == 0)
             {
@@ -28,22 +34,35 @@ public class ItemDropTester : MonoBehaviour
             }
             if (targetInventory == null)
             {
-                Debug.LogError("타겟 인벤토리가 지정되지 않았습니다!");
+                Debug.LogError("타겟 인벤토리를 찾을 수 없습니다! 씬에 플레이어가 생성되었는지 확인해주세요.");
                 return;
             }
 
-            Debug.Log($"테스트: 아이템 {itemsToDrop.Length}개를 강제로 드랍합니다...");
+            Debug.Log($"테스트: 아이템 {itemsToDrop.Length}개를 강제로 추가 후 드랍합니다...");
 
-            // DropItem 함수는 인벤토리에 아이템이 있는지 먼저 확인합니다.
-            // 따라서 확실한 테스트를 위해, 먼저 인벤토리에 아이템을 추가한 후 바로 드랍합니다.
             foreach (var itemToDrop in itemsToDrop)
             {
                 if (itemToDrop != null)
                 {
-                    int addedIndex = targetInventory.Add(itemToDrop);
-                    if (addedIndex != -1)
+                    // 1. 먼저 인벤토리에 아이템을 추가합니다.
+                    bool added = targetInventory.Add(itemToDrop, itemToDrop.amount);
+
+                    // 2. 추가에 성공했다면, 해당 아이템을 찾아 드랍합니다.
+                    if (added)
                     {
-                        targetInventory.DropItem(addedIndex);
+                        // 인벤토리 끝에서부터 아이템을 검색하여 가장 마지막에 추가된 아이템일 확률을 높입니다.
+                        for (int i = targetInventory.items.Count - 1; i >= 0; i--)
+                        {
+                            if (targetInventory.items[i] != null && targetInventory.items[i].itemName == itemToDrop.itemName)
+                            {
+                                targetInventory.DropItem(i, true); // 전체 스택을 드랍합니다.
+                                break; // 해당 아이템을 드랍했으면 다음 테스트 아이템으로 넘어갑니다.
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"'{itemToDrop.itemName}'을(를) 인벤토리에 추가하지 못했습니다. 인벤토리가 가득 찼을 수 있습니다.");
                     }
                 }
             }
