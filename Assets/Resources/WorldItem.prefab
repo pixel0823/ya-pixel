@@ -122,6 +122,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemData: {fileID: 0}
+  count: 1
 --- !u!58 &5744963037557427329
 CircleCollider2D:
   m_ObjectHideFlags: 0

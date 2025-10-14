@@ -325,6 +325,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5611e94575a49b84bab5dd4d1106b040, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  interactPromptUI: {fileID: 0}
 --- !u!114 &-902526628826898475
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -338,5 +339,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemDatabase: {fileID: 11400000, guid: e44ff360004b6a4488a21ca8472d2dbc, type: 2}
-  items: []
   space: 20
+  items: []
