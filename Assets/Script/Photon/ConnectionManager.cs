@@ -8,6 +8,7 @@ using TMPro;
 public class ConnectionManager : MonoBehaviourPunCallbacks
 {
     public GameObject MainMenuUI;
+    public GameObject PasswordPanel; // 비밀번호 입력 패널
     public GameObject RoomListPanel; // 방 목록을 담고 있는 UI 패널
     public GameObject MultiUI;
     public TMP_Text roomNameText;
@@ -129,7 +130,7 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
             RoomListItem listItem = entry.GetComponent<RoomListItem>();
             if (listItem != null)
             {
-                listItem.SetRoomInfo(info);
+                listItem.Setup(info, this);
             }
             else
             {
@@ -147,5 +148,48 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
         cachedRoomList.Clear();
         // 방 목록 패널을 비활성화합니다.
         if (RoomListPanel != null) RoomListPanel.SetActive(false);
+
+        // 마스터 클라이언트만 게임 씬을 로드하고, 다른 클라이언트들은 자동으로 따라갑니다.
+        // (PhotonNetwork.AutomaticallySyncScene = true 설정 필요)
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log("마스터 클라이언트로서 'Map1' 씬을 로드합니다.");
+            PhotonNetwork.LoadLevel("Map1");
+        }
+    }
+
+    /// <summary>
+    /// RoomListItem에서 호출하여 비밀번호 입력 패널을 활성화합니다.
+    /// </summary>
+    /// <param name="roomInfo">입장할 방의 정보</param>
+    public void ShowPasswordPanel(RoomInfo roomInfo)
+    {
+        if (PasswordPanel != null) PasswordPanel.SetActive(true);
+        
+        // RoomListPanel의 CanvasGroup을 제어하여 비활성화된 것처럼 보이게 합니다.
+        if (RoomListPanel != null)
+        {
+            CanvasGroup canvasGroup = RoomListPanel.GetComponent<CanvasGroup>();
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0.5f; // 반투명하게 설정
+                canvasGroup.interactable = false; // 클릭 등 상호작용 비활성화
+            }
+        }
+
+        // TODO: 비밀번호 패널의 컨트롤러 스크립트에 roomInfo를 전달하여, 비밀번호 확인 후 해당 방으로 입장하도록 구현해야 합니다.
+        // 예: PasswordPanel.GetComponent<PasswordController>().SetRoom(roomInfo);
+    }
+
+    /// <summary>
+    /// 비밀번호 입력 패널이 닫힐 때 호출할 함수입니다. (예: '취소' 버튼에 연결)
+    /// </summary>
+    public void HidePasswordPanel()
+    {
+        if (PasswordPanel != null) PasswordPanel.SetActive(false);
+
+        CanvasGroup canvasGroup = RoomListPanel.GetComponent<CanvasGroup>();
+        canvasGroup.alpha = 1f; // 원래 투명도로 복원
+        canvasGroup.interactable = true; // 상호작용 활성화
     }
 }
