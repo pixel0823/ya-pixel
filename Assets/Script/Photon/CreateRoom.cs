@@ -96,7 +96,10 @@ public class CreateRoom : MonoBehaviourPunCallbacks
     public override void OnCreatedRoom()
     {
         Debug.Log("방 생성 성공! 방 이름: " + PhotonNetwork.CurrentRoom.Name);
-        PhotonNetwork.LoadLevel("Map1"); 
+        // 씬 로딩은 모든 플레이어가 방에 입장했을 때 공통적으로 호출되는 ConnectionManager.OnJoinedRoom()에서 처리합니다.
+        // 여기서 호출하면 다른 플레이어와 씬 동기화에 문제가 발생할 수 있습니다.
+        // PhotonNetwork.LoadLevel("Map1"); 
+        // PhotonNetwork.LoadLevel("Map1");
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)
