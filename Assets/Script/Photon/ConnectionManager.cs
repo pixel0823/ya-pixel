@@ -14,7 +14,7 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     public TMP_Text roomNameText;
     public TMP_Text playerCountText;
     public TMP_Text maxPlayerText;
-    
+
 
     void Start()
     {
@@ -26,7 +26,7 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     {
         if (MainMenuUI != null) MainMenuUI.SetActive(false);
         if (MultiUI != null) MultiUI.SetActive(true);
-        
+
         PhotonNetwork.ConnectUsingSettings();
     }
 
@@ -56,7 +56,7 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
 
     public GameObject roomListItemPrefab;
     public Transform roomListContent;
-    
+
     // RoomInfo 객체를 캐싱하여 방 목록을 관리합니다.
     private Dictionary<string, RoomInfo> cachedRoomList = new Dictionary<string, RoomInfo>();
     // 생성된 UI 아이템(프리팹)을 관리합니다.
@@ -126,7 +126,7 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
 
             GameObject entry = Instantiate(roomListItemPrefab, roomListContent);
             entry.SetActive(true);
-            
+
             RoomListItem listItem = entry.GetComponent<RoomListItem>();
             if (listItem != null)
             {
@@ -149,11 +149,11 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
         // 방 목록 패널을 비활성화합니다.
         if (RoomListPanel != null) RoomListPanel.SetActive(false);
 
-        // 마스터 클라이언트만 게임 씬을 로드하고, 다른 클라이언트들은 자동으로 따라갑니다.
-        // (PhotonNetwork.AutomaticallySyncScene = true 설정 필요)
-        if (PhotonNetwork.IsMasterClient)
+        // 마스터 클라이언트가 아닌 경우에만 씬을 로드합니다.
+        // 마스터 클라이언트는 CreateRoom.cs에서 씬을 로드합니다.
+        if (!PhotonNetwork.IsMasterClient)
         {
-            Debug.Log("마스터 클라이언트로서 'Map1' 씬을 로드합니다.");
+            Debug.Log("클라이언트로서 'Map1' 씬을 로드합니다.");
             PhotonNetwork.LoadLevel("Map1");
         }
     }
@@ -165,7 +165,7 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     public void ShowPasswordPanel(RoomInfo roomInfo)
     {
         if (PasswordPanel != null) PasswordPanel.SetActive(true);
-        
+
         // RoomListPanel의 CanvasGroup을 제어하여 비활성화된 것처럼 보이게 합니다.
         if (RoomListPanel != null)
         {
