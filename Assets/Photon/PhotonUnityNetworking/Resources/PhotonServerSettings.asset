@@ -28,7 +28,11 @@ MonoBehaviour:
     AuthMode: 0
     EnableLobbyStatistics: 0
     NetworkLogging: 1
+<<<<<<< HEAD
   DevRegion: jp
+=======
+  DevRegion: hk
+>>>>>>> origin/jwy1
   PunLogging: 0
   EnableSupportLogger: 0
   RunInBackground: 1
@@ -39,6 +43,8 @@ MonoBehaviour:
   - DestroySpaceship
   - Fire
   - RespawnSpaceship
+  - AddItemRPC
+  - RemoveItemRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
