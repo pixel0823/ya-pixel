@@ -1307,13 +1307,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1229960760}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca9543b7b99c34c5fb2eebf28d816419, type: 3}
+  m_Script: {fileID: 11500000, guid: b33900bf7c6364889944ac2564edee20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  userId: {fileID: 1736107639}
-  password: {fileID: 1505514267}
+  serverConfig: {fileID: 11400000, guid: 1025e5d1348d74e708b9978386173ea1, type: 2}
+  userIdInput: {fileID: 1736107639}
+  passwordInput: {fileID: 1505514267}
   loginButton: {fileID: 1120921462}
-  _loginText: {fileID: 932608660}
+  statusText: {fileID: 932608660}
+  sceneToLoadOnSuccess: LobbyScene
 --- !u!1 &1458604090
 GameObject:
   m_ObjectHideFlags: 0
@@ -2036,6 +2038,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1736107637}
   m_CullTransparentMesh: 1
+--- !u!1 &1875541958
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1875541959}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1875541959
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875541958}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 748.2056, y: 342.2187, z: -2.0103106}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1962284640
 GameObject:
   m_ObjectHideFlags: 0
@@ -2165,3 +2198,4 @@ SceneRoots:
   - {fileID: 488298534}
   - {fileID: 538683877}
   - {fileID: 1229960761}
+  - {fileID: 1875541959}
