@@ -10,8 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63329583e483c1d43911bacbffc1029e, type: 3}
-  m_Name: Can
+  m_Name: Seashell03
   m_EditorClassIdentifier: 
-  itemName: "\uCE94"
-  description: "\uCE94"
-  icon: {fileID: -256725571, guid: d67589590a721d848bd5cb692e4bc6a3, type: 3}
+  itemName: Seashell03
+  description: Item Description
+  icon: {fileID: -907791992, guid: 45a6d30ea3b7cbf47be380ae4801c37f, type: 3}
+  isStackable: 1
+  maxStackSize: 99
+  amount: 1

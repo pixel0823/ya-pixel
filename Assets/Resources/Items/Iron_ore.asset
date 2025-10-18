@@ -9,7 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b7783ab7d8473c4b9b831a352e9f2c2, type: 3}
-  m_Name: GlobalItemDatabase
+  m_Script: {fileID: 11500000, guid: 63329583e483c1d43911bacbffc1029e, type: 3}
+  m_Name: Iron_ore
   m_EditorClassIdentifier: 
-  allItems: []
+  itemName: Iron_ore
+  description: Item Description
+  icon: {fileID: 227964187, guid: 45a6d30ea3b7cbf47be380ae4801c37f, type: 3}
+  isStackable: 1
+  maxStackSize: 99
+  amount: 1
