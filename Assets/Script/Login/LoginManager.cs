@@ -17,16 +17,6 @@ public class LoginRequestData
 }
 
 /// <summary>
-/// 사용자 정보 요청에 사용될 데이터 구조체
-/// </summary>
-[System.Serializable]
-public class UserInfoRequestData
-{
-    public string token;
-}
-
-
-/// <summary>
 /// 로그인 응답으로 받을 데이터 구조체 (JWT 토큰 포함)
 /// </summary>
 [System.Serializable]
@@ -34,6 +24,16 @@ public class LoginResponse
 {
     public string token;
     public string expirationTime;
+}
+
+/// <summary>
+/// 사용자 정보 응답으로 받을 데이터 구조체
+/// </summary>
+[System.Serializable]
+public class UserInfoResponse
+{
+    public string userId;
+    public string nickname;
 }
 /// <summary>
 /// 로그인, 사용자 정보 조회 등 인증 관련 로직을 관리합니다.
@@ -54,9 +54,6 @@ public class LoginManager : MonoBehaviour
     [SerializeField] private Button loginButton;
     [Tooltip("로그인 시도 결과(성공, 실패, 오류)를 표시할 텍스트")]
     [SerializeField] private TMP_Text statusText; 
-    
-    
-
     
     private void Start()
     {
@@ -132,16 +129,15 @@ public class LoginManager : MonoBehaviour
                     PlayerPrefs.SetString("AccessToken", response.token);
                     PlayerPrefs.Save();
 
-                    // 유저 정보 요청 코루틴 시작 (필요 시)
-                    StartCoroutine(GetUserInfoCoroutine(response.token));
+                    // 유저 정보 요청 코루틴이 끝날 때까지 기다립니다.
+                    yield return StartCoroutine(GetUserInfoCoroutine(response.token));
+                    SceneManager.LoadScene("Connection");
                 }
                 else
                 {
                     Debug.LogError("로그인은 성공했으나, 서버로부터 유효한 AccessToken을 받지 못했습니다.");
                     if (statusText != null) statusText.text = "토큰 수신 오류. 다시 시도해주세요.";
                 }
-                // 씬 전환
-                SceneManager.LoadScene("Connection");
             }
             else
             {
@@ -167,39 +163,46 @@ public class LoginManager : MonoBehaviour
     /// </summary>
     private IEnumerator GetUserInfoCoroutine(string token)
     {
-        // 1. POST 요청 본문에 담을 데이터 생성 (제거)
-        // UserInfoRequestData requestData = new UserInfoRequestData ... (제거)
-        // string json = JsonUtility.ToJson(requestData); (제거)
-        // byte[] bodyRaw = Encoding.UTF8.GetBytes(json); (제거)
-
-        // POST 방식으로 UnityWebRequest 생성
-        using (UnityWebRequest www = new UnityWebRequest(serverConfig.userInfoUrl, "POST"))
+        // 코루틴 시작 시점에 serverConfig 또는 URL이 유효한지 다시 한번 확인합니다.
+        if (serverConfig == null || string.IsNullOrEmpty(serverConfig.userInfoUrl))
         {
-            // 2. UploadHandler 제거 (Body를 보내지 않음)
-            // www.uploadHandler = new UploadHandlerRaw(bodyRaw); (제거)
+            Debug.LogError("GetUserInfoCoroutine: ServerConfig 또는 userInfoUrl이 유효하지 않습니다. Inspector 설정을 확인해주세요.");
+            // 코루틴을 즉시 종료합니다.
+            yield break;
+        }
 
-            // 3. DownloadHandler는 응답을 받아야 하므로 유지
-            www.downloadHandler = new DownloadHandlerBuffer();
+        // POST 요청 본문에 담을 JSON 데이터 생성
+        // 서버에서 토큰을 어떤 Key로 받을지 모르므로, 가장 일반적인 "token"을 사용합니다.
+        // 만약 서버가 다른 Key(예: "accessToken")를 사용한다면 이 부분을 수정해야 합니다.
+        string jsonBody = $"{{\"token\":\"{token}\"}}";
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
 
-            // 4. Content-Type 헤더 제거 (Body가 없으므로 불필요)
-            // www.SetRequestHeader("Content-Type", "application/json"); (제거)
-
-            // 5. Authorization 헤더 수정 ("Bearer"와 token 사이에 공백 추가)
-            www.SetRequestHeader("Authorization", "Bearer " + token); // <-- 수정됨
-            Debug.Log("Authorization 헤더 설정: Bearer " + token); // <-- 수정됨
+        // UnityWebRequest.Post 헬퍼 메소드를 사용하여 POST 요청 생성
+        using (UnityWebRequest www = UnityWebRequest.Post(serverConfig.userInfoUrl, jsonBody, "application/json"))
+        {
+            // Authorization 헤더는 별도로 설정해줍니다.
+            // Content-Type은 Post 메소드에서 자동으로 설정됩니다.
+            www.SetRequestHeader("Authorization", "Bearer " + token);
 
             yield return www.SendWebRequest();
 
             if (www.result == UnityWebRequest.Result.Success)
             {
                 Debug.Log("유저 정보 조회 성공: " + www.downloadHandler.text);
-                // TODO: 여기서 받은 유저 정보를 파싱하여 게임 내에 저장하거나 활용할 수 있습니다.
+                UserInfoResponse userInfo = JsonUtility.FromJson<UserInfoResponse>(www.downloadHandler.text);
+
+                // UserDataManager에 사용자 정보 저장
+                if (userInfo != null)
+                {
+                    UserDataManager.Instance.SetUserData(userInfo.userId, userInfo.nickname);
+                    // UserDataManager에 데이터가 잘 들어갔는지 확인하기 위한 Debug.Log 출력
+                    Debug.Log($"[LoginManager] UserDataManager에 저장된 닉네임: {UserDataManager.Instance.Nickname}");
+                }
             }
             else
             {
                 Debug.LogError("유저 정보 조회 실패: " + www.error);
-                Debug.LogError("조회 실패 응답 코드: " + www.responseCode);
-                Debug.LogError("조회 실패 내용: " + www.downloadHandler.text);
+                Debug.LogError("응답 내용: " + www.downloadHandler.text);
             }
         }
     }
