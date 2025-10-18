@@ -10,7 +10,6 @@ public class InventoryUI : MonoBehaviour
     public GameObject inventoryPanel;   // 인벤토리 슬롯들의 부모 패널
 
     [Header("UI Elements")]
-    public GameObject selectionHighlight; // 선택된 핫바 슬롯을 표시할 UI 오브젝트
     [SerializeField] private Transform rootCanvas; // UI의 최상위 Canvas Transform
 
     private Inventory inventory;
@@ -37,12 +36,6 @@ public class InventoryUI : MonoBehaviour
         hotbarPanel.SetActive(true);
         inventoryPanel.SetActive(false);
 
-        var highlightGraphic = selectionHighlight.GetComponent<UnityEngine.UI.Graphic>();
-        if (highlightGraphic != null)
-        {
-            highlightGraphic.raycastTarget = false;
-        }
-
         if (rootCanvas == null)
         {
             Debug.LogError("Root Canvas가 InventoryUI 컴포넌트에 할당되지 않았습니다! 드래그 기능이 작동하지 않습니다.", this);
@@ -62,7 +55,6 @@ public class InventoryUI : MonoBehaviour
             AssignSlotDetails(hotbarSlots);
             AssignSlotDetails(inventorySlots);
             UpdateUI();
-            Canvas.ForceUpdateCanvases();
             UpdateSelectionVisual();
         }
     }
@@ -99,14 +91,8 @@ public class InventoryUI : MonoBehaviour
             inventoryPanel.SetActive(isInventoryOpen);
             hotbarPanel.SetActive(!isInventoryOpen);
 
-            if (selectionHighlight != null)
-            {
-                selectionHighlight.SetActive(!isInventoryOpen);
-            }
-
             if (!isInventoryOpen)
             {
-                Canvas.ForceUpdateCanvases();
                 UpdateSelectionVisual();
             }
         }
@@ -158,18 +144,12 @@ public class InventoryUI : MonoBehaviour
 
     void UpdateSelectionVisual()
     {
-        Canvas.ForceUpdateCanvases();
-
-        if (!hotbarPanel.activeSelf || selectionHighlight == null || hotbarSlots.Length == 0)
+        for (int i = 0; i < hotbarSlots.Length; i++)
         {
-            if (selectionHighlight != null) selectionHighlight.SetActive(false);
-            return;
-        }
-
-        selectionHighlight.SetActive(true);
-        if (selectedSlot >= 0 && selectedSlot < hotbarSlots.Length)
-        {
-            selectionHighlight.transform.position = hotbarSlots[selectedSlot].transform.position;
+            if (hotbarSlots[i] != null)
+            {
+                hotbarSlots[i].SetSelected(i == selectedSlot);
+            }
         }
     }
 
