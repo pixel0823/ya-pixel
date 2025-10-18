@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: ba45427c77d1cfe4883b4bad228516a4
+=======
+guid: 42880a2901c660e43b1b599f91c82380
+>>>>>>> origin/jwy
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
