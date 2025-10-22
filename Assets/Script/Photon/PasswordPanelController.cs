@@ -70,6 +70,6 @@ public class PasswordPanelController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }

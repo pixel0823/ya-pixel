@@ -3,10 +3,11 @@ using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
+using System.Collections.Generic; // For List
 
 /// <summary>
-/// 방 생성 UI와 관련된 로직을 처리합니다.
-/// 이 스크립트의 역할은 방을 만들고, 맵 시드를 Room Properties에 저장하는 것까지입니다.
+/// [공용] 방 생성 UI와 관련된 로직을 처리합니다.
+/// 게임 모드(Single/Multi)에 따라 다르게 동작합니다.
 /// </summary>
 public class CreateRoom : MonoBehaviourPunCallbacks
 {
@@ -22,25 +23,32 @@ public class CreateRoom : MonoBehaviourPunCallbacks
     public Color defaultColor = Color.white;
 
     private byte selectedPlayerCount = 2;
+    private const string SaveKey = "SinglePlayerWorlds";
 
     void Awake()
     {
-        // 방장이 LoadLevel을 호출하면 모든 클라이언트가 동일한 씬을 로드하도록 설정합니다.
-        // 이 설정은 여전히 유효하며, MapManager가 씬에 있는 모든 클라이언트에게 동일하게 작동하도록 보장합니다.
         PhotonNetwork.AutomaticallySyncScene = true;
     }
 
     void Start()
     {
         // UI 초기 상태 설정
-        if (passwordPanel != null && privateRoomToggle != null)
-        {
-            passwordPanel.SetActive(privateRoomToggle.isOn);
-        }
+        OnPrivateRoomToggleChanged(privateRoomToggle.isOn);
         SelectPlayerCount(2);
     }
 
-    // 비공개 토글 UI의 값이 변경될 때 호출되는 함수입니다.
+    private void OnEnable()
+    {
+        // 이 UI가 활성화될 때, 게임 모드에 따라 UI 상태를 조정합니다.
+        bool isMultiplayer = GameModeManager.Instance.CurrentMode == GameMode.Multi;
+        privateRoomToggle.gameObject.SetActive(isMultiplayer);
+        passwordPanel.SetActive(isMultiplayer && privateRoomToggle.isOn);
+        foreach (var button in playerCountButtons)
+        {
+            button.gameObject.SetActive(isMultiplayer);
+        }
+    }
+
     public void OnPrivateRoomToggleChanged(bool isPrivate)
     {
         if (passwordPanel != null)
@@ -49,7 +57,6 @@ public class CreateRoom : MonoBehaviourPunCallbacks
         }
     }
 
-    // 플레이어 수 선택 버튼을 눌렀을 때 호출되는 함수입니다.
     public void SelectPlayerCount(int count)
     {
         selectedPlayerCount = (byte)count;
@@ -62,9 +69,49 @@ public class CreateRoom : MonoBehaviourPunCallbacks
         }
     }
 
-    // "방 만들기" 버튼을 눌렀을 때 호출되는 함수입니다.
+    // "방 만들기" 버튼을 눌렀을 때 호출되는 공용 함수입니다.
     public void OnCreateRoomButtonClicked()
     {
+        if (GameModeManager.Instance.CurrentMode == GameMode.Single)
+        {
+            CreateSinglePlayerWorld();
+        }
+        else if (GameModeManager.Instance.CurrentMode == GameMode.Multi)
+        {
+            CreateMultiPlayerRoom();
+        }
+    }
+
+    private void CreateSinglePlayerWorld()
+    {
+        string worldName = roomNameInput.text;
+        if (string.IsNullOrEmpty(worldName))
+        {
+            Debug.LogError("월드 이름이 비어있습니다.");
+            return;
+        }
+
+        PhotonNetwork.OfflineMode = true;
+        // 오프라인 모드에서는 CreateRoom이 성공하면 즉시 OnJoinedRoom 콜백이 호출됩니다.
+        if (PhotonNetwork.CreateRoom(worldName))
+        {
+            Debug.Log($"오프라인 월드 '{worldName}' 생성 성공.");
+            SaveWorldName(worldName);
+        }
+        else
+        {
+            Debug.LogError("오프라인 월드 생성에 실패했습니다. 이미 같은 이름의 월드가 있을 수 있습니다.");
+        }
+    }
+
+    private void CreateMultiPlayerRoom()
+    {
+        if (!PhotonNetwork.IsConnected)
+        {
+            Debug.LogError("포톤 서버에 연결되어 있지 않습니다. 메인 메뉴로 돌아가 다시 시도하세요.");
+            return;
+        }
+
         string roomName = roomNameInput.text;
         if (string.IsNullOrEmpty(roomName))
         {
@@ -77,7 +124,6 @@ public class CreateRoom : MonoBehaviourPunCallbacks
         roomOptions.IsVisible = true;
         roomOptions.IsOpen = true;
 
-        // 맵 시드를 생성하여 Room Properties에 저장하는 핵심 로직은 그대로 유지합니다.
         int mapSeed = (int)System.DateTime.Now.Ticks;
         roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
         roomOptions.CustomRoomProperties.Add("mapSeed", mapSeed);
@@ -97,15 +143,11 @@ public class CreateRoom : MonoBehaviourPunCallbacks
         PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
     }
 
-    // --- 포톤 콜백 함수들 ---
+    // --- 포톤 콜백 함수들 (공용) ---
 
     public override void OnCreatedRoom()
     {
         Debug.Log("방 생성 성공! 방 이름: " + PhotonNetwork.CurrentRoom.Name);
-        // 씬 로딩은 모든 플레이어가 방에 입장했을 때 공통적으로 호출되는 ConnectionManager.OnJoinedRoom()에서 처리합니다.
-        // 여기서 호출하면 다른 플레이어와 씬 동기화에 문제가 발생할 수 있습니다.
-        // PhotonNetwork.LoadLevel("Map1"); 
-        // PhotonNetwork.LoadLevel("Map1");
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)
@@ -113,15 +155,39 @@ public class CreateRoom : MonoBehaviourPunCallbacks
         Debug.LogError($"방 생성 실패. 코드: {returnCode}, 메시지: {message}");
     }
 
-    // 방에 참가했을 때 호출됩니다.
+    // 방에 참가했을 때 호출됩니다. (싱글/멀티 공용)
     public override void OnJoinedRoom()
     {
         Debug.Log($"방 '{PhotonNetwork.CurrentRoom.Name}'에 성공적으로 참가했습니다. 플레이어 수: {PhotonNetwork.CurrentRoom.PlayerCount}");
-        // 방장만 GameScene을 로드합니다. 다른 클라이언트들은 AutomaticallySyncScene 설정에 따라 자동으로 따라갑니다.
         if (PhotonNetwork.IsMasterClient)
         {
-            Debug.Log("방장입니다. 'GameScene'을 로드합니다. 맵 생성은 GameScene의 MapManager가 담당합니다.");
+            Debug.Log("방장입니다. 'Map1' 씬을 로드합니다.");
             PhotonNetwork.LoadLevel("Map1");
         }
     }
+
+    // --- 싱글플레이 월드 이름 저장/불러오기 ---
+    private List<string> GetSavedWorlds()
+    {
+        string json = PlayerPrefs.GetString(SaveKey, "{}");
+        WorldList worldList = JsonUtility.FromJson<WorldList>(json);
+        return worldList?.names ?? new List<string>();
+    }
+
+    private void SaveWorldName(string worldName)
+    {
+        List<string> worlds = GetSavedWorlds();
+        if (!worlds.Contains(worldName))
+        {
+            worlds.Add(worldName);
+            WorldList worldList = new WorldList { names = worlds };
+            string json = JsonUtility.ToJson(worldList);
+            PlayerPrefs.SetString(SaveKey, json);
+            PlayerPrefs.Save();
+            Debug.Log($"월드 '{worldName}'이(가) 로컬에 저장되었습니다.");
+        }
+    }
+
+    [System.Serializable]
+    private class WorldList { public List<string> names; }
 }
