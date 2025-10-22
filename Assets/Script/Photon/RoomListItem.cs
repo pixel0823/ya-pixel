@@ -53,9 +53,17 @@ public class RoomListItem : MonoBehaviour
         }
         else // GameMode.Multi
         {
-            // 비밀번호가 있는 방에 대한 처리가 필요하다면 여기에 추가합니다.
-            // 예: connectionManager.ShowPasswordPanel(roomInfo);
-            connectionManager.JoinMultiPlayerRoom(roomName);
+            bool isPasswordProtected = roomInfo != null && roomInfo.CustomProperties.ContainsKey("password") && !string.IsNullOrEmpty(roomInfo.CustomProperties["password"].ToString());
+            if (isPasswordProtected)
+            {
+                // 비밀번호가 있는 방 -> 비밀번호 입력 패널 표시
+                connectionManager.ShowPasswordPanel(roomInfo);
+            }
+            else
+            {
+                // 비밀번호가 없는 방 -> 바로 참가
+                connectionManager.JoinMultiPlayerRoom(roomName);
+            }
         }
     }
 }
