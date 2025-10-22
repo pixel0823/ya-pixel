@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63329583e483c1d43911bacbffc1029e, type: 3}
-  m_Name: Chest01
+  m_Name: Oxystron_pickax
   m_EditorClassIdentifier: 
-  itemName: Chest01
+  itemName: Oxystonepickax
   description: Item Description
-  icon: {fileID: -39835503, guid: 45a6d30ea3b7cbf47be380ae4801c37f, type: 3}
-  isStackable: 0
+  icon: {fileID: -1492458466, guid: 45a6d30ea3b7cbf47be380ae4801c37f, type: 3}
+  isStackable: 1
   maxStackSize: 99
   amount: 1
