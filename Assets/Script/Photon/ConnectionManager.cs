@@ -5,191 +5,199 @@ using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
 
+/// <summary>
+/// [공용] 포톤 서버 연결 및 방 목록 관리를 처리합니다.
+/// 게임 모드(Single/Multi)에 따라 다르게 동작합니다.
+/// </summary>
 public class ConnectionManager : MonoBehaviourPunCallbacks
 {
+    [Header("UI Panels")]
     public GameObject MainMenuUI;
-    public GameObject PasswordPanel; // 비밀번호 입력 패널
+    public GameObject MultiUI; // 로비 UI (방 목록, 생성/참가 버튼 포함)
     public GameObject RoomListPanel; // 방 목록을 담고 있는 UI 패널
-    public GameObject MultiUI;
-    public TMP_Text roomNameText;
-    public TMP_Text playerCountText;
-    public TMP_Text maxPlayerText;
+    public GameObject PasswordPanel; // 비밀번호 입력 패널
 
-
-    void Start()
-    {
-        // We will connect on button click, not on start
-        // PhotonNetwork.ConnectUsingSettings();
-    }
-
-    public void Connect()
-    {
-        if (MainMenuUI != null) MainMenuUI.SetActive(false);
-        if (MultiUI != null) MultiUI.SetActive(true);
-
-        PhotonNetwork.ConnectUsingSettings();
-    }
-
-    public override void OnConnectedToMaster() // 포톤 서버 (마스터 서버)에 접속
-    {
-        base.OnConnectedToMaster();
-        Debug.Log("<color=green>OnConnectedToMaster:</color> 포톤 마스터 서버에 접속했습니다.");
-
-        // 로비 진입 요청
-        PhotonNetwork.JoinLobby(TypedLobby.Default);
-    }
-
-    public override void OnJoinedLobby() // 로비 접속
-    {
-        base.OnJoinedLobby();
-        Debug.Log("<color=green>OnJoinedLobby:</color> 로비에 접속했습니다. 이제 방 목록을 받을 수 있습니다.");
-    }
-
-    public override void OnLeftLobby() // 로비 퇴장
-    {
-        base.OnLeftLobby();
-        print("Left Lobby");
-
-        if (MainMenuUI != null) MainMenuUI.SetActive(true);
-        if (MultiUI != null) MultiUI.SetActive(false);
-    }
-
+    [Header("Room List")]
     public GameObject roomListItemPrefab;
     public Transform roomListContent;
 
-    // RoomInfo 객체를 캐싱하여 방 목록을 관리합니다.
-    private Dictionary<string, RoomInfo> cachedRoomList = new Dictionary<string, RoomInfo>();
-    // 생성된 UI 아이템(프리팹)을 관리합니다.
     private Dictionary<string, GameObject> roomListEntries = new Dictionary<string, GameObject>();
+    private const string SaveKey = "SinglePlayerWorlds";
 
-    /// <summary>
-    /// '방 목록 보기' 버튼에 연결할 함수입니다.
-    /// </summary>
-    public void OnRoomListButtonClicked()
+    // 멀티플레이 모드에서 포톤 서버에 연결을 시작합니다.
+    public void Connect()
     {
-        Debug.Log("<color=yellow>UI Event:</color> '방 목록 보기' 버튼이 클릭되었습니다.");
-        if (RoomListPanel != null) RoomListPanel.SetActive(true);
+        if (PhotonNetwork.IsConnected) return;
+
+        PhotonNetwork.AutomaticallySyncScene = true;
+        PhotonNetwork.ConnectUsingSettings();
+        Debug.Log("포톤 마스터 서버에 접속을 시도합니다...");
     }
 
-    public override void OnRoomListUpdate(List<RoomInfo> roomList)
+    public override void OnConnectedToMaster()
     {
-        Debug.Log($"<color=cyan>OnRoomListUpdate:</color> 방 목록 업데이트 수신. {roomList.Count}개의 변경사항 감지.");
-        if (roomListItemPrefab == null)
+        Debug.Log("<color=green>OnConnectedToMaster:</color> 포톤 마스터 서버에 접속했습니다.");
+        // 멀티플레이 모드일 때만 로비에 접속합니다.
+        if (GameModeManager.Instance.CurrentMode == GameMode.Multi)
         {
-            Debug.LogError("ConnectionManager: 'Room List Item Prefab'이(가) Inspector에 설정되지 않았습니다.");
-            return;
-        }
-        if (roomListContent == null)
-        {
-            Debug.LogError("ConnectionManager: 'Room List Content'가 Inspector에 설정되지 않았습니다.");
-            return;
-        }
-
-        // 변경된 방 목록 정보를 캐시에 업데이트합니다.
-        UpdateCachedRoomList(roomList);
-        // 캐시된 정보를 바탕으로 UI를 업데이트합니다.
-        UpdateRoomListView();
-    }
-
-    private void UpdateCachedRoomList(List<RoomInfo> roomList)
-    {
-        foreach (RoomInfo info in roomList)
-        {
-            // 목록에서 제거되었거나, 닫혔거나, 보이지 않는 방은 캐시에서 삭제합니다.
-            if (!info.IsOpen || !info.IsVisible || info.RemovedFromList)
-            {
-                if (cachedRoomList.ContainsKey(info.Name))
-                {
-                    cachedRoomList.Remove(info.Name);
-                }
-                continue;
-            }
-
-            // 캐시된 방 정보를 갱신하거나 새로 추가합니다.
-            cachedRoomList[info.Name] = info;
+            PhotonNetwork.JoinLobby(TypedLobby.Default);
         }
     }
 
-    private void UpdateRoomListView()
+    public override void OnJoinedLobby()
     {
-        // 기존에 생성된 UI 리스트를 모두 삭제합니다.
+        base.OnJoinedLobby();
+        Debug.Log("<color=green>OnJoinedLobby:</color> 로비에 접속했습니다. 이제 방 목록을 받을 수 있습니다.");
+
+        // MainMenuManager 등을 통해 ConnectingUI를 끄고 LobbyChoiceUI를 켜주는 것이 이상적입니다.
+        // 여기서는 MultiUI(LobbyChoiceUI)를 직접 켭니다.
+        var mainMenuManager = FindObjectOfType<MainMenuManager>();
+        if (mainMenuManager != null)
+        {
+            if (mainMenuManager.connectingUI != null) mainMenuManager.connectingUI.SetActive(false);
+            if (mainMenuManager.lobbyChoiceUI != null) mainMenuManager.lobbyChoiceUI.SetActive(true);
+        }
+    }
+
+    // 이 함수는 '방 목록 보기' UI가 활성화될 때 호출됩니다.
+    public void RefreshRoomList()
+    {
+        // 기존 목록 정리
         foreach (GameObject entry in roomListEntries.Values)
         {
             Destroy(entry.gameObject);
         }
         roomListEntries.Clear();
 
-        // 캐시된 방 목록을 기반으로 새로운 UI 리스트를 생성합니다.
-        foreach (RoomInfo info in cachedRoomList.Values)
+        if (GameModeManager.Instance.CurrentMode == GameMode.Single)
         {
-            Debug.Log($"<color=lightblue>UpdateRoomListView:</color> '{info.Name}' 방 UI 생성 중...");
+            PopulateForSinglePlayer();
+        }
+        // 멀티플레이 모드는 OnRoomListUpdate 콜백이 목록을 채우므로 여기서는 아무것도 하지 않습니다.
+    }
 
+    private void PopulateForSinglePlayer()
+    {
+        Debug.Log("싱글플레이 모드: 저장된 월드 목록을 불러옵니다.");
+        List<string> worlds = GetSavedWorlds();
+        foreach (string worldName in worlds)
+        {
             GameObject entry = Instantiate(roomListItemPrefab, roomListContent);
             entry.SetActive(true);
-
             RoomListItem listItem = entry.GetComponent<RoomListItem>();
             if (listItem != null)
             {
-                listItem.Setup(info, this);
+                listItem.SetupForSingleplayer(worldName, this);
+            }
+            roomListEntries.Add(worldName, entry);
+        }
+    }
+
+    public override void OnRoomListUpdate(List<RoomInfo> roomList)
+    {
+        // 싱글플레이 모드에서는 이 콜백을 무시합니다.
+        if (GameModeManager.Instance.CurrentMode != GameMode.Multi) return;
+
+        Debug.Log($"<color=cyan>OnRoomListUpdate:</color> 방 목록 업데이트 수신.");
+
+        foreach (var entry in roomListEntries)
+        {
+            entry.Value.SetActive(false); //일단 비활성화
+        }
+
+        foreach (RoomInfo info in roomList)
+        {
+            if (!info.IsOpen || !info.IsVisible || info.RemovedFromList)
+            {
+                if (roomListEntries.ContainsKey(info.Name))
+                {
+                    Destroy(roomListEntries[info.Name]);
+                    roomListEntries.Remove(info.Name);
+                }
+                continue;
+            }
+
+            if (roomListEntries.ContainsKey(info.Name))
+            {
+                // 기존 항목 업데이트
+                roomListEntries[info.Name].SetActive(true);
+                RoomListItem listItem = roomListEntries[info.Name].GetComponent<RoomListItem>();
+                listItem.SetupForMultiplayer(info, this);
             }
             else
             {
-                Debug.LogError("'RoomListItem' 프리팹의 최상단에 RoomListItem.cs 스크립트가 없습니다.");
-            }
-
-            roomListEntries.Add(info.Name, entry);
-        }
-    }
-
-    public override void OnJoinedRoom()
-    {
-        Debug.Log("<color=green>OnJoinedRoom:</color> 방에 입장했습니다. 방 목록 UI를 숨깁니다.");
-        // 방에 입장하면 캐시와 UI 목록을 초기화합니다.
-        cachedRoomList.Clear();
-        // 방 목록 패널을 비활성화합니다.
-        if (RoomListPanel != null) RoomListPanel.SetActive(false);
-
-        // 마스터 클라이언트가 아닌 경우에만 씬을 로드합니다.
-        // 마스터 클라이언트는 CreateRoom.cs에서 씬을 로드합니다.
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            Debug.Log("클라이언트로서 'Map1' 씬을 로드합니다.");
-            PhotonNetwork.LoadLevel("Map1");
-        }
-    }
-
-    /// <summary>
-    /// RoomListItem에서 호출하여 비밀번호 입력 패널을 활성화합니다.
-    /// </summary>
-    /// <param name="roomInfo">입장할 방의 정보</param>
-    public void ShowPasswordPanel(RoomInfo roomInfo)
-    {
-        if (PasswordPanel != null) PasswordPanel.SetActive(true);
-
-        // RoomListPanel의 CanvasGroup을 제어하여 비활성화된 것처럼 보이게 합니다.
-        if (RoomListPanel != null)
-        {
-            CanvasGroup canvasGroup = RoomListPanel.GetComponent<CanvasGroup>();
-            if (canvasGroup != null)
-            {
-                canvasGroup.alpha = 0.5f; // 반투명하게 설정
-                canvasGroup.interactable = false; // 클릭 등 상호작용 비활성화
+                // 새 항목 추가
+                GameObject entry = Instantiate(roomListItemPrefab, roomListContent);
+                entry.SetActive(true);
+                RoomListItem listItem = entry.GetComponent<RoomListItem>();
+                if (listItem != null)
+                {
+                    listItem.SetupForMultiplayer(info, this);
+                }
+                roomListEntries.Add(info.Name, entry);
             }
         }
-
-        // TODO: 비밀번호 패널의 컨트롤러 스크립트에 roomInfo를 전달하여, 비밀번호 확인 후 해당 방으로 입장하도록 구현해야 합니다.
-        // 예: PasswordPanel.GetComponent<PasswordController>().SetRoom(roomInfo);
     }
 
-    /// <summary>
-    /// 비밀번호 입력 패널이 닫힐 때 호출할 함수입니다. (예: '취소' 버튼에 연결)
-    /// </summary>
+    // --- 방 참가 로직 (공용) ---
+    public void JoinSinglePlayerWorld(string worldName)
+    {
+        PhotonNetwork.OfflineMode = true;
+        PhotonNetwork.JoinRoom(worldName);
+    }
+
+    public void JoinMultiPlayerRoom(string roomName)
+    {
+        PhotonNetwork.JoinRoom(roomName);
+    }
+
+
     public void HidePasswordPanel()
     {
-        if (PasswordPanel != null) PasswordPanel.SetActive(false);
-
-        CanvasGroup canvasGroup = RoomListPanel.GetComponent<CanvasGroup>();
-        canvasGroup.alpha = 1f; // 원래 투명도로 복원
-        canvasGroup.interactable = true; // 상호작용 활성화
+        if (PasswordPanel != null)
+        {
+            PasswordPanel.SetActive(false);
+        }
     }
+
+    // --- 기타 콜백 및 유틸리티 ---
+    public override void OnJoinedRoom()
+    {
+        Debug.Log("<color=green>OnJoinedRoom:</color> 방에 입장했습니다.");
+        // 씬 로딩은 CreateRoom.cs에서 담당하므로 여기서는 UI만 숨깁니다.
+        var mainMenuManager = FindObjectOfType<MainMenuManager>();
+        if (mainMenuManager != null && mainMenuManager.lobbyChoiceUI != null)
+        {
+            mainMenuManager.lobbyChoiceUI.SetActive(false);
+        }
+    }
+
+    public override void OnLeftRoom()
+    {
+        Debug.Log("<color=orange>OnLeftRoom:</color> 방에서 퇴장했습니다.");
+    }
+
+    public override void OnDisconnected(DisconnectCause cause)
+    {
+        Debug.LogError($"<color=red>OnDisconnected:</color> 연결이 끊어졌습니다. 원인: {cause}");
+
+        var mainMenuManager = FindObjectOfType<MainMenuManager>();
+        if (mainMenuManager != null)
+        {
+            if (mainMenuManager.mainMenuUI != null) mainMenuManager.mainMenuUI.SetActive(true);
+            if (mainMenuManager.lobbyChoiceUI != null) mainMenuManager.lobbyChoiceUI.SetActive(false);
+            if (mainMenuManager.connectingUI != null) mainMenuManager.connectingUI.SetActive(false);
+        }
+    }
+
+    // --- 싱글플레이 월드 이름 불러오기 ---
+    private List<string> GetSavedWorlds()
+    {
+        string json = PlayerPrefs.GetString(SaveKey, "{}");
+        WorldList worldList = JsonUtility.FromJson<WorldList>(json);
+        return worldList?.names ?? new List<string>();
+    }
+
+    [System.Serializable]
+    private class WorldList { public List<string> names; }
 }

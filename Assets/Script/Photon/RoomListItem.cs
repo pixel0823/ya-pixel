@@ -1,59 +1,61 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
-using Photon.Pun;
 using Photon.Realtime;
 
 public class RoomListItem : MonoBehaviour
 {
+    [Header("UI References")]
     public TMP_Text roomNameText;
-    public TMP_Text playerCountText;
-    public GameObject privateIcon;
-    
+    public TMP_Text playerCountText; // 멀티플레이 전용
+    public Image lockIcon; // 비밀방 표시용
+
+    // 내부 상태
+    private GameMode mode;
+    private string roomName;
+    private ConnectionManager connectionManager; // ConnectionManager 참조
     private RoomInfo roomInfo;
-    private ConnectionManager connectionManager;
 
-    public void Setup(RoomInfo info, ConnectionManager manager)
+    // 멀티플레이 방 정보를 설정
+    public void SetupForMultiplayer(RoomInfo info, ConnectionManager manager)
     {
-        this.roomInfo = info;
-        this.connectionManager = manager;
+        mode = GameMode.Multi;
+        roomInfo = info;
+        roomName = info.Name;
+        connectionManager = manager;
 
-        if (roomNameText == null)
-        {
-            Debug.LogError("RoomListItem: 'Room Name Text'가 Inspector에 설정되지 않았습니다.", this.gameObject);
-            return;
-        }
-        if (playerCountText == null)
-        {
-            Debug.LogError("RoomListItem: 'Player Count Text'가 Inspector에 설정되지 않았습니다.", this.gameObject);
-            return;
-        }
-        if (privateIcon == null)
-        {
-            Debug.LogWarning("RoomListItem: 'Private Icon'이(가) Inspector에 설정되지 않았습니다.", this.gameObject);
-        }
+        roomNameText.text = info.Name;
+        playerCountText.text = $"{info.PlayerCount} / {info.MaxPlayers}";
+        playerCountText.gameObject.SetActive(true);
 
-        roomNameText.text = this.roomInfo.Name;
-        playerCountText.text = $"{this.roomInfo.PlayerCount} / {this.roomInfo.MaxPlayers}";
-
-        if (privateIcon != null)
-        {
-            // "password" 커스텀 프로퍼티가 존재하기만 하면 비공개 방으로 취급합니다.
-            bool isPrivate = this.roomInfo.CustomProperties.ContainsKey("password");
-            privateIcon.SetActive(isPrivate);
-        }
+        bool isPasswordProtected = info.CustomProperties.ContainsKey("password");
+        lockIcon.gameObject.SetActive(isPasswordProtected);
     }
 
-    public void OnItemClick()
+    // 싱글플레이 월드 정보를 설정
+    public void SetupForSingleplayer(string worldName, ConnectionManager manager)
     {
-        if (roomInfo.CustomProperties.ContainsKey("password"))
+        mode = GameMode.Single;
+        this.roomName = worldName;
+        connectionManager = manager;
+
+        roomNameText.text = worldName;
+        playerCountText.gameObject.SetActive(false);
+        lockIcon.gameObject.SetActive(false);
+    }
+
+    // '참가' 버튼에 연결될 함수
+    public void OnJoinButtonClicked()
+    {
+        if (mode == GameMode.Single)
         {
-            // 비밀번호가 있는 방: ConnectionManager에게 비밀번호 패널을 보여달라고 요청
-            connectionManager.ShowPasswordPanel(roomInfo);
+            connectionManager.JoinSinglePlayerWorld(roomName);
         }
-        else
+        else // GameMode.Multi
         {
-            // 비밀번호가 없는 방: 바로 입장 시도
-            PhotonNetwork.JoinRoom(roomInfo.Name);
+            // 비밀번호가 있는 방에 대한 처리가 필요하다면 여기에 추가합니다.
+            // 예: connectionManager.ShowPasswordPanel(roomInfo);
+            connectionManager.JoinMultiPlayerRoom(roomName);
         }
     }
 }
