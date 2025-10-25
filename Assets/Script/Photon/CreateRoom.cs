@@ -13,6 +13,7 @@ public class CreateRoom : MonoBehaviourPunCallbacks
 {
     [Header("UI Elements")]
     public TMP_InputField roomNameInput;
+    public TMP_InputField seedInput; // 시드 입력을 위한 필드
     public Toggle privateRoomToggle;
     public GameObject passwordPanel;
     public TMP_InputField passwordInput;
@@ -83,8 +84,24 @@ public class CreateRoom : MonoBehaviourPunCallbacks
             return;
         }
         PhotonNetwork.OfflineMode = true;
-        // 오프라인 모드에서는 JoinOrCreateRoom을 사용하는 것이 더 안정적일 수 있습니다.
+        
         RoomOptions roomOptions = new RoomOptions { IsVisible = false, MaxPlayers = 1 };
+        roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
+
+        int mapSeed;
+        if (seedInput != null && !string.IsNullOrEmpty(seedInput.text))
+        {
+            // 문자열 시드를 int로 변환 (GetHashCode 사용)
+            mapSeed = seedInput.text.GetHashCode();
+        }
+        else
+        {
+            // 시드가 비어있으면 현재 시간을 기반으로 랜덤 시드 생성
+            mapSeed = (int)System.DateTime.Now.Ticks;
+        }
+        roomOptions.CustomRoomProperties.Add("mapSeed", mapSeed);
+        Debug.Log($"싱글플레이 월드 생성. 시드: {mapSeed}");
+
         PhotonNetwork.JoinOrCreateRoom(worldName, roomOptions, TypedLobby.Default);
     }
 
@@ -107,9 +124,19 @@ public class CreateRoom : MonoBehaviourPunCallbacks
         roomOptions.IsVisible = true;
         roomOptions.IsOpen = true;
 
-        int mapSeed = (int)System.DateTime.Now.Ticks;
         roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
+        
+        int mapSeed;
+        if (seedInput != null && !string.IsNullOrEmpty(seedInput.text))
+        {
+            mapSeed = seedInput.text.GetHashCode();
+        }
+        else
+        {
+            mapSeed = (int)System.DateTime.Now.Ticks;
+        }
         roomOptions.CustomRoomProperties.Add("mapSeed", mapSeed);
+        Debug.Log($"멀티플레이 방 생성. 시드: {mapSeed}");
 
         if (privateRoomToggle != null && privateRoomToggle.isOn)
         {
@@ -119,9 +146,8 @@ public class CreateRoom : MonoBehaviourPunCallbacks
                 roomOptions.CustomRoomProperties.Add("password", password);
             }
         }
-        roomOptions.CustomRoomPropertiesForLobby = new string[] { "password" };
+        roomOptions.CustomRoomPropertiesForLobby = new string[] { "password", "mapSeed" }; // mapSeed도 로비에서 볼 수 있도록 추가
 
-        // ConnectionManager를 통해 방 생성을 요청합니다.
         ConnectionManager.Instance.CreateRoom(roomName, roomOptions);
     }
 

@@ -2199,6 +2199,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hotbarPanel: {fileID: 1516052750}
   inventoryPanel: {fileID: 516955579}
+  trashCanButton: {fileID: 635720843}
   rootCanvas: {fileID: 515349245}
 --- !u!4 &723729381
 Transform:

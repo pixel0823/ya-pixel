@@ -8,6 +8,7 @@ public class InventoryUI : MonoBehaviour
     [Header("UI Panels")]
     public GameObject hotbarPanel;      // 핫바 슬롯들의 부모 패널
     public GameObject inventoryPanel;   // 인벤토리 슬롯들의 부모 패널
+    public GameObject trashCanButton; // 쓰레기통 버튼
 
     [Header("UI Elements")]
     [SerializeField] private Transform rootCanvas; // UI의 최상위 Canvas Transform
@@ -35,6 +36,10 @@ public class InventoryUI : MonoBehaviour
 
         hotbarPanel.SetActive(true);
         inventoryPanel.SetActive(false);
+        if (trashCanButton != null)
+        {
+            trashCanButton.SetActive(false);
+        }
 
         if (rootCanvas == null)
         {
@@ -89,6 +94,10 @@ public class InventoryUI : MonoBehaviour
         {
             bool isInventoryOpen = !inventoryPanel.activeSelf;
             inventoryPanel.SetActive(isInventoryOpen);
+            if (trashCanButton != null)
+            {
+                trashCanButton.SetActive(isInventoryOpen);
+            }
             hotbarPanel.SetActive(!isInventoryOpen);
 
             if (!isInventoryOpen)
@@ -110,8 +119,8 @@ public class InventoryUI : MonoBehaviour
             float scroll = Input.GetAxisRaw("Mouse ScrollWheel");
             if (scroll != 0)
             {
-                if (scroll > 0f) selectedSlot--;
-                else selectedSlot++;
+                if (scroll > 0f) selectedSlot++;
+                else selectedSlot--;
 
                 if (hotbarSlots.Length > 0)
                 {
