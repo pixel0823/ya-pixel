@@ -140,9 +140,9 @@ public class MainMenuManager : MonoBehaviour
     public void OnDisconnected()
     {
         if (connectingUI != null) connectingUI.SetActive(false);
-        lobbyChoiceUI.SetActive(false);
-        createRoomUI.SetActive(false);
-        roomListUI.SetActive(false);
-        mainMenuUI.SetActive(true);
+        if (lobbyChoiceUI != null) lobbyChoiceUI.SetActive(false);
+        if (createRoomUI != null) createRoomUI.SetActive(false);
+        if (roomListUI != null) roomListUI.SetActive(false);
+        if (mainMenuUI != null) mainMenuUI.SetActive(true);
     }
 }

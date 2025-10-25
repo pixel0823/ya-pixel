@@ -11,6 +11,8 @@ using TMPro;
 /// </summary>
 public class ConnectionManager : MonoBehaviourPunCallbacks
 {
+    public static ConnectionManager Instance { get; private set; }
+
     [Header("Managers")]
     public MainMenuManager mainMenuManager; // UI 전환을 담당하는 매니저
 
@@ -25,6 +27,19 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     private Dictionary<string, GameObject> roomListEntries = new Dictionary<string, GameObject>();
     private const string SaveKey = "SinglePlayerWorlds";
 
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this.gameObject);
+        }
+        else
+        {
+            Instance = this;
+            DontDestroyOnLoad(this.gameObject);
+        }
+    }
+
     // 멀티플레이 모드에서 포톤 서버에 연결을 시작합니다.
     public void Connect()
     {
@@ -33,6 +48,16 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
         PhotonNetwork.AutomaticallySyncScene = true;
         PhotonNetwork.ConnectUsingSettings();
         Debug.Log("포톤 마스터 서버에 접속을 시도합니다...");
+    }
+
+    public void CreateRoom(string roomName, RoomOptions roomOptions)
+    {
+        Debug.Log($"ConnectionManager: 방 생성 시도: '{roomName}'");
+        bool sent = PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
+        if (!sent)
+        {
+            Debug.LogError("ConnectionManager: PhotonNetwork.CreateRoom failed to send. Client may be in wrong state.");
+        }
     }
 
     public override void OnConnectedToMaster()
@@ -48,12 +73,35 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     {
         base.OnJoinedLobby();
         Debug.Log("<color=green>OnJoinedLobby:</color> 로비에 접속했습니다. 이제 방 목록을 받을 수 있습니다.");
+    }
 
-        // MainMenuManager에게 로비에 접속했음을 알려 UI를 전환하도록 합니다.
-        // if (mainMenuManager != null)
-        // {
-        //     mainMenuManager.OnJoinedLobby();
-        // }
+    public override void OnCreatedRoom()
+    {
+        Debug.Log("ConnectionManager: 방 생성 성공! 방 이름: " + PhotonNetwork.CurrentRoom.Name);
+        // 방장(MasterClient)만 맵을 로드할 책임이 있습니다.
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log("방장입니다. 'Map1' 씬을 로드합니다.");
+            PhotonNetwork.LoadLevel("Map1");
+        }
+    }
+
+    public override void OnCreateRoomFailed(short returnCode, string message)
+    {
+        Debug.LogError($"ConnectionManager: 방 생성 실패. 코드: {returnCode}, 메시지: {message}");
+    }
+    
+    public override void OnJoinedRoom()
+    {
+        Debug.Log($"방 '{PhotonNetwork.CurrentRoom.Name}'에 성공적으로 참가했습니다. 플레이어 수: {PhotonNetwork.CurrentRoom.PlayerCount}");
+
+        // 싱글플레이 월드에 재접속한 경우, 씬을 로드할 필요가 있을 수 있습니다.
+        // 멀티플레이에서는 OnCreatedRoom에서 방장이 씬을 로드하므로, 여기서는 중복 동작을 피합니다.
+        if (PhotonNetwork.OfflineMode && PhotonNetwork.IsMasterClient)
+        {
+             Debug.Log("오프라인 모드 방장입니다. 'Map1' 씬을 로드합니다.");
+             PhotonNetwork.LoadLevel("Map1");
+        }
     }
 
     public void RefreshRoomList()
@@ -165,12 +213,6 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public override void OnJoinedRoom()
-    {
-        Debug.Log("<color=green>OnJoinedRoom:</color> 방에 입장했습니다.");
-        // 씬 로딩은 CreateRoom.cs에서 담당합니다.
-    }
-
     public override void OnLeftRoom()
     {
         Debug.Log("<color=orange>OnLeftRoom:</color> 방에서 퇴장했습니다.");
@@ -180,7 +222,6 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     {
         Debug.LogError($"<color=red>OnDisconnected:</color> 연결이 끊어졌습니다. 원인: {cause}");
 
-        // MainMenuManager에게 연결이 끊어졌음을 알려 UI를 초기 상태로 되돌리도록 합니다.
         if (mainMenuManager != null)
         {
             mainMenuManager.OnDisconnected();
