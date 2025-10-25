@@ -8,6 +8,7 @@ public class InventoryUI : MonoBehaviour
     [Header("UI Panels")]
     public GameObject hotbarPanel;      // 핫바 슬롯들의 부모 패널
     public GameObject inventoryPanel;   // 인벤토리 슬롯들의 부모 패널
+    public GameObject itemCombPanel;    // 조합창 패널 (드래그 허용용)
 
     [Header("UI Elements")]
     public GameObject selectionHighlight; // 선택된 핫바 슬롯을 표시할 UI 오브젝트
@@ -82,7 +83,10 @@ public class InventoryUI : MonoBehaviour
 
     public bool IsInventoryOpen()
     {
-        return inventoryPanel.activeSelf;
+        // 기본 인벤토리 또는 조합창이 열려있으면 true
+        bool inventoryOpen = inventoryPanel != null && inventoryPanel.activeSelf;
+        bool combOpen = itemCombPanel != null && itemCombPanel.activeSelf;
+        return inventoryOpen || combOpen;
     }
 
     void Update()
@@ -180,6 +184,11 @@ public class InventoryUI : MonoBehaviour
         return originalSlot != null;
     }
 
+    public InventorySlot GetDraggedSlot()
+    {
+        return originalSlot;
+    }
+
     public void OnBeginDrag(InventorySlot slot)
     {
         if (!IsInventoryOpen() || slot.item == null || rootCanvas == null) return;
@@ -220,14 +229,21 @@ public class InventoryUI : MonoBehaviour
     {
         if (originalSlot == null) return;
 
-        // 마우스 포인터가 인벤토리 패널 위에 있는지 확인합니다.
+        // 마우스 포인터가 인벤토리 패널 또는 조합창 위에 있는지 확인합니다.
         bool isPointerOverInventory = false;
+
+        // 기본 인벤토리 패널 체크
         if (inventoryPanel != null && inventoryPanel.activeSelf)
         {
             RectTransform invPanelRect = inventoryPanel.GetComponent<RectTransform>();
-            // RectTransformUtility.RectangleContainsScreenPoint는 스크린 좌표를 기준으로 판별하므로 정확합니다.
-            // 세 번째 인자인 카메라는 Screen Space - Overlay 캔버스에서는 null로 두어도 됩니다.
             isPointerOverInventory = RectTransformUtility.RectangleContainsScreenPoint(invPanelRect, Input.mousePosition, null);
+        }
+
+        // 조합창 패널 체크
+        if (!isPointerOverInventory && itemCombPanel != null && itemCombPanel.activeSelf)
+        {
+            RectTransform combPanelRect = itemCombPanel.GetComponent<RectTransform>();
+            isPointerOverInventory = RectTransformUtility.RectangleContainsScreenPoint(combPanelRect, Input.mousePosition, null);
         }
 
         if (!dropSuccessful)
