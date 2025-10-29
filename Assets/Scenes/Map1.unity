@@ -13983,17 +13983,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9aadbd2b788134f448b117dfca3fb542, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  combSlots: []
-  resultSlot: {fileID: 0}
-  craftButton: {fileID: 1547396839}
-  craftingManager: {fileID: 1899639253}
-  inventory: {fileID: 0}
-  inventoryUI: {fileID: 0}
-  combInventoryPanel: {fileID: 0}
-  statusText: {fileID: 0}
-  currentRecipe: {fileID: 0}
-  draggedSlot: {fileID: 0}
-  combInventorySlots: []
 --- !u!1001 &1291782540
 PrefabInstance:
   m_ObjectHideFlags: 0
