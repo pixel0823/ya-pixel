@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "ya-pixel.sln"
+    "dotnet.defaultSolution": "ya-pixel2.sln"
 }
