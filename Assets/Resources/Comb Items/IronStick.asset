@@ -16,11 +16,11 @@ MonoBehaviour:
   description: "\uCCA0 \uB9C9\uB300\uAE30"
   ingredients:
   - item: {fileID: 11400000, guid: c132217783ba2ea4cb53dcc5ef91fb2d, type: 2}
-    requiredAmount: 0
+    requiredAmount: 1
   - item: {fileID: 11400000, guid: c132217783ba2ea4cb53dcc5ef91fb2d, type: 2}
-    requiredAmount: 0
+    requiredAmount: 1
   result:
     item: {fileID: 11400000, guid: f7c2fe63a37d1eb4a9870ae0d66941de, type: 2}
-    resultAmount: 0
-  requiresCraftingTable: 0
+    resultAmount: 1
+  requiresCraftingTable: 1
   requiredTool: 
