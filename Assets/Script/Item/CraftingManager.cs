@@ -100,20 +100,31 @@ public class CraftingManager : MonoBehaviour
     {
         Dictionary<Item, int> availableItems = new Dictionary<Item, int>();
 
+        Debug.Log($"[CraftingManager] GetAvailableItems 호출");
+        Debug.Log($"[CraftingManager] Inventory 인스턴스 ID: {(inventory != null ? inventory.GetInstanceID().ToString() : "null")}");
+        Debug.Log($"[CraftingManager] Inventory.items: {(inventory?.items != null ? "존재" : "null")}");
+
         if (inventory == null || inventory.items == null)
         {
+            Debug.LogError("[CraftingManager] inventory 또는 inventory.items가 null입니다!");
             return availableItems;
         }
+
+        Debug.Log($"[CraftingManager] Inventory.items.Count: {inventory.items.Count}");
 
         foreach (Item item in inventory.items)
         {
             if (item != null)
             {
-                // 아이템 이름으로 구분하여 합산
+                Debug.Log($"[CraftingManager] 발견한 아이템: {item.itemName} x{item.amount}");
+
+                // 아이템 이름으로 구분하여 합산 (이름 정규화: 공백 제거 + 소문자 변환)
+                string normalizedItemName = item.itemName.Trim().ToLower();
                 Item existingKey = null;
                 foreach (Item key in availableItems.Keys)
                 {
-                    if (key.itemName == item.itemName)
+                    string normalizedKeyName = key.itemName.Trim().ToLower();
+                    if (normalizedKeyName == normalizedItemName)
                     {
                         existingKey = key;
                         break;
@@ -131,6 +142,7 @@ public class CraftingManager : MonoBehaviour
             }
         }
 
+        Debug.Log($"[CraftingManager] 총 {availableItems.Count}종류의 아이템 발견");
         return availableItems;
     }
 
@@ -144,11 +156,13 @@ public class CraftingManager : MonoBehaviour
 
         int remainingAmount = amount;
 
-        // 모든 슬롯을 확인하며 아이템 소모
+        // 모든 슬롯을 확인하며 아이템 소모 (이름 정규화: 공백 제거 + 소문자 변환)
+        string normalizedTemplateName = itemTemplate.itemName.Trim().ToLower();
         for (int i = 0; i < inventory.items.Count; i++)
         {
             Item item = inventory.items[i];
-            if (item != null && item.itemName == itemTemplate.itemName)
+            string normalizedItemName = item != null ? item.itemName.Trim().ToLower() : "";
+            if (item != null && normalizedItemName == normalizedTemplateName)
             {
                 if (item.amount >= remainingAmount)
                 {

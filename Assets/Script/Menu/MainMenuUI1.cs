@@ -4,9 +4,20 @@ using UnityEngine;
 
 public class MainMenuUI : MonoBehaviour
 {
+    [Header("Panels")]
+    public GameObject settingPanel;
+
     public void OnClickOnlineButton()
     {
         Debug.Log("Click Online");
+    }
+
+    public void OnClickSettingButton()
+    {
+        if (settingPanel != null)
+        {
+            settingPanel.SetActive(true);
+        }
     }
 
     public void OnClickQuitButton()

@@ -97,20 +97,6 @@ public class CombManager : MonoBehaviour
             }
         }
 
-        // Inventory 자동 찾기 (비활성화된 것도 포함)
-        if (inventory == null)
-        {
-            inventory = FindObjectOfType<Inventory>(true);
-            if (inventory != null)
-            {
-                Debug.Log("Inventory 자동 찾기 완료");
-            }
-            else
-            {
-                Debug.LogError("Inventory를 찾을 수 없습니다! Scene에 Inventory 컴포넌트가 있는지 확인하세요.");
-            }
-        }
-
         // InventoryUI 자동 찾기 (비활성화된 것도 포함)
         if (inventoryUI == null)
         {
@@ -124,18 +110,94 @@ public class CombManager : MonoBehaviour
                 Debug.LogError("InventoryUI를 찾을 수 없습니다! Scene에 InventoryUI 컴포넌트가 있는지 확인하세요.");
             }
         }
+
+        // Inventory는 InventoryUI에서 가져오기 (같은 인스턴스 보장)
+        if (inventory == null && inventoryUI != null)
+        {
+            inventory = inventoryUI.GetInventory();
+            if (inventory != null)
+            {
+                Debug.Log($"[CombManager] InventoryUI에서 Inventory 가져오기 완료! 인스턴스 ID: {inventory.GetInstanceID()}");
+                Debug.Log($"[CombManager] Inventory.items 개수: {inventory.items?.Count ?? 0}");
+
+                // 아이템 내용 확인
+                int itemCount = 0;
+                if (inventory.items != null)
+                {
+                    foreach (var item in inventory.items)
+                    {
+                        if (item != null)
+                        {
+                            itemCount++;
+                            Debug.Log($"[CombManager] Start에서 발견한 아이템: {item.itemName} x{item.amount}");
+                        }
+                    }
+                }
+                Debug.Log($"[CombManager] Start에서 null 아닌 아이템 개수: {itemCount}");
+            }
+            else
+            {
+                Debug.LogError("[CombManager] InventoryUI.GetInventory()가 null을 반환했습니다!");
+            }
+        }
+
+        // 그래도 없으면 FindObjectOfType 시도
+        if (inventory == null)
+        {
+            inventory = FindObjectOfType<Inventory>(true);
+            if (inventory != null)
+            {
+                Debug.LogWarning($"Inventory 자동 찾기 완료 (InventoryUI와 다를 수 있음!) 인스턴스 ID: {inventory.GetInstanceID()}");
+            }
+            else
+            {
+                Debug.LogError("Inventory를 찾을 수 없습니다! Scene에 Inventory 컴포넌트가 있는지 확인하세요.");
+            }
+        }
     }
 
     void OnEnable()
     {
+        Debug.Log("[CombManager] OnEnable 호출됨 - 조합창 활성화");
+
         // 조합창이 활성화될 때 다시 시도
-        if (inventory == null)
-        {
-            inventory = FindObjectOfType<Inventory>(true);
-        }
         if (inventoryUI == null)
         {
             inventoryUI = FindObjectOfType<InventoryUI>(true);
+            Debug.Log($"[CombManager] OnEnable에서 InventoryUI 찾기: {(inventoryUI != null ? "성공" : "실패")}");
+        }
+
+        // Inventory는 InventoryUI에서 가져오기 (같은 인스턴스 보장)
+        if (inventoryUI != null)
+        {
+            inventory = inventoryUI.GetInventory();
+            if (inventory != null)
+            {
+                Debug.Log($"[CombManager] OnEnable에서 Inventory 가져오기 완료! 인스턴스 ID: {inventory.GetInstanceID()}");
+                Debug.Log($"[CombManager] OnEnable에서 Inventory.items 개수: {inventory.items?.Count ?? 0}");
+
+                // 아이템 내용 확인
+                int itemCount = 0;
+                if (inventory.items != null)
+                {
+                    foreach (var item in inventory.items)
+                    {
+                        if (item != null)
+                        {
+                            itemCount++;
+                            Debug.Log($"[CombManager] OnEnable에서 발견한 아이템: {item.itemName} x{item.amount}");
+                        }
+                    }
+                }
+                Debug.Log($"[CombManager] OnEnable에서 null 아닌 아이템 개수: {itemCount}");
+            }
+        }
+
+        // 그래도 없으면 FindObjectOfType 시도
+        if (inventory == null)
+        {
+            inventory = FindObjectOfType<Inventory>(true);
+            Debug.LogWarning($"[CombManager] OnEnable에서 FindObjectOfType으로 Inventory 찾기: {(inventory != null ? "성공" : "실패")}");
         }
     }
 
@@ -211,18 +273,21 @@ public class CombManager : MonoBehaviour
                 continue;
             }
 
-            // 순서 상관없이 매칭
+            // 순서 상관없이 매칭 (이름 정규화: 공백 제거 + 소문자 변환)
             bool matched = false;
 
+            string slot1Name = slot1.item.itemName.Trim().ToLower();
+            string slot2Name = slot2.item.itemName.Trim().ToLower();
+            string recipe0Name = recipe.ingredients[0].item.itemName.Trim().ToLower();
+            string recipe1Name = recipe.ingredients[1].item.itemName.Trim().ToLower();
+
             // 경우 1: slot1=재료1, slot2=재료2
-            if (slot1.item.itemName == recipe.ingredients[0].item.itemName &&
-                slot2.item.itemName == recipe.ingredients[1].item.itemName)
+            if (slot1Name == recipe0Name && slot2Name == recipe1Name)
             {
                 matched = true;
             }
             // 경우 2: slot1=재료2, slot2=재료1
-            else if (slot1.item.itemName == recipe.ingredients[1].item.itemName &&
-                     slot2.item.itemName == recipe.ingredients[0].item.itemName)
+            else if (slot1Name == recipe1Name && slot2Name == recipe0Name)
             {
                 matched = true;
             }
@@ -286,37 +351,55 @@ public class CombManager : MonoBehaviour
             return false;
         }
 
+        // 인벤토리 상태 디버깅
+        Debug.Log($"=== 인벤토리 상태 확인 ===");
+        Debug.Log($"Inventory 인스턴스: {inventory.GetInstanceID()}");
+        Debug.Log($"Inventory.items가 null인가? {inventory.items == null}");
+        Debug.Log($"Inventory.items 개수: {inventory.items?.Count ?? 0}");
+
         // 인벤토리 아이템 개수 확인
         Dictionary<string, int> inventoryItems = new Dictionary<string, int>();
+        int itemCount = 0;
         foreach (Item item in inventory.items)
         {
             if (item != null)
             {
-                if (inventoryItems.ContainsKey(item.itemName))
+                itemCount++;
+                // 이름 정규화: 공백 제거 + 소문자 변환
+                string normalizedName = item.itemName.Trim().ToLower();
+
+                Debug.Log($"인벤토리 아이템 발견: '{item.itemName}' (정규화: '{normalizedName}') x{item.amount}");
+
+                if (inventoryItems.ContainsKey(normalizedName))
                 {
-                    inventoryItems[item.itemName] += item.amount;
+                    inventoryItems[normalizedName] += item.amount;
                 }
                 else
                 {
-                    inventoryItems[item.itemName] = item.amount;
+                    inventoryItems[normalizedName] = item.amount;
                 }
             }
         }
 
+        Debug.Log($"=== 인벤토리에서 null 아닌 아이템: {itemCount}개 ===");
         Debug.Log($"인벤토리 아이템 목록: {string.Join(", ", inventoryItems.Keys)}");
 
         // 레시피 재료가 충분한지 확인
         foreach (RecipeIngredient ingredient in currentRecipe.ingredients)
         {
-            Debug.Log($"필요한 재료: {ingredient.item.itemName} x{ingredient.requiredAmount}");
+            // 이름 정규화: 공백 제거 + 소문자 변환
+            string normalizedIngredientName = ingredient.item.itemName.Trim().ToLower();
 
-            if (!inventoryItems.ContainsKey(ingredient.item.itemName))
+            Debug.Log($"필요한 재료: {ingredient.item.itemName} (정규화: {normalizedIngredientName}) x{ingredient.requiredAmount}");
+
+            if (!inventoryItems.ContainsKey(normalizedIngredientName))
             {
-                Debug.LogWarning($"인벤토리에 {ingredient.item.itemName}이(가) 없습니다!");
+                Debug.LogWarning($"인벤토리에 {ingredient.item.itemName}이(가) 없습니다! (정규화된 이름: '{normalizedIngredientName}')");
+                Debug.LogWarning($"인벤토리에 있는 아이템들: {string.Join(", ", inventoryItems.Keys)}");
                 return false;
             }
 
-            int available = inventoryItems[ingredient.item.itemName];
+            int available = inventoryItems[normalizedIngredientName];
             Debug.Log($"인벤토리에 있는 {ingredient.item.itemName}: {available}개");
 
             if (available < ingredient.requiredAmount)
@@ -341,12 +424,26 @@ public class CombManager : MonoBehaviour
             return;
         }
 
+        if (inventory == null)
+        {
+            Debug.LogError("[CombManager] inventory가 null입니다! 조합 불가능");
+            return;
+        }
+
         CraftingManager craftingManager = FindObjectOfType<CraftingManager>();
         if (craftingManager == null)
         {
             Debug.LogError("CraftingManager를 찾을 수 없습니다.");
             return;
         }
+
+        // CraftingManager가 올바른 Inventory를 참조하도록 설정
+        Debug.Log($"[CombManager] 조합 버튼 클릭! CombManager Inventory ID: {inventory.GetInstanceID()}");
+        Debug.Log($"[CombManager] CraftingManager Inventory ID: {(craftingManager.inventory != null ? craftingManager.inventory.GetInstanceID().ToString() : "null")}");
+
+        // CraftingManager의 inventory를 CombManager와 동일한 것으로 설정
+        craftingManager.inventory = inventory;
+        Debug.Log($"[CombManager] CraftingManager에 Inventory 설정 완료");
 
         // 조합 실행
         bool success = craftingManager.CraftItem(currentRecipe);
