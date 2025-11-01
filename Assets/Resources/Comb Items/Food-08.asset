@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7deede7a57c6c064e85bc9f4eb72ad0d, type: 3}
+  m_Name: Food-08
+  m_EditorClassIdentifier: 
+  recipeName: Snack - 5
+  description: "\uACFC\uC790"
+  ingredients:
+  - item: {fileID: 11400000, guid: 60ffc5e4f635b5f4384fb2c71c193bb0, type: 2}
+    requiredAmount: 0
+  - item: {fileID: 11400000, guid: d69cba1c3266e734db4717dc4724f550, type: 2}
+    requiredAmount: 0
+  result:
+    item: {fileID: 11400000, guid: 54af4cc9590bab147a061710f8a93c7c, type: 2}
+    resultAmount: 0
+  requiresCraftingTable: 1
+  requiredTool: 

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7deede7a57c6c064e85bc9f4eb72ad0d, type: 3}
+  m_Name: Food-02
+  m_EditorClassIdentifier: 
+  recipeName: Canned Food - 2
+  description: "\uD1B5\uC870\uB9BC"
+  ingredients:
+  - item: {fileID: 11400000, guid: 4a9122a5f063ebe41b0247c19e7302f7, type: 2}
+    requiredAmount: 0
+  - item: {fileID: 11400000, guid: ae6a2b2cee584da44890d702480f04b4, type: 2}
+    requiredAmount: 0
+  result:
+    item: {fileID: 11400000, guid: 6551e277b55bb5845a1a22ea49c24251, type: 2}
+    resultAmount: 0
+  requiresCraftingTable: 1
+  requiredTool: 

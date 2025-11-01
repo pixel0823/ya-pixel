@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 using TMPro;
 
 // 인벤토리의 각 슬롯을 제어하는 클래스
-public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerClickHandler
 {
     [Header("UI Components")]
     [Tooltip("아이템 아이콘을 표시할 이미지 컴포넌트")]
@@ -21,6 +21,8 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private bool isMouseOver = false;
     private bool isSelected = false;
     private bool isDragging = false;
+
+    private CombManager combManager;
 
     private Color normalColor;
     private readonly Color selectedColor = new Color(0.8f, 0.8f, 0.8f, 1f); // 선택 시 색상
@@ -55,6 +57,9 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         {
             Debug.LogError($"인벤토리 슬롯 '{gameObject.name}'에 itemIcon이 할당되지 않았습니다!", gameObject);
         }
+
+        // 씬에서 CombManager를 찾습니다. (비활성화된 것도 포함)
+        combManager = FindObjectOfType<CombManager>(true);
 
         UpdateSlotUI(); // 초기 상태 업데이트
     }
@@ -148,6 +153,19 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     }
 
     // --- 인터페이스 구현 ---
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // 좌클릭이고, 아이템이 있고, 조합창이 활성화 상태일 때
+        if (eventData.button == PointerEventData.InputButton.Left && item != null && combManager != null && combManager.gameObject.activeInHierarchy)
+        {
+            // 드래그 중이 아닐 때만 처리
+            if (inventoryUI != null && !inventoryUI.IsDragging())
+            {
+                combManager.TryAddItemToCrafting(item);
+            }
+        }
+    }
 
     public void OnPointerEnter(PointerEventData eventData)
     {

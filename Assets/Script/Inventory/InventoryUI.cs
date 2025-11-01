@@ -8,8 +8,11 @@ public class InventoryUI : MonoBehaviour
     [Header("UI Panels")]
     public GameObject hotbarPanel;      // 핫바 슬롯들의 부모 패널
     public GameObject inventoryPanel;   // 인벤토리 슬롯들의 부모 패널
+    public GameObject itemCombPanel;    // 조합창 패널 (드래그 허용용)
 
     [Header("UI Elements")]
+    public Color selectedColor = new Color(0.8f, 0.8f, 0.8f, 1f); // 선택된 슬롯 색상
+    public Color defaultColor = Color.white;                      // 기본 슬롯 색상
     [SerializeField] private Transform rootCanvas; // UI의 최상위 Canvas Transform
 
     private Inventory inventory;
@@ -55,6 +58,7 @@ public class InventoryUI : MonoBehaviour
             AssignSlotDetails(hotbarSlots);
             AssignSlotDetails(inventorySlots);
             UpdateUI();
+            Canvas.ForceUpdateCanvases();
             UpdateSelectionVisual();
         }
     }
@@ -74,7 +78,10 @@ public class InventoryUI : MonoBehaviour
 
     public bool IsInventoryOpen()
     {
-        return inventoryPanel.activeSelf;
+        // 기본 인벤토리 또는 조합창이 열려있으면 true
+        bool inventoryOpen = inventoryPanel != null && inventoryPanel.activeSelf;
+        bool combOpen = itemCombPanel != null && itemCombPanel.activeSelf;
+        return inventoryOpen || combOpen;
     }
 
     void Update()
@@ -85,17 +92,44 @@ public class InventoryUI : MonoBehaviour
             if (inventory == null) return;
         }
 
-        if (Input.GetKeyDown(KeyCode.E))
+        // E 키 또는 ESC 키 처리
+        if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Escape))
         {
-            bool isInventoryOpen = !inventoryPanel.activeSelf;
-            inventoryPanel.SetActive(isInventoryOpen);
-            hotbarPanel.SetActive(!isInventoryOpen);
-
-            if (!isInventoryOpen)
+            // 조합창이 열려있으면 닫기
+            if (itemCombPanel.activeSelf)
             {
+                itemCombPanel.SetActive(false);
+                // 조합창을 닫을 때 인벤토리가 닫혀있다면 핫바를 다시 활성화
+                if (!inventoryPanel.activeSelf)
+                {
+                    hotbarPanel.SetActive(true);
+                }
+                return; // 다른 동작 방지
+            }
+
+            // 인벤토리 창 토글 (E 키만)
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                bool isInventoryOpen = !inventoryPanel.activeSelf;
+                inventoryPanel.SetActive(isInventoryOpen);
+                hotbarPanel.SetActive(!isInventoryOpen);
+
+                if (!isInventoryOpen)
+                {
+                    Canvas.ForceUpdateCanvases();
+                    UpdateSelectionVisual();
+                }
+            }
+            // 인벤토리가 열려있을 때 ESC 키 누르면 닫기
+            else if (Input.GetKeyDown(KeyCode.Escape) && inventoryPanel.activeSelf)
+            {
+                inventoryPanel.SetActive(false);
+                hotbarPanel.SetActive(true);
+                Canvas.ForceUpdateCanvases();
                 UpdateSelectionVisual();
             }
         }
+
 
         // 핫바 아이템 버리기 로직
         if (hotbarPanel.activeSelf && Input.GetKeyDown(KeyCode.Q))
@@ -110,8 +144,8 @@ public class InventoryUI : MonoBehaviour
             float scroll = Input.GetAxisRaw("Mouse ScrollWheel");
             if (scroll != 0)
             {
-                if (scroll > 0f) selectedSlot--;
-                else selectedSlot++;
+                if (scroll > 0f) selectedSlot++;
+                else selectedSlot--;
 
                 if (hotbarSlots.Length > 0)
                 {
@@ -146,9 +180,17 @@ public class InventoryUI : MonoBehaviour
     {
         for (int i = 0; i < hotbarSlots.Length; i++)
         {
-            if (hotbarSlots[i] != null)
+            Image slotImage = hotbarSlots[i].GetComponent<Image>();
+            if (slotImage != null)
             {
-                hotbarSlots[i].SetSelected(i == selectedSlot);
+                if (i == selectedSlot && hotbarPanel.activeSelf)
+                {
+                    slotImage.color = selectedColor;
+                }
+                else
+                {
+                    slotImage.color = defaultColor;
+                }
             }
         }
     }
@@ -158,6 +200,11 @@ public class InventoryUI : MonoBehaviour
     public bool IsDragging()
     {
         return originalSlot != null;
+    }
+
+    public InventorySlot GetDraggedSlot()
+    {
+        return originalSlot;
     }
 
     public void OnBeginDrag(InventorySlot slot)
@@ -176,8 +223,6 @@ public class InventoryUI : MonoBehaviour
 
         dragIcon.transform.SetParent(rootCanvas);
         dragIcon.transform.SetAsLastSibling();
-
-        originalSlot.SetDragState(true);
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -200,14 +245,21 @@ public class InventoryUI : MonoBehaviour
     {
         if (originalSlot == null) return;
 
-        // 마우스 포인터가 인벤토리 패널 위에 있는지 확인합니다.
+        // 마우스 포인터가 인벤토리 패널 또는 조합창 위에 있는지 확인합니다.
         bool isPointerOverInventory = false;
+
+        // 기본 인벤토리 패널 체크
         if (inventoryPanel != null && inventoryPanel.activeSelf)
         {
             RectTransform invPanelRect = inventoryPanel.GetComponent<RectTransform>();
-            // RectTransformUtility.RectangleContainsScreenPoint는 스크린 좌표를 기준으로 판별하므로 정확합니다.
-            // 세 번째 인자인 카메라는 Screen Space - Overlay 캔버스에서는 null로 두어도 됩니다.
             isPointerOverInventory = RectTransformUtility.RectangleContainsScreenPoint(invPanelRect, Input.mousePosition, null);
+        }
+
+        // 조합창 패널 체크
+        if (!isPointerOverInventory && itemCombPanel != null && itemCombPanel.activeSelf)
+        {
+            RectTransform combPanelRect = itemCombPanel.GetComponent<RectTransform>();
+            isPointerOverInventory = RectTransformUtility.RectangleContainsScreenPoint(combPanelRect, Input.mousePosition, null);
         }
 
         if (!dropSuccessful)
@@ -221,7 +273,6 @@ public class InventoryUI : MonoBehaviour
             {
                 // 드래그가 성공하지 않았지만 마우스가 인벤토리 UI 안에 있다면, 아이템을 원래 슬롯으로 되돌립니다.
                 // OnBeginDrag에서 호출된 SetDragState(true)를 되돌리기 위해 SetDragState(false)를 호출합니다.
-                originalSlot.SetDragState(false);
             }
         }
 
