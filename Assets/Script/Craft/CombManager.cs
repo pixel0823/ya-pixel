@@ -482,4 +482,35 @@ public class CombManager : MonoBehaviour
             craftButton.interactable = interactable;
         }
     }
+
+    /// <summary>
+    /// 인벤토리에서 클릭으로 아이템을 조합 슬롯에 추가 시도
+    /// </summary>
+    public void TryAddItemToCrafting(Item item)
+    {
+        if (item == null) return;
+
+        // 복사본 생성 (원본 아이템 수정 방지)
+        Item itemCopy = item.GetCopy();
+        itemCopy.amount = 1; // 조합에는 1개씩만 사용
+
+        // 비어있는 슬롯을 찾아 아이템 추가
+        if (slot1.item == null)
+        {
+            slot1.SetItem(itemCopy);
+        }
+        else if (slot2.item == null)
+        {
+            slot2.SetItem(itemCopy);
+        }
+        else
+        {
+            // 모든 슬롯이 꽉 찼을 경우
+            Debug.Log("조합 슬롯이 모두 찼습니다.");
+            return; // 아이템을 추가하지 않았으므로 여기서 종료
+        }
+
+        // 아이템 추가 후 레시피 확인
+        CheckRecipe();
+    }
 }

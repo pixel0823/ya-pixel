@@ -181,7 +181,7 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         // 아이템이 없으면 드래그 시작 안함
         if (item == null) return;
-        
+
         if (inventoryUI != null)
         {
             inventoryUI.OnBeginDrag(this);
