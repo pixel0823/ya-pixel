@@ -53,12 +53,28 @@ public class Recipe : ScriptableObject
     {
         foreach (RecipeIngredient ingredient in ingredients)
         {
-            if (!availableItems.ContainsKey(ingredient.item))
+            // 이름 정규화를 통한 비교 (공백 제거 + 소문자 변환)
+            string normalizedIngredientName = ingredient.item.itemName.Trim().ToLower();
+            bool found = false;
+            int availableAmount = 0;
+
+            foreach (var kvp in availableItems)
+            {
+                string normalizedAvailableName = kvp.Key.itemName.Trim().ToLower();
+                if (normalizedAvailableName == normalizedIngredientName)
+                {
+                    found = true;
+                    availableAmount = kvp.Value;
+                    break;
+                }
+            }
+
+            if (!found)
             {
                 return false;
             }
 
-            if (availableItems[ingredient.item] < ingredient.requiredAmount)
+            if (availableAmount < ingredient.requiredAmount)
             {
                 return false;
             }

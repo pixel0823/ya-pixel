@@ -16,11 +16,11 @@ MonoBehaviour:
   description: 
   ingredients:
   - item: {fileID: 11400000, guid: f7c2fe63a37d1eb4a9870ae0d66941de, type: 2}
-    requiredAmount: 0
+    requiredAmount: 1
   - item: {fileID: 11400000, guid: 55e8eb72abeb6bd47bc02dfc4aceb1fd, type: 2}
-    requiredAmount: 0
+    requiredAmount: 1
   result:
     item: {fileID: 11400000, guid: 518926be225c3c847ab128d1c5452bac, type: 2}
-    resultAmount: 0
-  requiresCraftingTable: 0
+    resultAmount: 1
+  requiresCraftingTable: 1
   requiredTool: 

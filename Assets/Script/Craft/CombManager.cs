@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// </summary>
 public class CombManager : MonoBehaviour
 {
-    [Header("조합 슬롯")]
+    [Header("조합 슬롯 (자동 설정)")]
     public CombSlot slot1; // 재료 슬롯 1
     public CombSlot slot2; // 재료 슬롯 2
     public CombSlot slot3; // 결과 슬롯
@@ -25,44 +25,36 @@ public class CombManager : MonoBehaviour
 
     void Start()
     {
-        // 슬롯이 수동으로 할당되었는지 확인
-        if (slot1 == null || slot2 == null || slot3 == null)
+        // 슬롯 자동 찾기 - 직접 자식만 (프리펩 대응)
+        List<CombSlot> foundSlots = new List<CombSlot>();
+
+        foreach (Transform child in transform)
         {
-            Debug.Log("조합 슬롯이 수동으로 할당되지 않아 자동 찾기를 시작합니다.");
-            // 슬롯 자동 찾기 - 직접 자식만 (프리펩 대응)
-            List<CombSlot> foundSlots = new List<CombSlot>();
+            CombSlot combSlot = child.GetComponent<CombSlot>();
+            if (combSlot == null)
+            {
+                // CombSlot이 없으면 자동 추가
+                combSlot = child.gameObject.AddComponent<CombSlot>();
+                Debug.Log($"CombSlot 자동 추가: {child.name}");
+            }
+            foundSlots.Add(combSlot);
+        }
 
-            foreach (Transform child in transform)
-            {
-                CombSlot combSlot = child.GetComponent<CombSlot>();
-                if (combSlot != null) // CombSlot 컴포넌트가 있는 경우에만 추가
-                {
-                    foundSlots.Add(combSlot);
-                }
-            }
+        if (foundSlots.Count >= 3)
+        {
+            slot1 = foundSlots[0];
+            slot2 = foundSlots[1];
+            slot3 = foundSlots[2];
 
-            if (foundSlots.Count >= 3)
-            {
-                slot1 = foundSlots[0];
-                slot2 = foundSlots[1];
-                slot3 = foundSlots[2];
-                Debug.Log($"조합 슬롯 자동 설정 완료: {slot1.name}, {slot2.name}, {slot3.name}");
-            }
-            else
-            {
-                Debug.LogError($"조합 슬롯이 부족합니다! (필요: 3개, 발견: {foundSlots.Count}개)");
-                Debug.LogError($"ItemCombPanel의 직접 자식 오브젝트에 CombSlot 컴포넌트가 3개 이상 있어야 합니다.");
-            }
+            // 결과 슬롯 설정
+            slot3.isResultSlot = true;
+
+            Debug.Log($"조합 슬롯 자동 설정 완료: {slot1.name}, {slot2.name}, {slot3.name}");
         }
         else
         {
-            Debug.Log("조합 슬롯이 수동으로 할당되었습니다.");
-        }
-
-        // 결과 슬롯 설정
-        if (slot3 != null)
-        {
-            slot3.isResultSlot = true;
+            Debug.LogError($"조합 슬롯이 부족합니다! (필요: 3개, 발견: {foundSlots.Count}개)");
+            Debug.LogError($"ItemCombPanel의 직접 자식 오브젝트가 3개 있어야 합니다.");
         }
 
         // 조합 버튼 자동 찾기
@@ -105,20 +97,6 @@ public class CombManager : MonoBehaviour
             }
         }
 
-        // Inventory 자동 찾기 (비활성화된 것도 포함)
-        if (inventory == null)
-        {
-            inventory = FindObjectOfType<Inventory>(true);
-            if (inventory != null)
-            {
-                Debug.Log("Inventory 자동 찾기 완료");
-            }
-            else
-            {
-                Debug.LogError("Inventory를 찾을 수 없습니다! Scene에 Inventory 컴포넌트가 있는지 확인하세요.");
-            }
-        }
-
         // InventoryUI 자동 찾기 (비활성화된 것도 포함)
         if (inventoryUI == null)
         {
@@ -132,49 +110,119 @@ public class CombManager : MonoBehaviour
                 Debug.LogError("InventoryUI를 찾을 수 없습니다! Scene에 InventoryUI 컴포넌트가 있는지 확인하세요.");
             }
         }
+
+        // Inventory는 InventoryUI에서 가져오기 (같은 인스턴스 보장)
+        if (inventory == null && inventoryUI != null)
+        {
+            inventory = inventoryUI.GetInventory();
+            if (inventory != null)
+            {
+                Debug.Log($"[CombManager] InventoryUI에서 Inventory 가져오기 완료! 인스턴스 ID: {inventory.GetInstanceID()}");
+                Debug.Log($"[CombManager] Inventory.items 개수: {inventory.items?.Count ?? 0}");
+
+                // 아이템 내용 확인
+                int itemCount = 0;
+                if (inventory.items != null)
+                {
+                    foreach (var item in inventory.items)
+                    {
+                        if (item != null)
+                        {
+                            itemCount++;
+                            Debug.Log($"[CombManager] Start에서 발견한 아이템: {item.itemName} x{item.amount}");
+                        }
+                    }
+                }
+                Debug.Log($"[CombManager] Start에서 null 아닌 아이템 개수: {itemCount}");
+            }
+            else
+            {
+                Debug.LogError("[CombManager] InventoryUI.GetInventory()가 null을 반환했습니다!");
+            }
+        }
+
+        // 그래도 없으면 FindObjectOfType 시도
+        if (inventory == null)
+        {
+            inventory = FindObjectOfType<Inventory>(true);
+            if (inventory != null)
+            {
+                Debug.LogWarning($"Inventory 자동 찾기 완료 (InventoryUI와 다를 수 있음!) 인스턴스 ID: {inventory.GetInstanceID()}");
+            }
+            else
+            {
+                Debug.LogError("Inventory를 찾을 수 없습니다! Scene에 Inventory 컴포넌트가 있는지 확인하세요.");
+            }
+        }
     }
 
     void OnEnable()
     {
+        Debug.Log("[CombManager] OnEnable 호출됨 - 조합창 활성화");
+
         // 조합창이 활성화될 때 다시 시도
-        if (inventory == null)
-        {
-            inventory = FindObjectOfType<Inventory>(true);
-        }
         if (inventoryUI == null)
         {
             inventoryUI = FindObjectOfType<InventoryUI>(true);
+            Debug.Log($"[CombManager] OnEnable에서 InventoryUI 찾기: {(inventoryUI != null ? "성공" : "실패")}");
+        }
+
+        // Inventory는 InventoryUI에서 가져오기 (같은 인스턴스 보장)
+        if (inventoryUI != null)
+        {
+            inventory = inventoryUI.GetInventory();
+            if (inventory != null)
+            {
+                Debug.Log($"[CombManager] OnEnable에서 Inventory 가져오기 완료! 인스턴스 ID: {inventory.GetInstanceID()}");
+                Debug.Log($"[CombManager] OnEnable에서 Inventory.items 개수: {inventory.items?.Count ?? 0}");
+
+                // 아이템 내용 확인
+                int itemCount = 0;
+                if (inventory.items != null)
+                {
+                    foreach (var item in inventory.items)
+                    {
+                        if (item != null)
+                        {
+                            itemCount++;
+                            Debug.Log($"[CombManager] OnEnable에서 발견한 아이템: {item.itemName} x{item.amount}");
+                        }
+                    }
+                }
+                Debug.Log($"[CombManager] OnEnable에서 null 아닌 아이템 개수: {itemCount}");
+            }
+        }
+
+        // 그래도 없으면 FindObjectOfType 시도
+        if (inventory == null)
+        {
+            inventory = FindObjectOfType<Inventory>(true);
+            Debug.LogWarning($"[CombManager] OnEnable에서 FindObjectOfType으로 Inventory 찾기: {(inventory != null ? "성공" : "실패")}");
         }
     }
 
     /// <summary>
-    /// 인벤토리에서 아이템을 클릭했을 때 조합 슬롯에 추가 시도
+    /// 인벤토리에서 조합 슬롯으로 드롭했을 때 호출
     /// </summary>
-    public void TryAddItemToCrafting(Item itemToAdd)
+    public void OnDropToCombSlot(CombSlot targetSlot)
     {
-        if (itemToAdd == null) return;
+        if (inventoryUI == null || !inventoryUI.IsDragging())
+        {
+            return;
+        }
 
-        // 아이템 복사본 생성
-        Item itemCopy = itemToAdd.GetCopy();
-        itemCopy.amount = 1;
+        // 드래그 중인 인벤토리 슬롯 가져오기
+        InventorySlot draggedSlot = inventoryUI.GetDraggedSlot();
 
-        // 빈 슬롯에 아이템 추가
-        if (slot1.item == null)
+        if (draggedSlot == null || draggedSlot.item == null)
         {
-            slot1.SetItem(itemCopy);
+            return;
         }
-        else if (slot2.item == null)
-        {
-            // 동일한 아이템이 이미 슬롯1에 있는지 확인 (중복 방지)
-            if (slot1.item.itemName == itemCopy.itemName) return;
-            slot2.SetItem(itemCopy);
-        }
-        else
-        {
-            // 슬롯이 꽉 찼을 경우, 첫번째 슬롯을 교체하고 두번째 슬롯은 비움 (새로운 조합 시작)
-            slot1.SetItem(itemCopy);
-            slot2.ClearSlot();
-        }
+
+        // 조합 슬롯에 아이템 복사본 배치 (인벤토리에서는 제거 안 함)
+        Item itemCopy = draggedSlot.item.GetCopy();
+        itemCopy.amount = 1; // 조합에는 1개씩만 사용
+        targetSlot.SetItem(itemCopy);
 
         // 레시피 확인
         CheckRecipe();
@@ -225,18 +273,21 @@ public class CombManager : MonoBehaviour
                 continue;
             }
 
-            // 순서 상관없이 매칭
+            // 순서 상관없이 매칭 (이름 정규화: 공백 제거 + 소문자 변환)
             bool matched = false;
 
+            string slot1Name = slot1.item.itemName.Trim().ToLower();
+            string slot2Name = slot2.item.itemName.Trim().ToLower();
+            string recipe0Name = recipe.ingredients[0].item.itemName.Trim().ToLower();
+            string recipe1Name = recipe.ingredients[1].item.itemName.Trim().ToLower();
+
             // 경우 1: slot1=재료1, slot2=재료2
-            if (slot1.item.itemName == recipe.ingredients[0].item.itemName &&
-                slot2.item.itemName == recipe.ingredients[1].item.itemName)
+            if (slot1Name == recipe0Name && slot2Name == recipe1Name)
             {
                 matched = true;
             }
             // 경우 2: slot1=재료2, slot2=재료1
-            else if (slot1.item.itemName == recipe.ingredients[1].item.itemName &&
-                     slot2.item.itemName == recipe.ingredients[0].item.itemName)
+            else if (slot1Name == recipe1Name && slot2Name == recipe0Name)
             {
                 matched = true;
             }
@@ -300,54 +351,60 @@ public class CombManager : MonoBehaviour
             return false;
         }
 
-        // 1. 레시피에 필요한 총 재료 개수 계산
-        Dictionary<string, int> requiredItems = new Dictionary<string, int>();
-        foreach (RecipeIngredient ingredient in currentRecipe.ingredients)
-        {
-            if (requiredItems.ContainsKey(ingredient.item.itemName))
-            {
-                requiredItems[ingredient.item.itemName] += ingredient.requiredAmount;
-            }
-            else
-            {
-                requiredItems[ingredient.item.itemName] = ingredient.requiredAmount;
-            }
-        }
+        // 인벤토리 상태 디버깅
+        Debug.Log($"=== 인벤토리 상태 확인 ===");
+        Debug.Log($"Inventory 인스턴스: {inventory.GetInstanceID()}");
+        Debug.Log($"Inventory.items가 null인가? {inventory.items == null}");
+        Debug.Log($"Inventory.items 개수: {inventory.items?.Count ?? 0}");
 
-        // 2. 현재 인벤토리에 있는 아이템 개수 확인
+        // 인벤토리 아이템 개수 확인
         Dictionary<string, int> inventoryItems = new Dictionary<string, int>();
+        int itemCount = 0;
         foreach (Item item in inventory.items)
         {
             if (item != null)
             {
-                if (inventoryItems.ContainsKey(item.itemName))
+                itemCount++;
+                // 이름 정규화: 공백 제거 + 소문자 변환
+                string normalizedName = item.itemName.Trim().ToLower();
+
+                Debug.Log($"인벤토리 아이템 발견: '{item.itemName}' (정규화: '{normalizedName}') x{item.amount}");
+
+                if (inventoryItems.ContainsKey(normalizedName))
                 {
-                    inventoryItems[item.itemName] += item.amount;
+                    inventoryItems[normalizedName] += item.amount;
                 }
                 else
                 {
-                    inventoryItems[item.itemName] = item.amount;
+                    inventoryItems[normalizedName] = item.amount;
                 }
             }
         }
 
-        // 3. 필요한 재료가 인벤토리에 충분한지 확인
-        foreach (var requiredItem in requiredItems)
-        {
-            Debug.Log($"필요한 재료: {requiredItem.Key} x{requiredItem.Value}");
+        Debug.Log($"=== 인벤토리에서 null 아닌 아이템: {itemCount}개 ===");
+        Debug.Log($"인벤토리 아이템 목록: {string.Join(", ", inventoryItems.Keys)}");
 
-            if (!inventoryItems.ContainsKey(requiredItem.Key))
+        // 레시피 재료가 충분한지 확인
+        foreach (RecipeIngredient ingredient in currentRecipe.ingredients)
+        {
+            // 이름 정규화: 공백 제거 + 소문자 변환
+            string normalizedIngredientName = ingredient.item.itemName.Trim().ToLower();
+
+            Debug.Log($"필요한 재료: {ingredient.item.itemName} (정규화: {normalizedIngredientName}) x{ingredient.requiredAmount}");
+
+            if (!inventoryItems.ContainsKey(normalizedIngredientName))
             {
-                Debug.LogWarning($"인벤토리에 {requiredItem.Key}이(가) 없습니다!");
+                Debug.LogWarning($"인벤토리에 {ingredient.item.itemName}이(가) 없습니다! (정규화된 이름: '{normalizedIngredientName}')");
+                Debug.LogWarning($"인벤토리에 있는 아이템들: {string.Join(", ", inventoryItems.Keys)}");
                 return false;
             }
 
-            int available = inventoryItems[requiredItem.Key];
-            Debug.Log($"인벤토리에 있는 {requiredItem.Key}: {available}개");
+            int available = inventoryItems[normalizedIngredientName];
+            Debug.Log($"인벤토리에 있는 {ingredient.item.itemName}: {available}개");
 
-            if (available < requiredItem.Value)
+            if (available < ingredient.requiredAmount)
             {
-                Debug.LogWarning($"{requiredItem.Key}이(가) 부족합니다! (필요: {requiredItem.Value}, 보유: {available})");
+                Debug.LogWarning($"{ingredient.item.itemName}이(가) 부족합니다! (필요: {ingredient.requiredAmount}, 보유: {available})");
                 return false;
             }
         }
@@ -367,12 +424,26 @@ public class CombManager : MonoBehaviour
             return;
         }
 
+        if (inventory == null)
+        {
+            Debug.LogError("[CombManager] inventory가 null입니다! 조합 불가능");
+            return;
+        }
+
         CraftingManager craftingManager = FindObjectOfType<CraftingManager>();
         if (craftingManager == null)
         {
             Debug.LogError("CraftingManager를 찾을 수 없습니다.");
             return;
         }
+
+        // CraftingManager가 올바른 Inventory를 참조하도록 설정
+        Debug.Log($"[CombManager] 조합 버튼 클릭! CombManager Inventory ID: {inventory.GetInstanceID()}");
+        Debug.Log($"[CombManager] CraftingManager Inventory ID: {(craftingManager.inventory != null ? craftingManager.inventory.GetInstanceID().ToString() : "null")}");
+
+        // CraftingManager의 inventory를 CombManager와 동일한 것으로 설정
+        craftingManager.inventory = inventory;
+        Debug.Log($"[CombManager] CraftingManager에 Inventory 설정 완료");
 
         // 조합 실행
         bool success = craftingManager.CraftItem(currentRecipe);
@@ -410,5 +481,36 @@ public class CombManager : MonoBehaviour
         {
             craftButton.interactable = interactable;
         }
+    }
+
+    /// <summary>
+    /// 인벤토리에서 클릭으로 아이템을 조합 슬롯에 추가 시도
+    /// </summary>
+    public void TryAddItemToCrafting(Item item)
+    {
+        if (item == null) return;
+
+        // 복사본 생성 (원본 아이템 수정 방지)
+        Item itemCopy = item.GetCopy();
+        itemCopy.amount = 1; // 조합에는 1개씩만 사용
+
+        // 비어있는 슬롯을 찾아 아이템 추가
+        if (slot1.item == null)
+        {
+            slot1.SetItem(itemCopy);
+        }
+        else if (slot2.item == null)
+        {
+            slot2.SetItem(itemCopy);
+        }
+        else
+        {
+            // 모든 슬롯이 꽉 찼을 경우
+            Debug.Log("조합 슬롯이 모두 찼습니다.");
+            return; // 아이템을 추가하지 않았으므로 여기서 종료
+        }
+
+        // 아이템 추가 후 레시피 확인
+        CheckRecipe();
     }
 }
