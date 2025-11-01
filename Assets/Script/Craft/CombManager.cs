@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// </summary>
 public class CombManager : MonoBehaviour
 {
-    [Header("조합 슬롯 (자동 설정)")]
+    [Header("조합 슬롯")]
     public CombSlot slot1; // 재료 슬롯 1
     public CombSlot slot2; // 재료 슬롯 2
     public CombSlot slot3; // 결과 슬롯
@@ -25,36 +25,44 @@ public class CombManager : MonoBehaviour
 
     void Start()
     {
-        // 슬롯 자동 찾기 - 직접 자식만 (프리펩 대응)
-        List<CombSlot> foundSlots = new List<CombSlot>();
-
-        foreach (Transform child in transform)
+        // 슬롯이 수동으로 할당되었는지 확인
+        if (slot1 == null || slot2 == null || slot3 == null)
         {
-            CombSlot combSlot = child.GetComponent<CombSlot>();
-            if (combSlot == null)
+            Debug.Log("조합 슬롯이 수동으로 할당되지 않아 자동 찾기를 시작합니다.");
+            // 슬롯 자동 찾기 - 직접 자식만 (프리펩 대응)
+            List<CombSlot> foundSlots = new List<CombSlot>();
+
+            foreach (Transform child in transform)
             {
-                // CombSlot이 없으면 자동 추가
-                combSlot = child.gameObject.AddComponent<CombSlot>();
-                Debug.Log($"CombSlot 자동 추가: {child.name}");
+                CombSlot combSlot = child.GetComponent<CombSlot>();
+                if (combSlot != null) // CombSlot 컴포넌트가 있는 경우에만 추가
+                {
+                    foundSlots.Add(combSlot);
+                }
             }
-            foundSlots.Add(combSlot);
-        }
 
-        if (foundSlots.Count >= 3)
-        {
-            slot1 = foundSlots[0];
-            slot2 = foundSlots[1];
-            slot3 = foundSlots[2];
-
-            // 결과 슬롯 설정
-            slot3.isResultSlot = true;
-
-            Debug.Log($"조합 슬롯 자동 설정 완료: {slot1.name}, {slot2.name}, {slot3.name}");
+            if (foundSlots.Count >= 3)
+            {
+                slot1 = foundSlots[0];
+                slot2 = foundSlots[1];
+                slot3 = foundSlots[2];
+                Debug.Log($"조합 슬롯 자동 설정 완료: {slot1.name}, {slot2.name}, {slot3.name}");
+            }
+            else
+            {
+                Debug.LogError($"조합 슬롯이 부족합니다! (필요: 3개, 발견: {foundSlots.Count}개)");
+                Debug.LogError($"ItemCombPanel의 직접 자식 오브젝트에 CombSlot 컴포넌트가 3개 이상 있어야 합니다.");
+            }
         }
         else
         {
-            Debug.LogError($"조합 슬롯이 부족합니다! (필요: 3개, 발견: {foundSlots.Count}개)");
-            Debug.LogError($"ItemCombPanel의 직접 자식 오브젝트가 3개 있어야 합니다.");
+            Debug.Log("조합 슬롯이 수동으로 할당되었습니다.");
+        }
+
+        // 결과 슬롯 설정
+        if (slot3 != null)
+        {
+            slot3.isResultSlot = true;
         }
 
         // 조합 버튼 자동 찾기
@@ -140,27 +148,33 @@ public class CombManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 인벤토리에서 조합 슬롯으로 드롭했을 때 호출
+    /// 인벤토리에서 아이템을 클릭했을 때 조합 슬롯에 추가 시도
     /// </summary>
-    public void OnDropToCombSlot(CombSlot targetSlot)
+    public void TryAddItemToCrafting(Item itemToAdd)
     {
-        if (inventoryUI == null || !inventoryUI.IsDragging())
+        if (itemToAdd == null) return;
+
+        // 아이템 복사본 생성
+        Item itemCopy = itemToAdd.GetCopy();
+        itemCopy.amount = 1;
+
+        // 빈 슬롯에 아이템 추가
+        if (slot1.item == null)
         {
-            return;
+            slot1.SetItem(itemCopy);
         }
-
-        // 드래그 중인 인벤토리 슬롯 가져오기
-        InventorySlot draggedSlot = inventoryUI.GetDraggedSlot();
-
-        if (draggedSlot == null || draggedSlot.item == null)
+        else if (slot2.item == null)
         {
-            return;
+            // 동일한 아이템이 이미 슬롯1에 있는지 확인 (중복 방지)
+            if (slot1.item.itemName == itemCopy.itemName) return;
+            slot2.SetItem(itemCopy);
         }
-
-        // 조합 슬롯에 아이템 복사본 배치 (인벤토리에서는 제거 안 함)
-        Item itemCopy = draggedSlot.item.GetCopy();
-        itemCopy.amount = 1; // 조합에는 1개씩만 사용
-        targetSlot.SetItem(itemCopy);
+        else
+        {
+            // 슬롯이 꽉 찼을 경우, 첫번째 슬롯을 교체하고 두번째 슬롯은 비움 (새로운 조합 시작)
+            slot1.SetItem(itemCopy);
+            slot2.ClearSlot();
+        }
 
         // 레시피 확인
         CheckRecipe();
@@ -286,7 +300,21 @@ public class CombManager : MonoBehaviour
             return false;
         }
 
-        // 인벤토리 아이템 개수 확인
+        // 1. 레시피에 필요한 총 재료 개수 계산
+        Dictionary<string, int> requiredItems = new Dictionary<string, int>();
+        foreach (RecipeIngredient ingredient in currentRecipe.ingredients)
+        {
+            if (requiredItems.ContainsKey(ingredient.item.itemName))
+            {
+                requiredItems[ingredient.item.itemName] += ingredient.requiredAmount;
+            }
+            else
+            {
+                requiredItems[ingredient.item.itemName] = ingredient.requiredAmount;
+            }
+        }
+
+        // 2. 현재 인벤토리에 있는 아이템 개수 확인
         Dictionary<string, int> inventoryItems = new Dictionary<string, int>();
         foreach (Item item in inventory.items)
         {
@@ -303,25 +331,23 @@ public class CombManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"인벤토리 아이템 목록: {string.Join(", ", inventoryItems.Keys)}");
-
-        // 레시피 재료가 충분한지 확인
-        foreach (RecipeIngredient ingredient in currentRecipe.ingredients)
+        // 3. 필요한 재료가 인벤토리에 충분한지 확인
+        foreach (var requiredItem in requiredItems)
         {
-            Debug.Log($"필요한 재료: {ingredient.item.itemName} x{ingredient.requiredAmount}");
+            Debug.Log($"필요한 재료: {requiredItem.Key} x{requiredItem.Value}");
 
-            if (!inventoryItems.ContainsKey(ingredient.item.itemName))
+            if (!inventoryItems.ContainsKey(requiredItem.Key))
             {
-                Debug.LogWarning($"인벤토리에 {ingredient.item.itemName}이(가) 없습니다!");
+                Debug.LogWarning($"인벤토리에 {requiredItem.Key}이(가) 없습니다!");
                 return false;
             }
 
-            int available = inventoryItems[ingredient.item.itemName];
-            Debug.Log($"인벤토리에 있는 {ingredient.item.itemName}: {available}개");
+            int available = inventoryItems[requiredItem.Key];
+            Debug.Log($"인벤토리에 있는 {requiredItem.Key}: {available}개");
 
-            if (available < ingredient.requiredAmount)
+            if (available < requiredItem.Value)
             {
-                Debug.LogWarning($"{ingredient.item.itemName}이(가) 부족합니다! (필요: {ingredient.requiredAmount}, 보유: {available})");
+                Debug.LogWarning($"{requiredItem.Key}이(가) 부족합니다! (필요: {requiredItem.Value}, 보유: {available})");
                 return false;
             }
         }

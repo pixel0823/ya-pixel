@@ -62,14 +62,6 @@ public class CraftingManager : MonoBehaviour
             return false;
         }
 
-        // 재료 확인
-        Dictionary<Item, int> availableItems = GetAvailableItems();
-        if (!recipe.CanCraft(availableItems))
-        {
-            Debug.Log($"재료가 부족하여 '{recipe.recipeName}'를 조합할 수 없습니다.");
-            return false;
-        }
-
         // 재료 소모
         foreach (RecipeIngredient ingredient in recipe.ingredients)
         {
