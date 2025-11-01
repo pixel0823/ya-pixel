@@ -16,11 +16,11 @@ MonoBehaviour:
   description: "\uACFC\uC790"
   ingredients:
   - item: {fileID: 11400000, guid: 4669488330343094cb69aa8136fa75b2, type: 2}
-    requiredAmount: 0
+    requiredAmount: 1
   - item: {fileID: 11400000, guid: 14bf81a6ffbf63d4a90820a13e2ce6d6, type: 2}
-    requiredAmount: 0
+    requiredAmount: 1
   result:
     item: {fileID: 11400000, guid: cfd12809346c287418b6e193eb8c2c83, type: 2}
-    resultAmount: 0
+    resultAmount: 1
   requiresCraftingTable: 1
   requiredTool: 

@@ -16,11 +16,11 @@ MonoBehaviour:
   description: "\uD1B5\uC870\uB9BC"
   ingredients:
   - item: {fileID: 11400000, guid: 60ffc5e4f635b5f4384fb2c71c193bb0, type: 2}
-    requiredAmount: 0
+    requiredAmount: 1
   - item: {fileID: 11400000, guid: 0f3fc24cb16b9af49ba889de1efed6a8, type: 2}
-    requiredAmount: 0
+    requiredAmount: 1
   result:
     item: {fileID: 11400000, guid: 7dfe0d805365b044e9c4132fd2e391b1, type: 2}
-    resultAmount: 0
+    resultAmount: 1
   requiresCraftingTable: 1
   requiredTool: 

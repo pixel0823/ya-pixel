@@ -22,5 +22,5 @@ MonoBehaviour:
   result:
     item: {fileID: 11400000, guid: e70d6b1670c07604c93e256aac85085e, type: 2}
     resultAmount: 1
-  requiresCraftingTable: 0
+  requiresCraftingTable: 1
   requiredTool: 

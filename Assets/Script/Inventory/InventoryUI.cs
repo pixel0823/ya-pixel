@@ -20,6 +20,17 @@ public class InventoryUI : MonoBehaviour
     private InventorySlot[] inventorySlots;
     private int selectedSlot = 0;
 
+    // 다른 스크립트에서 inventory에 접근할 수 있도록 프로퍼티 추가
+    public Inventory GetInventory()
+    {
+        // inventory가 null이면 초기화 시도
+        if (inventory == null)
+        {
+            TryInitializeInventory();
+        }
+        return inventory;
+    }
+
     // --- 드래그 앤 드롭 상태 관리 변수 ---
     private GameObject dragIcon;
     private InventorySlot originalSlot;
@@ -54,12 +65,18 @@ public class InventoryUI : MonoBehaviour
         inventory = FindObjectOfType<Inventory>();
         if (inventory != null)
         {
+            Debug.Log($"[InventoryUI] Inventory 찾기 완료! 인스턴스 ID: {inventory.GetInstanceID()}");
+            Debug.Log($"[InventoryUI] Inventory.items 개수: {inventory.items?.Count ?? 0}");
             inventory.onItemChangedCallback += UpdateUI;
             AssignSlotDetails(hotbarSlots);
             AssignSlotDetails(inventorySlots);
             UpdateUI();
             Canvas.ForceUpdateCanvases();
             UpdateSelectionVisual();
+        }
+        else
+        {
+            Debug.LogError("[InventoryUI] Inventory를 찾을 수 없습니다!");
         }
     }
 
@@ -159,6 +176,23 @@ public class InventoryUI : MonoBehaviour
 
     void UpdateUI()
     {
+        // 디버그: 인벤토리 아이템 목록 출력
+        int itemCount = 0;
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        sb.Append("[InventoryUI] 인벤토리 아이템: ");
+        for (int i = 0; i < inventory.items.Count; i++)
+        {
+            if (inventory.items[i] != null)
+            {
+                itemCount++;
+                sb.Append($"{inventory.items[i].itemName} x{inventory.items[i].amount}, ");
+            }
+        }
+        if (itemCount > 0)
+        {
+            Debug.Log(sb.ToString());
+        }
+
         for (int i = 0; i < hotbarSlots.Length; i++)
         {
             if (i < inventory.items.Count) hotbarSlots[i].item = inventory.items[i];
