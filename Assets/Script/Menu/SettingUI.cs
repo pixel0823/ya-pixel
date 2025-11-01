@@ -14,6 +14,15 @@ public class SettingUI : MonoBehaviour
         ShowSoundPanel();
     }
 
+    private void Update()
+    {
+        // ESC 키를 누르면 설정창 닫기
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            CloseSettings();
+        }
+    }
+
     public void ShowSoundPanel()
     {
         if (soundPanel != null)
