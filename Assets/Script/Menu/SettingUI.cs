@@ -17,6 +17,7 @@ public class SettingUI : MonoBehaviour
     private void Update()
     {
         // ESC 키를 누르면 설정창 닫기
+        // (EscUI가 없는 씬에서 사용, EscUI가 있으면 EscUI가 처리함)
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             CloseSettings();
