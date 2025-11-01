@@ -1,33 +1,37 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using System.Collections.Generic;
 using Photon.Pun;
 
 /// <summary>
-/// [수정됨] 게임 씬이 로드될 때, Photon 방의 Custom Properties에 저장된 시드 값을 읽어 맵을 생성합니다.
+/// [수정됨] 바이옴(Biome) 개념을 도입하여 맵을 생성합니다.
+/// 2중 Perlin Noise를 사용하여 큰 바이옴을 먼저 결정하고, 각 바이옴 내에서 세부 지형을 생성합니다.
 /// </summary>
 public class MapManager : MonoBehaviour
 {
     [Header("맵 생성 설정")]
     [Tooltip("전체 맵의 가로(X) 크기입니다.")]
-    public int mapWidth = 100;
-    [Tooltip("전체 맵의 세로(Z) 크기입니다.")]
-    public int mapHeight = 100;
+    public int mapWidth = 1000;
+    [Tooltip("전체 맵의 세로(Y) 크기입니다.")]
+    public int mapHeight = 1000;
 
-    [Header("기본 맵 설정")]
-    [Tooltip("중앙에 배치될 기본 맵 프리팹입니다.")]
-    public GameObject baseMapPrefab;
-    [Tooltip("기본 맵의 가로(X) 크기입니다.")]
-    public int baseMapWidth = 20;
-    [Tooltip("기본 맵의 세로(Z) 크기입니다.")]
-    public int baseMapHeight = 20;
+    [Header("타일맵 설정")]
+    [Tooltip("맵을 그릴 대상 Tilemap입니다.")]
+    public Tilemap targetTilemap;
+    [Tooltip("중앙에 배치될 베이스맵 프리팹입니다. (Tilemap 형태)")]
+    public Tilemap baseMapPrefab;
+    [Tooltip("베이스맵의 위치 오프셋입니다.")]
+    public Vector2Int baseMapOffset;
 
-    [Header("절차적 지형 설정")]
-    [Tooltip("지형 생성에 사용될 타일 프리팹 리스트입니다.")]
-    public List<TileInfo> terrainTiles;
-    [Tooltip("Perlin Noise의 스케일 값입니다.")]
-    public float noiseScale = 0.1f;
+    // [수정] 단일 지형 설정 대신 바이옴 기반 설정으로 변경
+    [Header("바이옴 및 지형 설정")]
+    [Tooltip("생성될 바이옴 리스트입니다.")]
+    public List<Biome> biomes;
+    [Tooltip("바이옴 구분을 위한 Perlin Noise 스케일 값입니다. (작을수록 바이옴이 커짐)")]
+    public float biomeNoiseScale = 0.02f;
+    [Tooltip("바이옴 내 세부 지형을 위한 Perlin Noise 스케일 값입니다.")]
+    public float terrainNoiseScale = 0.1f;
 
-    // 시드 값은 이제 Photon Room Properties에서 직접 읽어옵니다.
     private int seed;
     private System.Random pseudoRandom;
 
@@ -35,27 +39,45 @@ public class MapManager : MonoBehaviour
     public class TileInfo
     {
         public string name;
-        public GameObject tilePrefab;
+        public TileBase tileAsset;
         [Range(0f, 1f)]
         public float threshold;
     }
 
+    // [신규] 바이옴 클래스 정의
+    [System.Serializable]
+    public class Biome
+    {
+        public string name;
+        [Tooltip("이 바이옴을 결정하는 임계값입니다.")]
+        [Range(0f, 1f)]
+        public float threshold;
+        [Tooltip("이 바이옴에서 사용될 타일 리스트입니다.")]
+        public List<TileInfo> terrainTiles;
+    }
+
+
     void Start()
     {
-        // 이 스크립트는 "Map1" 같은 게임 씬에 존재해야 합니다.
-        // 씬이 로드되면, 모든 클라이언트에서 이 Start 함수가 실행됩니다.
-
-        // 먼저, 인스펙터 설정이 올바르게 되었는지 확인합니다.
-        if (terrainTiles == null || terrainTiles.Count == 0)
+        if (targetTilemap == null)
         {
-            Debug.LogError("[MapManager] 'Terrain Tiles' 리스트가 비어있습니다. 맵을 생성할 수 없습니다.");
+            Debug.LogError("[MapManager] 'Target Tilemap'이 할당되지 않았습니다.");
+            return;
+        }
+        // [수정] 바이옴 리스트 유효성 검사
+        if (biomes == null || biomes.Count == 0)
+        {
+            Debug.LogError("[MapManager] 'Biomes' 리스트가 비어있습니다. 맵을 생성할 수 없습니다.");
             return;
         }
 
-        // (개선) 임계값(threshold)을 기준으로 타일 리스트를 오름차순 정렬하여 안정성 확보
-        terrainTiles.Sort((a, b) => a.threshold.CompareTo(b.threshold));
+        // [수정] 바이옴 및 각 바이옴의 타일 리스트를 임계값 기준으로 정렬
+        biomes.Sort((a, b) => a.threshold.CompareTo(b.threshold));
+        foreach (var biome in biomes)
+        {
+            biome.terrainTiles.Sort((a, b) => a.threshold.CompareTo(b.threshold));
+        }
 
-        // Photon 방의 Custom Properties에서 "mapSeed" 값을 가져옵니다.
         if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("mapSeed", out object mapSeedValue))
         {
             this.seed = (int)mapSeedValue;
@@ -64,18 +86,15 @@ public class MapManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("[MapManager] 방 속성에서 'mapSeed'를 찾을 수 없습니다! CreateRoom 스크립트에서 시드가 정상적으로 설정되었는지 확인하세요.");
+            Debug.LogError("[MapManager] 방 속성에서 'mapSeed'를 찾을 수 없습니다!");
         }
     }
 
-    /// <summary>
-    /// 동기화된 시드 값을 사용하여 맵 생성을 시작하는 메인 메서드입니다.
-    /// </summary>
     public void GenerateMap()
     {
         ClearMap();
         InitializeRandom(this.seed);
-        InstantiateBaseMap();
+        StampBaseMap();
         GenerateSurroundingTerrain();
         Debug.Log($"[MapManager] 맵 생성 완료. (시드: {this.seed})");
     }
@@ -85,68 +104,109 @@ public class MapManager : MonoBehaviour
         pseudoRandom = new System.Random(syncedSeed);
     }
 
-    private void InstantiateBaseMap()
+    private void StampBaseMap()
     {
-        if (baseMapPrefab != null)
+        if (baseMapPrefab == null) return;
+        BoundsInt bounds = baseMapPrefab.cellBounds;
+        for (int x = bounds.xMin; x < bounds.xMax; x++)
         {
-            Vector3 centerPosition = new Vector3(mapWidth / 2f, 0, mapHeight / 2f);
-            Instantiate(baseMapPrefab, centerPosition, Quaternion.identity, this.transform);
+            for (int y = bounds.yMin; y < bounds.yMax; y++)
+            {
+                Vector3Int prefabTilePos = new Vector3Int(x, y, 0);
+                TileBase tile = baseMapPrefab.GetTile(prefabTilePos);
+                if (tile != null)
+                {
+                    Vector3Int targetPos = new Vector3Int(x + baseMapOffset.x, y + baseMapOffset.y, 0);
+                    targetTilemap.SetTile(targetPos, tile);
+                }
+            }
         }
+        Debug.Log("[MapManager] 베이스맵 스탬프 완료.");
     }
 
+    // [수정] 2중 Perlin Noise를 사용하도록 재작성
     private void GenerateSurroundingTerrain()
     {
-        float offsetX = pseudoRandom.Next(-10000, 10000);
-        float offsetZ = pseudoRandom.Next(-10000, 10000);
+        // 바이옴과 지형을 위한 별도의 노이즈 오프셋 생성
+        float biomeOffsetX = pseudoRandom.Next(-10000, 10000);
+        float biomeOffsetY = pseudoRandom.Next(-10000, 10000);
+        float terrainOffsetX = pseudoRandom.Next(-20000, 20000);
+        float terrainOffsetY = pseudoRandom.Next(-20000, 20000);
 
-        int baseStartX = (mapWidth - baseMapWidth) / 2;
-        int baseEndX = baseStartX + baseMapWidth;
-        int baseStartZ = (mapHeight - baseMapHeight) / 2;
-        int baseEndZ = baseStartZ + baseMapHeight;
+        int startX = -mapWidth / 2;
+        int startY = -mapHeight / 2;
 
-        for (int x = 0; x < mapWidth; x++)
+        for (int x = startX; x < startX + mapWidth; x++)
         {
-            for (int z = 0; z < mapHeight; z++)
+            for (int y = startY; y < startY + mapHeight; y++)
             {
-                if (x >= baseStartX && x < baseEndX && z >= baseStartZ && z < baseEndZ)
+                Vector3Int tilePosition = new Vector3Int(x, y, 0);
+                if (targetTilemap.HasTile(tilePosition))
                 {
                     continue;
                 }
 
-                float sampleX = (x + offsetX) * noiseScale;
-                float sampleZ = (z + offsetZ) * noiseScale;
-                float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ);
+                // 1. 바이옴 결정
+                float biomeSampleX = (x + biomeOffsetX) * biomeNoiseScale;
+                float biomeSampleY = (y + biomeOffsetY) * biomeNoiseScale;
+                float biomeValue = Mathf.PerlinNoise(biomeSampleX, biomeSampleY);
+                Biome currentBiome = GetBiomeForValue(biomeValue);
 
-                GameObject tileToInstantiate = GetTileForPerlinValue(perlinValue);
-                if (tileToInstantiate != null)
+                if (currentBiome == null) continue;
+
+                // 2. 바이옴 내에서 세부 타일 결정
+                float terrainSampleX = (x + terrainOffsetX) * terrainNoiseScale;
+                float terrainSampleY = (y + terrainOffsetY) * terrainNoiseScale;
+                float terrainValue = Mathf.PerlinNoise(terrainSampleX, terrainSampleY);
+                TileBase tileToSet = GetTileForValue(terrainValue, currentBiome.terrainTiles);
+
+                if (tileToSet != null)
                 {
-                    Instantiate(tileToInstantiate, new Vector3(x, 0, z), Quaternion.identity, this.transform);
+                    targetTilemap.SetTile(tilePosition, tileToSet);
                 }
             }
         }
     }
 
-    private GameObject GetTileForPerlinValue(float perlinValue)
+    // [신규] 값에 따라 바이옴을 선택하는 함수
+    private Biome GetBiomeForValue(float value)
     {
-        foreach (var tileInfo in terrainTiles)
+        foreach (var biome in biomes)
         {
-            if (perlinValue <= tileInfo.threshold)
+            if (value <= biome.threshold)
             {
-                return tileInfo.tilePrefab;
+                return biome;
             }
         }
-        if (terrainTiles.Count > 0)
+        if (biomes.Count > 0)
         {
-            return terrainTiles[terrainTiles.Count - 1].tilePrefab;
+            return biomes[biomes.Count - 1];
+        }
+        return null;
+    }
+
+    // [수정] 이름 변경 및 특정 타일 리스트를 받도록 수정
+    private TileBase GetTileForValue(float value, List<TileInfo> tiles)
+    {
+        foreach (var tileInfo in tiles)
+        {
+            if (value <= tileInfo.threshold)
+            {
+                return tileInfo.tileAsset;
+            }
+        }
+        if (tiles.Count > 0)
+        {
+            return tiles[tiles.Count - 1].tileAsset;
         }
         return null;
     }
 
     public void ClearMap()
     {
-        while (transform.childCount > 0)
+        if (targetTilemap != null)
         {
-            Destroy(transform.GetChild(0).gameObject);
+            targetTilemap.ClearAllTiles();
         }
     }
 }
