@@ -4,10 +4,13 @@ using UnityEngine.EventSystems;
 using TMPro;
 
 // 인벤토리의 각 슬롯을 제어하는 클래스
-public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerClickHandler
 {
-    private Image slotImage;
-    private Sprite defaultSprite;
+    [Header("UI Components")]
+    [Tooltip("아이템 아이콘을 표시할 이미지 컴포넌트")]
+    public Image itemIcon; // 아이템 아이콘을 표시할 전용 이미지
+
+    private Image slotImage; // 슬롯 자체의 배경 이미지
     private TextMeshProUGUI amountText;
 
     [HideInInspector] public Item item;
@@ -16,6 +19,14 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     [HideInInspector] public int slotIndex;
 
     private bool isMouseOver = false;
+    private bool isSelected = false;
+    private bool isDragging = false;
+
+    private CombManager combManager;
+
+    private Color normalColor;
+    private readonly Color selectedColor = new Color(0.8f, 0.8f, 0.8f, 1f); // 선택 시 색상
+    private readonly Color draggingColor = new Color(1f, 1f, 1f, 0.5f); // 드래그 시 색상
 
     void Awake()
     {
@@ -25,15 +36,32 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             Debug.LogError($"인벤토리 슬롯 '{gameObject.name}'에 Image 컴포넌트가 없습니다!", gameObject);
             return;
         }
-        defaultSprite = slotImage.sprite;
+        normalColor = slotImage.color; // 기본 배경색 저장
 
         amountText = GetComponentInChildren<TextMeshProUGUI>();
         if (amountText == null)
         {
             Debug.LogError($"인벤토리 슬롯 '{gameObject.name}'에 TextMeshProUGUI 컴포넌트가 없습니다!", gameObject);
-            return;
+            // return; // Text가 없어도 일단은 동작하도록 주석 처리
         }
-        amountText.raycastTarget = false;
+        else
+        {
+            amountText.raycastTarget = false;
+        }
+
+        if (itemIcon != null)
+        {
+            itemIcon.raycastTarget = false; // 아이콘이 마우스 이벤트를 막지 않도록 설정
+        }
+        else
+        {
+            Debug.LogError($"인벤토리 슬롯 '{gameObject.name}'에 itemIcon이 할당되지 않았습니다!", gameObject);
+        }
+
+        // 씬에서 CombManager를 찾습니다. (비활성화된 것도 포함)
+        combManager = FindObjectOfType<CombManager>(true);
+
+        UpdateSlotUI(); // 초기 상태 업데이트
     }
 
     void Update()
@@ -56,12 +84,13 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void UpdateSlotUI()
     {
-        if (slotImage == null) return;
-
         if (item != null)
         {
-            slotImage.sprite = item.icon;
-            slotImage.color = Color.white;
+            if (itemIcon != null)
+            {
+                itemIcon.sprite = item.icon;
+                itemIcon.enabled = true;
+            }
 
             if (amountText != null)
             {
@@ -78,8 +107,12 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         }
         else
         {
-            slotImage.sprite = defaultSprite;
-            slotImage.color = Color.white;
+            if (itemIcon != null)
+            {
+                itemIcon.sprite = null;
+                itemIcon.enabled = false;
+            }
+
             if (amountText != null)
             {
                 amountText.gameObject.SetActive(false);
@@ -87,15 +120,52 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         }
     }
 
-    public void SetDragState(bool isDragging)
+    // 슬롯의 색상을 상태(드래그, 선택)에 따라 업데이트합니다.
+    private void UpdateSlotColor()
     {
-        if (slotImage != null)
+        if (slotImage == null) return;
+
+        if (isDragging)
         {
-            slotImage.color = isDragging ? new Color(1, 1, 1, 0.5f) : Color.white;
+            slotImage.color = draggingColor;
+        }
+        else if (isSelected)
+        {
+            slotImage.color = selectedColor;
+        }
+        else
+        {
+            slotImage.color = normalColor;
         }
     }
 
+    // InventoryUI에서 호출하여 슬롯의 선택 상태를 변경합니다.
+    public void SetSelected(bool selected)
+    {
+        isSelected = selected;
+        UpdateSlotColor();
+    }
+
+    public void SetDragState(bool dragging)
+    {
+        isDragging = dragging;
+        UpdateSlotColor();
+    }
+
     // --- 인터페이스 구현 ---
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // 좌클릭이고, 아이템이 있고, 조합창이 활성화 상태일 때
+        if (eventData.button == PointerEventData.InputButton.Left && item != null && combManager != null && combManager.gameObject.activeInHierarchy)
+        {
+            // 드래그 중이 아닐 때만 처리
+            if (inventoryUI != null && !inventoryUI.IsDragging())
+            {
+                combManager.TryAddItemToCrafting(item);
+            }
+        }
+    }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -109,6 +179,9 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // 아이템이 없으면 드래그 시작 안함
+        if (item == null) return;
+
         if (inventoryUI != null)
         {
             inventoryUI.OnBeginDrag(this);

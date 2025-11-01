@@ -3,13 +3,19 @@ using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
+using System.Collections.Generic;
 
+/// <summary>
+/// [공용] 방 생성 UI와 관련된 로직을 처리합니다.
+/// 게임 모드(Single/Multi)에 따라 다르게 동작합니다.
+/// </summary>
 public class CreateRoom : MonoBehaviourPunCallbacks
 {
     [Header("UI Elements")]
     public TMP_InputField roomNameInput;
-    public Toggle privateRoomToggle;      // 비공개방 여부를 선택하는 토글
-    public GameObject passwordPanel;       // 비밀번호 입력 필드와 라벨을 포함하는 패널/게임오브젝트
+    public TMP_InputField seedInput; // 시드 입력을 위한 필드
+    public Toggle privateRoomToggle;
+    public GameObject passwordPanel;
     public TMP_InputField passwordInput;
     public Button[] playerCountButtons;
 
@@ -18,18 +24,25 @@ public class CreateRoom : MonoBehaviourPunCallbacks
     public Color defaultColor = Color.white;
 
     private byte selectedPlayerCount = 2;
+    private const string SaveKey = "SinglePlayerWorlds";
 
     void Start()
     {
-        // 게임 시작 시 토글 상태에 맞춰 비밀번호 패널의 활성화 여부를 설정
-        if (passwordPanel != null && privateRoomToggle != null)
-        {
-            passwordPanel.SetActive(privateRoomToggle.isOn);
-        }
+        OnPrivateRoomToggleChanged(privateRoomToggle.isOn);
         SelectPlayerCount(2);
     }
 
-    // 비공개방 토글의 OnValueChanged 이벤트에 이 함수를 연결해야 합니다.
+    private void OnEnable()
+    {
+        bool isMultiplayer = GameModeManager.Instance.CurrentMode == GameMode.Multi;
+        privateRoomToggle.gameObject.SetActive(isMultiplayer);
+        passwordPanel.SetActive(isMultiplayer && privateRoomToggle.isOn);
+        foreach (var button in playerCountButtons)
+        {
+            button.gameObject.SetActive(isMultiplayer);
+        }
+    }
+
     public void OnPrivateRoomToggleChanged(bool isPrivate)
     {
         if (passwordPanel != null)
@@ -40,28 +53,65 @@ public class CreateRoom : MonoBehaviourPunCallbacks
 
     public void SelectPlayerCount(int count)
     {
-        Debug.Log($"인원 수 버튼 클릭: {count}명");
         selectedPlayerCount = (byte)count;
-
         for (int i = 0; i < playerCountButtons.Length; i++)
         {
             int buttonPlayerValue = i + 2;
             Image buttonImage = playerCountButtons[i].GetComponent<Image>();
             if (buttonImage == null) { continue; }
-
-            if (buttonPlayerValue == count)
-            {
-                buttonImage.color = selectedColor;
-            }
-            else
-            {
-                buttonImage.color = defaultColor;
-            }
+            buttonImage.color = (buttonPlayerValue == count) ? selectedColor : defaultColor;
         }
     }
 
     public void OnCreateRoomButtonClicked()
     {
+        if (GameModeManager.Instance.CurrentMode == GameMode.Single)
+        {
+            CreateSinglePlayerWorld();
+        }
+        else if (GameModeManager.Instance.CurrentMode == GameMode.Multi)
+        {
+            CreateMultiPlayerRoom();
+        }
+    }
+
+    private void CreateSinglePlayerWorld()
+    {
+        string worldName = roomNameInput.text;
+        if (string.IsNullOrEmpty(worldName))
+        {
+            Debug.LogError("월드 이름이 비어있습니다.");
+            return;
+        }
+        PhotonNetwork.OfflineMode = true;
+        
+        RoomOptions roomOptions = new RoomOptions { IsVisible = false, MaxPlayers = 1 };
+        roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
+
+        int mapSeed;
+        if (seedInput != null && !string.IsNullOrEmpty(seedInput.text))
+        {
+            // 문자열 시드를 int로 변환 (GetHashCode 사용)
+            mapSeed = seedInput.text.GetHashCode();
+        }
+        else
+        {
+            // 시드가 비어있으면 현재 시간을 기반으로 랜덤 시드 생성
+            mapSeed = (int)System.DateTime.Now.Ticks;
+        }
+        roomOptions.CustomRoomProperties.Add("mapSeed", mapSeed);
+        Debug.Log($"싱글플레이 월드 생성. 시드: {mapSeed}");
+
+        PhotonNetwork.JoinOrCreateRoom(worldName, roomOptions, TypedLobby.Default);
+    }
+
+    private void CreateMultiPlayerRoom()
+    {
+        if (!PhotonNetwork.InLobby)
+        {
+            Debug.LogError("로비에 접속해 있지 않습니다. 잠시 후 다시 시도하거나, 메인 메뉴로 돌아가 다시 시도하세요.");
+            return;
+        }
         string roomName = roomNameInput.text;
         if (string.IsNullOrEmpty(roomName))
         {
@@ -76,32 +126,52 @@ public class CreateRoom : MonoBehaviourPunCallbacks
 
         roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
         
-        string password = ""; // 우선 비밀번호를 빈 문자열로 초기화
-        // 비공개 토글이 켜져 있을 때만 비밀번호 입력 필드의 값을 가져옴
+        int mapSeed;
+        if (seedInput != null && !string.IsNullOrEmpty(seedInput.text))
+        {
+            mapSeed = seedInput.text.GetHashCode();
+        }
+        else
+        {
+            mapSeed = (int)System.DateTime.Now.Ticks;
+        }
+        roomOptions.CustomRoomProperties.Add("mapSeed", mapSeed);
+        Debug.Log($"멀티플레이 방 생성. 시드: {mapSeed}");
+
         if (privateRoomToggle != null && privateRoomToggle.isOn)
         {
-            password = passwordInput.text;
+            string password = passwordInput.text;
+            if (!string.IsNullOrEmpty(password))
+            {
+                roomOptions.CustomRoomProperties.Add("password", password);
+            }
         }
+        roomOptions.CustomRoomPropertiesForLobby = new string[] { "password", "mapSeed" }; // mapSeed도 로비에서 볼 수 있도록 추가
 
-        roomOptions.CustomRoomProperties.Add("password", password);
-        
-        // 중요: 커스텀 속성을 로비에 공개할 때, "password" 외에 다른 기본 정보(예: "maxPlayers")를 함께 공개하여
-        // 방 정보가 누락되는 것을 방지합니다.
-        // "maxPlayers"는 RoomInfo.MaxPlayers로 이미 접근 가능하지만, 명시적으로 공개 목록에 추가하여 안정성을 높입니다.
-        roomOptions.CustomRoomPropertiesForLobby = new string[] { "password", "maxPlayers" };
-
-        Debug.Log($"방 생성 시도: '{roomName}', 최대 인원: {selectedPlayerCount}명");
-        PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
+        ConnectionManager.Instance.CreateRoom(roomName, roomOptions);
     }
 
-    public override void OnCreatedRoom()
+    // --- 싱글플레이 월드 이름 저장/불러오기 (ConnectionManager로 옮겨도 좋음) ---
+    private List<string> GetSavedWorlds()
     {
-        Debug.Log("방 생성 성공! 방 이름: " + PhotonNetwork.CurrentRoom.Name);
-        PhotonNetwork.LoadLevel("Map1"); 
+        string json = PlayerPrefs.GetString(SaveKey, "{}");
+        WorldList worldList = JsonUtility.FromJson<WorldList>(json);
+        return worldList?.names ?? new List<string>();
     }
 
-    public override void OnCreateRoomFailed(short returnCode, string message)
+    private void SaveWorldName(string worldName)
     {
-        Debug.LogError($"방 생성 실패. 코드: {returnCode}, 메시지: {message}");
+        List<string> worlds = GetSavedWorlds();
+        if (!worlds.Contains(worldName))
+        {
+            worlds.Add(worldName);
+            WorldList worldList = new WorldList { names = worlds };
+            string json = JsonUtility.ToJson(worldList);
+            PlayerPrefs.SetString(SaveKey, json);
+            PlayerPrefs.Save();
+        }
     }
+
+    [System.Serializable]
+    private class WorldList { public List<string> names; }
 }

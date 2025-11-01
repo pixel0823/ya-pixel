@@ -21,9 +21,12 @@ public class Inventory : MonoBehaviour
 
     // 인벤토리 아이템 리스트.
     public List<Item> items;
+    private PhotonView photonView;
 
     void Awake()
     {
+        photonView = GetComponent<PhotonView>();
+        
         if (itemDatabase == null)
         {
             Debug.LogError("ItemDatabase가 Inventory 컴포넌트에 할당되지 않았습니다!", this);
@@ -62,6 +65,7 @@ public class Inventory : MonoBehaviour
                     if (amountToAdd <= 0)
                     {
                         onItemChangedCallback?.Invoke();
+                        Debug.Log($"[Inventory] Item '{itemTemplate.itemName}' stacked successfully.");
                         return true; // 모든 아이템 추가 완료
                     }
                 }
@@ -91,13 +95,14 @@ public class Inventory : MonoBehaviour
             else
             {
                 // 빈 슬롯이 더 이상 없음
-                Debug.Log("인벤토리가 가득 찼습니다. 남은 아이템 " + amountToAdd + "개는 추가할 수 없습니다.");
+                Debug.LogWarning($"[Inventory] Add failed: Inventory is full. Could not add {amountToAdd} of '{itemTemplate.itemName}'.");
                 onItemChangedCallback?.Invoke();
                 return false; // 추가 실패
             }
         }
 
         onItemChangedCallback?.Invoke();
+        Debug.Log($"[Inventory] Item '{itemTemplate.itemName}' x{amount} added successfully.");
         return true; // 모든 아이템 추가 성공
     }
 
@@ -160,7 +165,8 @@ public class Inventory : MonoBehaviour
 
         if (PhotonNetwork.InRoom)
         {
-            PhotonNetwork.Instantiate("WorldItem", spawnPosition, Quaternion.identity, 0, instantiationData);
+            // 마스터 클라이언트에게 아이템 생성을 요청합니다.
+            photonView.RPC("RequestDropItemFromServer", RpcTarget.MasterClient, itemIndexInDB, itemToDrop.amount, spawnPosition);
         }
         else
         {
@@ -219,5 +225,31 @@ public class Inventory : MonoBehaviour
         }
     }
 
+    [PunRPC]
+    void AddItemRPC(int itemID, int amount)
+    {
+        Debug.Log($"[Client] AddItemRPC received. ItemID: {itemID}, Amount: {amount}");
+        // 이 RPC는 특정 클라이언트(아이템을 주운 플레이어)에서만 실행됩니다.
+        Item itemToAdd = itemDatabase.GetItem(itemID);
+        if (itemToAdd != null)
+        {
+            Debug.Log($"[Client] Item '{itemToAdd.itemName}' found in DB. Calling Add().");
+            Add(itemToAdd, amount);
+        }
+        else
+        {
+            Debug.LogError($"[Client] AddItemRPC failed: Item ID({itemID}) not found in database.");
+        }
+    }
+
+    [PunRPC]
+    void RequestDropItemFromServer(int itemIndex, int amount, Vector3 position)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        object[] instantiationData = new object[] { itemIndex, amount };
+        // 마스터 클라이언트가 요청받은 위치에 아이템을 생성합니다. 소유권은 마스터 클라이언트에게 있습니다.
+        PhotonNetwork.Instantiate("WorldItem", position, Quaternion.identity, 0, instantiationData);
+    }
 
 }

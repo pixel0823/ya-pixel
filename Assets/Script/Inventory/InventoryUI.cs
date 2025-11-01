@@ -11,7 +11,8 @@ public class InventoryUI : MonoBehaviour
     public GameObject itemCombPanel;    // 조합창 패널 (드래그 허용용)
 
     [Header("UI Elements")]
-    public GameObject selectionHighlight; // 선택된 핫바 슬롯을 표시할 UI 오브젝트
+    public Color selectedColor = new Color(0.8f, 0.8f, 0.8f, 1f); // 선택된 슬롯 색상
+    public Color defaultColor = Color.white;                      // 기본 슬롯 색상
     [SerializeField] private Transform rootCanvas; // UI의 최상위 Canvas Transform
 
     private Inventory inventory;
@@ -48,12 +49,6 @@ public class InventoryUI : MonoBehaviour
 
         hotbarPanel.SetActive(true);
         inventoryPanel.SetActive(false);
-
-        var highlightGraphic = selectionHighlight.GetComponent<UnityEngine.UI.Graphic>();
-        if (highlightGraphic != null)
-        {
-            highlightGraphic.raycastTarget = false;
-        }
 
         if (rootCanvas == null)
         {
@@ -114,23 +109,44 @@ public class InventoryUI : MonoBehaviour
             if (inventory == null) return;
         }
 
-        if (Input.GetKeyDown(KeyCode.E))
+        // E 키 또는 ESC 키 처리
+        if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Escape))
         {
-            bool isInventoryOpen = !inventoryPanel.activeSelf;
-            inventoryPanel.SetActive(isInventoryOpen);
-            hotbarPanel.SetActive(!isInventoryOpen);
-
-            if (selectionHighlight != null)
+            // 조합창이 열려있으면 닫기
+            if (itemCombPanel.activeSelf)
             {
-                selectionHighlight.SetActive(!isInventoryOpen);
+                itemCombPanel.SetActive(false);
+                // 조합창을 닫을 때 인벤토리가 닫혀있다면 핫바를 다시 활성화
+                if (!inventoryPanel.activeSelf)
+                {
+                    hotbarPanel.SetActive(true);
+                }
+                return; // 다른 동작 방지
             }
 
-            if (!isInventoryOpen)
+            // 인벤토리 창 토글 (E 키만)
+            if (Input.GetKeyDown(KeyCode.E))
             {
+                bool isInventoryOpen = !inventoryPanel.activeSelf;
+                inventoryPanel.SetActive(isInventoryOpen);
+                hotbarPanel.SetActive(!isInventoryOpen);
+
+                if (!isInventoryOpen)
+                {
+                    Canvas.ForceUpdateCanvases();
+                    UpdateSelectionVisual();
+                }
+            }
+            // 인벤토리가 열려있을 때 ESC 키 누르면 닫기
+            else if (Input.GetKeyDown(KeyCode.Escape) && inventoryPanel.activeSelf)
+            {
+                inventoryPanel.SetActive(false);
+                hotbarPanel.SetActive(true);
                 Canvas.ForceUpdateCanvases();
                 UpdateSelectionVisual();
             }
         }
+
 
         // 핫바 아이템 버리기 로직
         if (hotbarPanel.activeSelf && Input.GetKeyDown(KeyCode.Q))
@@ -145,8 +161,8 @@ public class InventoryUI : MonoBehaviour
             float scroll = Input.GetAxisRaw("Mouse ScrollWheel");
             if (scroll != 0)
             {
-                if (scroll > 0f) selectedSlot--;
-                else selectedSlot++;
+                if (scroll > 0f) selectedSlot++;
+                else selectedSlot--;
 
                 if (hotbarSlots.Length > 0)
                 {
@@ -196,18 +212,20 @@ public class InventoryUI : MonoBehaviour
 
     void UpdateSelectionVisual()
     {
-        Canvas.ForceUpdateCanvases();
-
-        if (!hotbarPanel.activeSelf || selectionHighlight == null || hotbarSlots.Length == 0)
+        for (int i = 0; i < hotbarSlots.Length; i++)
         {
-            if (selectionHighlight != null) selectionHighlight.SetActive(false);
-            return;
-        }
-
-        selectionHighlight.SetActive(true);
-        if (selectedSlot >= 0 && selectedSlot < hotbarSlots.Length)
-        {
-            selectionHighlight.transform.position = hotbarSlots[selectedSlot].transform.position;
+            Image slotImage = hotbarSlots[i].GetComponent<Image>();
+            if (slotImage != null)
+            {
+                if (i == selectedSlot && hotbarPanel.activeSelf)
+                {
+                    slotImage.color = selectedColor;
+                }
+                else
+                {
+                    slotImage.color = defaultColor;
+                }
+            }
         }
     }
 
@@ -239,8 +257,6 @@ public class InventoryUI : MonoBehaviour
 
         dragIcon.transform.SetParent(rootCanvas);
         dragIcon.transform.SetAsLastSibling();
-
-        originalSlot.SetDragState(true);
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -291,7 +307,6 @@ public class InventoryUI : MonoBehaviour
             {
                 // 드래그가 성공하지 않았지만 마우스가 인벤토리 UI 안에 있다면, 아이템을 원래 슬롯으로 되돌립니다.
                 // OnBeginDrag에서 호출된 SetDragState(true)를 되돌리기 위해 SetDragState(false)를 호출합니다.
-                originalSlot.SetDragState(false);
             }
         }
 

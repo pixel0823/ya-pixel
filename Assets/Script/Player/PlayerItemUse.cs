@@ -4,7 +4,7 @@ using Photon.Pun;
 /// <summary>
 /// 나중에 아이템 사용 관련 로직 구현 예정
 /// </summary>
-public class ItemController : MonoBehaviourPunCallbacks
+public class PlayerItemUse : MonoBehaviourPunCallbacks
 {
     private Animator animator;
     private Inventory inventory; // 인벤토리 컴포넌트 참조

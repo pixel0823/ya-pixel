@@ -6,7 +6,7 @@ using TMPro;
 /// <summary>
 /// 조합 슬롯 - 아이템을 드롭받고 표시
 /// </summary>
-public class CombSlot : MonoBehaviour, IDropHandler, IPointerClickHandler
+public class CombSlot : MonoBehaviour, IPointerClickHandler
 {
     private Image slotImage;
     private Sprite defaultSprite;
@@ -77,18 +77,6 @@ public class CombSlot : MonoBehaviour, IDropHandler, IPointerClickHandler
     {
         item = newItem;
         UpdateSlotUI();
-    }
-
-    // 드롭 이벤트 처리
-    public void OnDrop(PointerEventData eventData)
-    {
-        // 결과 슬롯에는 드롭 불가
-        if (isResultSlot) return;
-
-        if (combManager != null)
-        {
-            combManager.OnDropToCombSlot(this);
-        }
     }
 
     // 우클릭으로 슬롯 비우기
