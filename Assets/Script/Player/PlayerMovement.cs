@@ -17,6 +17,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
     private float networkLastMoveX = 0f;
     private float networkLastMoveY = -1f; // 기본값은 정면(아래)을 보도록 설정
     private bool networkIsWalking = false;
+    private bool networkIsMining = false;
 
     void Awake()
     {
@@ -56,6 +57,16 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
                 animator.SetFloat("LastMoveX", moveX);
                 animator.SetFloat("LastMoveY", moveY);
             }
+
+            // 마우스 좌클릭으로 곡괭이 캐기 애니메이션 재생
+            if (Input.GetMouseButtonDown(0))
+            {
+                animator.SetBool("IsMining", true);
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                animator.SetBool("IsMining", false);
+            }
         }
         else
         {
@@ -67,6 +78,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             animator.SetFloat("MoveY", networkMoveY);
             animator.SetFloat("LastMoveX", networkLastMoveX);
             animator.SetFloat("LastMoveY", networkLastMoveY);
+            animator.SetBool("IsMining", networkIsMining);
         }
     }
 
@@ -82,6 +94,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             stream.SendNext(animator.GetFloat("MoveY"));
             stream.SendNext(animator.GetFloat("LastMoveX"));
             stream.SendNext(animator.GetFloat("LastMoveY"));
+            stream.SendNext(animator.GetBool("IsMining"));
         }
         else
         {
@@ -93,6 +106,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             networkMoveY = (float)stream.ReceiveNext();
             networkLastMoveX = (float)stream.ReceiveNext();
             networkLastMoveY = (float)stream.ReceiveNext();
+            networkIsMining = (bool)stream.ReceiveNext();
         }
     }
 }
