@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82e69ca77921540e78331089ba349de7, type: 3}
   m_Name: ServerConfig
   m_EditorClassIdentifier: 
-  loginUrl: http://localhost:8080/api/v1/auth/sign-in
-  userInfoUrl: http://localhost:8080/api/v1/user/user-info
+  loginUrl: http://52.192.129.141:8080/api/v1/auth/sign-in
+  userInfoUrl: http://52.192.129.141:8080/api/v1/user/user-info
