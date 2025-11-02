@@ -25,15 +25,20 @@ public class MapManager : MonoBehaviour
 
     // [수정] 단일 지형 설정 대신 바이옴 기반 설정으로 변경
     [Header("바이옴 및 지형 설정")]
-    [Tooltip("생성될 바이옴 리스트입니다.")]
+    [Tooltip("생성될 바이옴 리스트입니다. 리스트 순서대로 그리드에 배치됩니다.")]
     public List<Biome> biomes;
-    [Tooltip("바이옴 구분을 위한 Perlin Noise 스케일 값입니다. (작을수록 바이옴이 커짐)")]
-    public float biomeNoiseScale = 0.02f;
     [Tooltip("바이옴 내 세부 지형을 위한 Perlin Noise 스케일 값입니다.")]
     public float terrainNoiseScale = 0.1f;
+    [Space(10)]
+    [Tooltip("바이옴 경계의 왜곡(울퉁불퉁함) 정도를 조절합니다.")]
+    public float biomeWarpScale = 0.05f;
+    [Tooltip("바이옴 경계의 왜곡 강도(최대 변위)를 조절합니다.")]
+    public float biomeWarpIntensity = 20f;
 
     private int seed;
     private System.Random pseudoRandom;
+    // [신규] 왜곡 노이즈를 위한 오프셋
+    private float warpOffsetX, warpOffsetY;
 
     [System.Serializable]
     public class TileInfo
@@ -44,14 +49,11 @@ public class MapManager : MonoBehaviour
         public float threshold;
     }
 
-    // [신규] 바이옴 클래스 정의
+    // [수정] 바이옴 클래스에서 threshold 제거
     [System.Serializable]
     public class Biome
     {
         public string name;
-        [Tooltip("이 바이옴을 결정하는 임계값입니다.")]
-        [Range(0f, 1f)]
-        public float threshold;
         [Tooltip("이 바이옴에서 사용될 타일 리스트입니다.")]
         public List<TileInfo> terrainTiles;
     }
@@ -71,8 +73,7 @@ public class MapManager : MonoBehaviour
             return;
         }
 
-        // [수정] 바이옴 및 각 바이옴의 타일 리스트를 임계값 기준으로 정렬
-        biomes.Sort((a, b) => a.threshold.CompareTo(b.threshold));
+        // [수정] 각 바이옴의 타일 리스트를 임계값 기준으로 정렬
         foreach (var biome in biomes)
         {
             biome.terrainTiles.Sort((a, b) => a.threshold.CompareTo(b.threshold));
@@ -102,6 +103,9 @@ public class MapManager : MonoBehaviour
     private void InitializeRandom(int syncedSeed)
     {
         pseudoRandom = new System.Random(syncedSeed);
+        // [신규] 왜곡 노이즈 오프셋 초기화
+        warpOffsetX = pseudoRandom.Next(-30000, 30000);
+        warpOffsetY = pseudoRandom.Next(-30000, 30000);
     }
 
     private void StampBaseMap()
@@ -124,12 +128,10 @@ public class MapManager : MonoBehaviour
         Debug.Log("[MapManager] 베이스맵 스탬프 완료.");
     }
 
-    // [수정] 2중 Perlin Noise를 사용하도록 재작성
+    // [수정] 경계 왜곡을 포함한 바이옴 결정 로직으로 변경
     private void GenerateSurroundingTerrain()
     {
-        // 바이옴과 지형을 위한 별도의 노이즈 오프셋 생성
-        float biomeOffsetX = pseudoRandom.Next(-10000, 10000);
-        float biomeOffsetY = pseudoRandom.Next(-10000, 10000);
+        // 지형을 위한 노이즈 오프셋 생성
         float terrainOffsetX = pseudoRandom.Next(-20000, 20000);
         float terrainOffsetY = pseudoRandom.Next(-20000, 20000);
 
@@ -146,12 +148,9 @@ public class MapManager : MonoBehaviour
                     continue;
                 }
 
-                // 1. 바이옴 결정
-                float biomeSampleX = (x + biomeOffsetX) * biomeNoiseScale;
-                float biomeSampleY = (y + biomeOffsetY) * biomeNoiseScale;
-                float biomeValue = Mathf.PerlinNoise(biomeSampleX, biomeSampleY);
-                Biome currentBiome = GetBiomeForValue(biomeValue);
-
+                // 1. 좌표를 왜곡하여 바이옴 결정
+                Vector2Int warpedPos = GetWarpedPosition(x, y);
+                Biome currentBiome = GetBiomeForGridPosition(warpedPos.x, warpedPos.y);
                 if (currentBiome == null) continue;
 
                 // 2. 바이옴 내에서 세부 타일 결정
@@ -168,24 +167,62 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    // [신규] 값에 따라 바이옴을 선택하는 함수
-    private Biome GetBiomeForValue(float value)
+    // [신규] Perlin Noise를 사용하여 좌표를 왜곡하는 함수
+    private Vector2Int GetWarpedPosition(int x, int y)
     {
-        foreach (var biome in biomes)
-        {
-            if (value <= biome.threshold)
-            {
-                return biome;
-            }
-        }
-        if (biomes.Count > 0)
-        {
-            return biomes[biomes.Count - 1];
-        }
-        return null;
+        float warpSampleX = (x + warpOffsetX) * biomeWarpScale;
+        float warpSampleY = (y + warpOffsetY) * biomeWarpScale;
+
+        // Perlin Noise 결과값을 [-1, 1] 범위로 변환
+        float warpNoiseX = (Mathf.PerlinNoise(warpSampleX, warpSampleY) * 2) - 1;
+        float warpNoiseY = (Mathf.PerlinNoise(warpSampleY, warpSampleX) * 2) - 1; // X, Y를 반대로 넣어 비대칭적인 왜곡 생성
+
+        int warpedX = x + Mathf.RoundToInt(warpNoiseX * biomeWarpIntensity);
+        int warpedY = y + Mathf.RoundToInt(warpNoiseY * biomeWarpIntensity);
+
+        return new Vector2Int(warpedX, warpedY);
     }
 
-    // [수정] 이름 변경 및 특정 타일 리스트를 받도록 수정
+    // [수정] 이름 변경: GetBiomeForGridPosition
+    private Biome GetBiomeForGridPosition(int worldX, int worldY)
+    {
+        int biomeCount = biomes.Count;
+        if (biomeCount == 0) return null;
+
+        // 그리드 차원 계산 (가급적 정사각형에 가깝게)
+        int gridCols = Mathf.CeilToInt(Mathf.Sqrt(biomeCount));
+        int gridRows = Mathf.CeilToInt((float)biomeCount / gridCols);
+
+        // 각 그리드 셀의 크기
+        float cellWidth = (float)mapWidth / gridCols;
+        float cellHeight = (float)mapHeight / gridRows;
+
+        // 월드 좌표를 [0, mapWidth/mapHeight] 범위로 정규화
+        float normalizedX = worldX + (float)mapWidth / 2;
+        float normalizedY = worldY + (float)mapHeight / 2;
+
+        // 정규화된 좌표를 그리드 인덱스로 변환
+        int col = Mathf.FloorToInt(normalizedX / cellWidth);
+        int row = Mathf.FloorToInt(normalizedY / cellHeight);
+
+        // 1D 인덱스로 변환
+        int biomeIndex = row * gridCols + col;
+
+        // 인덱스가 바이옴 리스트 범위 내에 있는지 확인
+        if (biomeIndex >= 0 && biomeIndex < biomeCount)
+        {
+            return biomes[biomeIndex];
+        }
+
+        // 범위를 벗어나는 경우 가장 가까운 그리드 셀의 바이옴으로 대체
+        int clampedRow = Mathf.Clamp(row, 0, gridRows - 1);
+        int clampedCol = Mathf.Clamp(col, 0, gridCols - 1);
+        int clampedIndex = clampedRow * gridCols + clampedCol;
+        
+        return biomes[Mathf.Min(clampedIndex, biomeCount - 1)];
+    }
+
+    // [수정 없음] 특정 타일 리스트 내에서 값에 따라 타일을 선택하는 함수
     private TileBase GetTileForValue(float value, List<TileInfo> tiles)
     {
         foreach (var tileInfo in tiles)
@@ -208,5 +245,12 @@ public class MapManager : MonoBehaviour
         {
             targetTilemap.ClearAllTiles();
         }
+    }
+
+    // [수정] 외부용 GetBiomeAt 함수도 왜곡 로직을 사용하도록 변경
+    public Biome GetBiomeAt(Vector3Int worldPosition)
+    {
+        Vector2Int warpedPos = GetWarpedPosition(worldPosition.x, worldPosition.y);
+        return GetBiomeForGridPosition(warpedPos.x, warpedPos.y);
     }
 }
