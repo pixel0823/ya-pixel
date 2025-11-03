@@ -3203,7 +3203,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1257445591}
+  m_Father: {fileID: 1575161754}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &724710156
 PrefabInstance:
@@ -4470,7 +4470,6 @@ MonoBehaviour:
   baseMapOffset: {x: -30, y: 20}
   biomes:
   - name: Forest
-    threshold: 0.5
     terrainTiles:
     - name: Grass1
       tileAsset: {fileID: 11400000, guid: c1d883ddd00f121419dec41d55d83844, type: 2}
@@ -4482,7 +4481,6 @@ MonoBehaviour:
       tileAsset: {fileID: 11400000, guid: adfc5b7f2d7ad594cb4a7f75471f774b, type: 2}
       threshold: 0.4
   - name: Rock
-    threshold: 0.5
     terrainTiles:
     - name: Rock1
       tileAsset: {fileID: 11400000, guid: 1acbd47b2bc29e645b75005955032683, type: 2}
@@ -4493,8 +4491,9 @@ MonoBehaviour:
     - name: Rock3
       tileAsset: {fileID: 11400000, guid: 78612fa48849588449ebb457f6a8e64a, type: 2}
       threshold: 0.4
-  biomeNoiseScale: 0.003
   terrainNoiseScale: 0.05
+  biomeWarpScale: 0.05
+  biomeWarpIntensity: 20
 --- !u!4 &1151815189
 Transform:
   m_ObjectHideFlags: 0
@@ -5048,9 +5047,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 723729381}
-  - {fileID: 1986479945}
-  - {fileID: 1899639254}
   - {fileID: 2123092053}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -7518,7 +7514,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1257445591}
+  m_Father: {fileID: 1575161754}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1917936945
 PrefabInstance:
@@ -7919,7 +7915,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1257445591}
+  m_Father: {fileID: 1575161754}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!224 &1995091228 stripped
 RectTransform:
@@ -8828,6 +8824,4 @@ SceneRoots:
   - {fileID: 318034212}
   - {fileID: 1575161754}
   - {fileID: 1865480979}
-  - {fileID: 629860751}
-  - {fileID: 1742956190}
   - {fileID: 1257445591}
