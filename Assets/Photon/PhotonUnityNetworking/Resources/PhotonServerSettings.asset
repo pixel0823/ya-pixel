@@ -43,6 +43,8 @@ MonoBehaviour:
   - RequestPickupFromServer
   - AddItemRPC
   - RequestDropItemFromServer
+  - OpenBoxRPC
+  - MarkAsOpenedRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
