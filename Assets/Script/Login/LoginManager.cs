@@ -24,6 +24,8 @@ public class LoginResponse
 {
     public string token;
     public string expirationTime;
+    public string code;
+    public string message;
 }
 
 /// <summary>
@@ -125,12 +127,15 @@ public class LoginManager : MonoBehaviour
                 // 받은 토큰이 유효한지 확인합니다.
                 if (response != null && !string.IsNullOrEmpty(response.token))
                 {
+                    // JsonUtility가 문자열을 파싱할 때 포함시킬 수 있는 앞뒤 큰따옴표(")를 제거합니다.
+                    string cleanToken = response.token.Trim('"');
+
                     // JWT 토큰 저장 (예: PlayerPrefs 사용)
-                    PlayerPrefs.SetString("AccessToken", response.token);
+                    PlayerPrefs.SetString("AccessToken", cleanToken);
                     PlayerPrefs.Save();
 
                     // 유저 정보 요청 코루틴이 끝날 때까지 기다립니다.
-                    yield return StartCoroutine(GetUserInfoCoroutine(response.token));
+                    yield return StartCoroutine(GetUserInfoCoroutine(cleanToken));
                     SceneManager.LoadScene("Connection");
                 }
                 else
@@ -171,38 +176,54 @@ public class LoginManager : MonoBehaviour
             yield break;
         }
 
-        // POST 요청 본문에 담을 JSON 데이터 생성
-        // 서버에서 토큰을 어떤 Key로 받을지 모르므로, 가장 일반적인 "token"을 사용합니다.
-        // 만약 서버가 다른 Key(예: "accessToken")를 사용한다면 이 부분을 수정해야 합니다.
-        string jsonBody = $"{{\"token\":\"{token}\"}}";
-        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
 
         // UnityWebRequest.Post 헬퍼 메소드를 사용하여 POST 요청 생성
-        using (UnityWebRequest www = UnityWebRequest.Post(serverConfig.userInfoUrl, jsonBody, "application/json"))
+        using (UnityWebRequest www = UnityWebRequest.Get(serverConfig.userInfoUrl))
         {
-            // Authorization 헤더는 별도로 설정해줍니다.
-            // Content-Type은 Post 메소드에서 자동으로 설정됩니다.
-            www.SetRequestHeader("Authorization", "Bearer " + token);
+            // 리다이렉트를 자동으로 따라가지 않도록 설정합니다. (302 응답 등을 직접 확인하기 위함)
+            www.redirectLimit = 0;
+
+            // Trim()을 한 번 더 호출하여 안전장치 마련
+            www.SetRequestHeader("Authorization", "Bearer " + token.Trim());
+            www.SetRequestHeader("Accept", "application/json"); // JSON 응답을 기대한다는 헤더 추가
+            Debug.Log("GetUserInfoCoroutine 헤더: " + www.GetRequestHeader("Authorization"));
 
             yield return www.SendWebRequest();
+
+            // --- 모든 응답 코드와 헤더를 로그로 출력하여 분석 ---
+            Debug.Log($"[GetUserInfoCoroutine] 응답 코드: {www.responseCode}");
+            var headers = www.GetResponseHeaders();
+            if (headers != null) foreach (var header in headers) Debug.Log($"[GetUserInfoCoroutine] 응답 헤더: {header.Key}={header.Value}");
 
             if (www.result == UnityWebRequest.Result.Success)
             {
                 Debug.Log("유저 정보 조회 성공: " + www.downloadHandler.text);
                 UserInfoResponse userInfo = JsonUtility.FromJson<UserInfoResponse>(www.downloadHandler.text);
 
+                // --- 토큰 갱신 로직 추가 ---
+                // 서버가 응답 헤더에 새 토큰을 보내줬는지 확인합니다.
+                string newAccessToken = www.GetResponseHeader("Authorization");
+                if (!string.IsNullOrEmpty(newAccessToken))
+                {
+                    Debug.Log("새로운 Access Token을 발급받았습니다. 토큰을 갱신합니다.");
+                    PlayerPrefs.SetString("AccessToken", newAccessToken.Replace("Bearer ", ""));
+                }
+
                 // UserDataManager에 사용자 정보 저장
                 if (userInfo != null)
                 {
                     UserDataManager.Instance.SetUserData(userInfo.userId, userInfo.nickname);
+                    // Photon 네트워크에서 사용할 플레이어의 닉네임을 설정합니다.
+                    // 이 닉네임은 다른 플레이어에게 표시되며, Photon 룸 내에서 플레이어를 식별하는 데 사용될 수 있습니다.
+                    Photon.Pun.PhotonNetwork.NickName = userInfo.nickname;
                     // UserDataManager에 데이터가 잘 들어갔는지 확인하기 위한 Debug.Log 출력
                     Debug.Log($"[LoginManager] UserDataManager에 저장된 닉네임: {UserDataManager.Instance.Nickname}");
                 }
             }
             else
             {
-                Debug.LogError("유저 정보 조회 실패: " + www.error);
-                Debug.LogError("응답 내용: " + www.downloadHandler.text);
+                Debug.LogError("유저 정보 조회 실패 (GetUserInfoCoroutine): " + www.error);
+                Debug.LogError("응답 내용 (GetUserInfoCoroutine): " + www.downloadHandler.text);
             }
         }
     }
