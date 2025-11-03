@@ -5,7 +5,7 @@ using Photon.Pun;
 
 public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
 {
-    private PhotonView photonView;
+    //private PhotonView photonView;
     private Animator animator; // 애니메이터 컴포넌트
     public float moveSpeed = 5f;
     private Vector3 networkPosition;
@@ -17,10 +17,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
     private float networkLastMoveX = 0f;
     private float networkLastMoveY = -1f; // 기본값은 정면(아래)을 보도록 설정
     private bool networkIsWalking = false;
+    private bool networkIsMining = false;
 
     void Awake()
     {
-        photonView = GetComponent<PhotonView>();
         animator = GetComponent<Animator>(); // 애니메이터 컴포넌트 가져오기
         if (photonView == null)
         {
@@ -34,7 +34,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
 
     void Update()
     {
-        if (photonView != null && photonView.IsMine)
+        // photonView.IsMine이 true일 때만 키보드 입력을 받아서 직접 캐릭터를 움직입니다.
+        // 이렇게 하면 다른 사람의 캐릭터가 내 키보드 입력에 반응하지 않습니다.
+        if (photonView.IsMine)
         {
             // 로컬 플레이어의 입력 및 이동 처리
             float moveX = Input.GetAxisRaw("Horizontal");
@@ -55,25 +57,28 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
                 animator.SetFloat("LastMoveX", moveX);
                 animator.SetFloat("LastMoveY", moveY);
             }
+
+            // 마우스 좌클릭으로 곡괭이 캐기 애니메이션 재생
+            if (Input.GetMouseButtonDown(0))
+            {
+                animator.SetBool("IsMining", true);
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                animator.SetBool("IsMining", false);
+            }
         }
         else
         {
+            // 원격 플레이어(다른 사람 캐릭터)의 위치를 부드럽게 보간하여 움직임을 표현합니다.
+            transform.position = Vector3.Lerp(transform.position, networkPosition, Time.deltaTime * 10);
             // 원격 플레이어의 애니메이션 파라미터 적용
             animator.SetBool("IsWalking", networkIsWalking);
             animator.SetFloat("MoveX", networkMoveX);
             animator.SetFloat("MoveY", networkMoveY);
             animator.SetFloat("LastMoveX", networkLastMoveX);
             animator.SetFloat("LastMoveY", networkLastMoveY);
-        }
-    }
-
-    void LateUpdate()
-    {
-        if (photonView != null && !photonView.IsMine)
-        {
-            // 원격 플레이어의 위치를 부드럽게 보간
-            transform.position = Vector3.Lerp(transform.position, networkPosition, Time.deltaTime * 10);
-            transform.rotation = Quaternion.Lerp(transform.rotation, networkRotation, Time.deltaTime * 10);
+            animator.SetBool("IsMining", networkIsMining);
         }
     }
 
@@ -89,6 +94,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             stream.SendNext(animator.GetFloat("MoveY"));
             stream.SendNext(animator.GetFloat("LastMoveX"));
             stream.SendNext(animator.GetFloat("LastMoveY"));
+            stream.SendNext(animator.GetBool("IsMining"));
         }
         else
         {
@@ -100,6 +106,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             networkMoveY = (float)stream.ReceiveNext();
             networkLastMoveX = (float)stream.ReceiveNext();
             networkLastMoveY = (float)stream.ReceiveNext();
+            networkIsMining = (bool)stream.ReceiveNext();
         }
     }
 }
