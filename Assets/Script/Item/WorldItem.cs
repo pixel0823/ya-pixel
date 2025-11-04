@@ -1,19 +1,26 @@
 using UnityEngine;
 using Photon.Pun;
+using YAPixel;
+using YAPixel.World;
 
 /// <summary>
 /// 필드에 떨어져 있는 아이템을 나타냅니다. IInteractable을 구현하여 플레이어와 상호작용합니다.
 /// [수정됨] 아이템 줍기 로직을 마스터 클라이언트 권한으로 변경하여 소유권 문제를 해결합니다.
 /// </summary>
 [RequireComponent(typeof(PhotonView))]
-public class WorldItem : MonoBehaviourPun, IInteractable, IPunInstantiateMagicCallback
+public class WorldItem : BaseWorldEntity<Item, ItemDatabase>, IInteractable
 {
-    [Tooltip("이 아이템의 데이터. Item 컴포넌트를 참조합니다.")]
-    public Item itemData;
     [Tooltip("아이템 개수")]
     public int count = 1;
 
-    private ItemDatabase itemDatabase; // 아이템 DB 참조
+    // BaseWorldEntity에서 상속받은 entityData를 Item 타입으로 쉽게 접근할 수 있도록 프로퍼티를 추가합니다.
+    public Item itemData
+    {
+        get { return entityData; }
+        set { entityData = value; }
+    }
+
+    protected override string DatabasePath => "Items/GlobalItemDatabase";
 
     #region IInteractable 구현
     public string GetInteractText()
@@ -59,14 +66,14 @@ public class WorldItem : MonoBehaviourPun, IInteractable, IPunInstantiateMagicCa
         }
 
         // 아이템을 인벤토리에 추가하라고 해당 클라이언트에게 RPC로 명령합니다.
-        // itemDatabase는 OnPhotonInstantiate에서 로드되어 있어야 합니다.
-        if (itemDatabase == null)
+        // 이제 database 필드는 BaseWorldEntity에서 초기화됩니다.
+        if (database == null)
         {
             Debug.LogError("[Master] ItemDatabase not loaded. Cannot give item.");
             return;
         }
 
-        int itemID = itemDatabase.GetIndex(this.itemData);
+        int itemID = database.GetIndex(this.itemData);
         if (itemID != -1)
         {
             Debug.Log($"[Master] Found item '{this.itemData.itemName}' (ID: {itemID}). Sending AddItemRPC to player {requestingPlayerView.Owner.UserId}.");
@@ -83,38 +90,15 @@ public class WorldItem : MonoBehaviourPun, IInteractable, IPunInstantiateMagicCa
     }
     #endregion
 
-        #region Photon 콜백 및 초기화
-        /// <summary>
-        /// PhotonNetwork.Instantiate를 통해 생성될 때 호출됩니다.
-        /// 아이템 데이터와 개수를 네트워크로부터 받아 초기화합니다.
-        /// </summary>
-    public void OnPhotonInstantiate(PhotonMessageInfo info)
-    {
-        // DB를 로드합니다.
-        itemDatabase = Resources.Load<ItemDatabase>("Items/GlobalItemDatabase");
-        if (itemDatabase == null)
-        {
-            Debug.LogError("'Items/GlobalItemDatabase' 경로에서 ItemDatabase를 찾을 수 없습니다.");
-            if (PhotonNetwork.IsMasterClient) PhotonNetwork.Destroy(gameObject);
-            return;
-        }
-
-        // 네트워크 생성 시 받은 데이터(아이템 DB 인덱스, 개수)를 읽어옵니다.
-        object[] instantiationData = info.photonView.InstantiationData;
-        int itemIndex = (int)instantiationData[0];
-        int amount = (int)instantiationData[1];
-
-        Item data = itemDatabase.GetItem(itemIndex);
-        Initialize(data, amount);
-    }
-
+    #region 초기화
     /// <summary>
     /// 아이템 데이터와 개수를 기반으로 월드 아이템의 외형과 정보를 설정합니다.
+    /// 이 메서드는 BaseWorldEntity의 OnPhotonInstantiate에서 호출됩니다.
     /// </summary>
-    public void Initialize(Item data, int amount)
+    public override void Initialize(Item data, object[] instantiationData)
     {
         this.itemData = data;
-        this.count = amount;
+        this.count = (int)instantiationData[1]; // instantiationData에서 개수(amount)를 가져옵니다.
 
         if (this.itemData != null)
         {

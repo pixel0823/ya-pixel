@@ -179,7 +179,7 @@ public class Inventory : MonoBehaviour
                 if (worldItem != null)
                 {
                     // WorldItem.cs에 추가된 공용 초기화 메서드를 호출하여 아이템 정보를 설정합니다.
-                    worldItem.Initialize(itemDatabase.GetItem(itemIndexInDB), itemToDrop.amount);
+                    worldItem.Initialize(itemDatabase.GetItem(itemIndexInDB), new object[] { itemIndexInDB, itemToDrop.amount });
                 }
                 else
                 {
