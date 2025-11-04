@@ -11110,22 +11110,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2531d59435f2d8d4da5239851d94c76a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemsToDrop:
-  - {fileID: 11400000, guid: 5dc389ac8836ca84cb1345cbf9b86cb2, type: 2}
-  - {fileID: 11400000, guid: d69cba1c3266e734db4717dc4724f550, type: 2}
-  - {fileID: 11400000, guid: ff669afc08b92db45b073be08b61cd34, type: 2}
-  - {fileID: 11400000, guid: 35c3d44f611e7514694ccea63576d2e1, type: 2}
-  - {fileID: 11400000, guid: 2b29302c00d98004791938284822083d, type: 2}
-  - {fileID: 11400000, guid: f7c2fe63a37d1eb4a9870ae0d66941de, type: 2}
-  - {fileID: 11400000, guid: 539c5b44b146fdd4bbd2de6778dc891c, type: 2}
-  - {fileID: 11400000, guid: 14bf81a6ffbf63d4a90820a13e2ce6d6, type: 2}
-  - {fileID: 11400000, guid: 3101afb2e4b2fd44d9e910fda4d7295e, type: 2}
-  - {fileID: 11400000, guid: 0f3fc24cb16b9af49ba889de1efed6a8, type: 2}
-  - {fileID: 11400000, guid: 4669488330343094cb69aa8136fa75b2, type: 2}
-  - {fileID: 11400000, guid: 4a9122a5f063ebe41b0247c19e7302f7, type: 2}
-  - {fileID: 11400000, guid: c132217783ba2ea4cb53dcc5ef91fb2d, type: 2}
-  targetInventory: {fileID: 0}
-  testKey: 116
+  objectDatabase: {fileID: 11400000, guid: 91b1c833f260d6047864dbe89cbaeeea, type: 2}
+  objectIndexToSpawn: 0
 --- !u!4 &1865480979
 Transform:
   m_ObjectHideFlags: 0
