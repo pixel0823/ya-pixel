@@ -5,9 +5,10 @@ using UnityEngine;
 /// </summary>
 public class PlayerStats : MonoBehaviour
 {
-    [Header("체력")]
+    [Header("스탯")]
     [SerializeField] private float maxHealth = 100f;
     private float currentHealth;
+    public float attackDamage = 10f; // 공격력
 
     [Header("배고픔")]
     [SerializeField] private float maxHunger = 100f;

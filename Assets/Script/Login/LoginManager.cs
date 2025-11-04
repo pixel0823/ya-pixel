@@ -46,7 +46,7 @@ public class LoginManager : MonoBehaviour
     [Header("Configuration")]
     [Tooltip("서버 URL 설정 파일 (ScriptableObject)")]
     [SerializeField] private ServerConfig serverConfig;
-    
+
     [Header("UI Elements")]
     [Tooltip("사용자 ID를 입력받는 InputField")]
     [SerializeField] private TMP_InputField userIdInput;
@@ -55,8 +55,8 @@ public class LoginManager : MonoBehaviour
     [Tooltip("로그인 실행 버튼")]
     [SerializeField] private Button loginButton;
     [Tooltip("로그인 시도 결과(성공, 실패, 오류)를 표시할 텍스트")]
-    [SerializeField] private TMP_Text statusText; 
-    
+    [SerializeField] private TMP_Text statusText;
+
     private void Start()
     {
         // serverConfig가 할당되었는지 확인합니다.
@@ -72,7 +72,7 @@ public class LoginManager : MonoBehaviour
             loginButton.onClick.AddListener(OnLoginButtonClicked);
         }
     }
-    
+
     /// <summary>
     /// 로그인 버튼 클릭 시 호출될 함수입니다.
     /// </summary>
@@ -80,26 +80,26 @@ public class LoginManager : MonoBehaviour
     {
         string userId = userIdInput.text;
         string password = passwordInput.text;
-        
+
         if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(password))
         {
             if (statusText != null) statusText.text = "아이디와 비밀번호를 모두 입력해주세요.";
             Debug.LogWarning("아이디 또는 비밀번호가 입력되지 않았습니다.");
             return;
         }
-        
+
         // 기존에 실행 중인 코루틴이 있다면 중지하고 새로 시작
         StopAllCoroutines();
         StartCoroutine(LoginCoroutine(userId, password));
     }
-    
+
     /// <summary>
     /// 서버에 로그인 요청을 보내는 코루틴입니다.
     /// </summary>
     private IEnumerator LoginCoroutine(string userId, string password)
     {
         if (statusText != null) statusText.text = "로그인 중...";
-        
+
         LoginRequestData requestData = new LoginRequestData
         {
             userId = userId,
@@ -148,7 +148,7 @@ public class LoginManager : MonoBehaviour
             {
                 Debug.LogError("로그인 실패: " + www.error);
                 Debug.LogError("응답 내용: " + www.downloadHandler.text);
-                
+
                 string errorMessage = "로그인 실패: 아이디 또는 비밀번호를 확인해주세요.";
                 // 서버에서 구체적인 에러 메시지를 보내주는 경우, 이를 파싱하여 활용할 수 있습니다.
                 // 예시: {"code": "NP", "message": "No Permission."}
@@ -177,7 +177,6 @@ public class LoginManager : MonoBehaviour
         }
 
 
-        // UnityWebRequest.Post 헬퍼 메소드를 사용하여 POST 요청 생성
         using (UnityWebRequest www = UnityWebRequest.Get(serverConfig.userInfoUrl))
         {
             // 리다이렉트를 자동으로 따라가지 않도록 설정합니다. (302 응답 등을 직접 확인하기 위함)

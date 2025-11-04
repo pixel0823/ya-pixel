@@ -15,8 +15,28 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         if (playerPrefab != null && PhotonNetwork.InRoom)
         {
             // 플레이어 캐릭터 생성
-            PhotonNetwork.Instantiate(playerPrefab.name, new Vector3(0, 0, -3), Quaternion.identity);
+            GameObject player = PhotonNetwork.Instantiate(playerPrefab.name, Vector3.zero, Quaternion.identity);
             Debug.Log("플레이어 생성 완료.");
+
+            // 닉네임 설정
+            string nickname = UserDataManager.Instance.Nickname;
+            if (!string.IsNullOrEmpty(nickname))
+            {
+                PlayerName playerName = player.GetComponentInChildren<PlayerName>();
+                if (playerName != null)
+                {
+                    playerName.SetName(nickname);
+                }
+                else
+                {
+                    Debug.LogError("Player prefab에서 PlayerName 컴포넌트를 찾을 수 없습니다.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("UserDataManager에서 닉네임을 가져올 수 없습니다.");
+            }
+
 
             // PlayerManager는 플레이어 생성 역할만 하고 파괴되어도 괜찮습니다.
             // 만약 게임 내내 유지되어야 하는 로직이 있다면 이 코드를 제거하세요.
