@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 
+[RequireComponent(typeof(PlayerStats))]
 public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
 {
     //private PhotonView photonView;
@@ -18,6 +19,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
     private float networkLastMoveY = -1f; // 기본값은 정면(아래)을 보도록 설정
     private bool networkIsWalking = false;
     private bool networkIsMining = false;
+
+    // 외부에서 마지막 이동 방향을 읽을 수 있도록 public 프로퍼티 추가
+    public float LastMoveX => networkLastMoveX;
+    public float LastMoveY => networkLastMoveY;
 
     void Awake()
     {
@@ -56,16 +61,19 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             {
                 animator.SetFloat("LastMoveX", moveX);
                 animator.SetFloat("LastMoveY", moveY);
+                networkLastMoveX = moveX;
+                networkLastMoveY = moveY;
             }
 
-            // 마우스 좌클릭으로 곡괭이 캐기 애니메이션 재생
+            // 마우스 좌클릭으로 공격
             if (Input.GetMouseButtonDown(0))
             {
-                animator.SetBool("IsMining", true);
+                photonView.RPC("RPC_SetMining", RpcTarget.All, true);
+                Attack();
             }
             else if (Input.GetMouseButtonUp(0))
             {
-                animator.SetBool("IsMining", false);
+                photonView.RPC("RPC_SetMining", RpcTarget.All, false);
             }
         }
         else
@@ -80,6 +88,39 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             animator.SetFloat("LastMoveY", networkLastMoveY);
             animator.SetBool("IsMining", networkIsMining);
         }
+    }
+
+    private void Attack()
+    {
+        // 공격 방향 결정
+        Vector2 attackDirection = new Vector2(networkLastMoveX, networkLastMoveY).normalized;
+        if (attackDirection == Vector2.zero) attackDirection = Vector2.down; // 기본값
+
+        // 공격 위치 계산
+        Vector2 attackPosition = (Vector2)transform.position + attackDirection * 0.3f; // 사거리
+
+        // 해당 위치에 있는 모든 몬스터를 감지
+        Collider2D[] hits = Physics2D.OverlapBoxAll(attackPosition, new Vector2(0.5f, 0.5f), 0);
+
+        foreach (var hit in hits)
+        {
+            if (hit.CompareTag("Monster"))
+            {
+                MonsterAI monster = hit.GetComponent<MonsterAI>();
+                if (monster != null && monster.photonView != null)
+                {
+                    // Master Client를 통해 데미지 처리 요청
+                    monster.photonView.RPC("TakeDamage", RpcTarget.MasterClient, GetComponent<PlayerStats>().attackDamage);
+                    Debug.Log($"{hit.name}에게 {GetComponent<PlayerStats>().attackDamage}의 데미지를 입혔습니다.");
+                }
+            }
+        }
+    }
+
+    [PunRPC]
+    private void RPC_SetMining(bool isMining)
+    {
+        animator.SetBool("IsMining", isMining);
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)

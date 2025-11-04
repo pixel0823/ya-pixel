@@ -177,7 +177,6 @@ public class LoginManager : MonoBehaviour
         }
 
 
-        // UnityWebRequest.Post 헬퍼 메소드를 사용하여 POST 요청 생성
         using (UnityWebRequest www = UnityWebRequest.Get(serverConfig.userInfoUrl))
         {
             // 리다이렉트를 자동으로 따라가지 않도록 설정합니다. (302 응답 등을 직접 확인하기 위함)

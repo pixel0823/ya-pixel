@@ -44,6 +44,12 @@ MonoBehaviour:
   - AddItemRPC
   - RequestDropItemFromServer
   - SetNameRPC
+  - RpcTakeDamage
+  - RPC_Attack
+  - RPC_Die
+  - RPC_TakeDamage
+  - RPC_SetMining
+  - TakeDamage
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
