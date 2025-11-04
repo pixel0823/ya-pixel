@@ -35,10 +35,16 @@ public class MapManager : MonoBehaviour
     [Tooltip("바이옴 경계의 왜곡 강도(최대 변위)를 조절합니다.")]
     public float biomeWarpIntensity = 20f;
 
+    [Header("오브젝트 생성 설정")]
+    [Tooltip("생성될 월드 오브젝트의 프리팹입니다. (WorldObject 스크립트 포함)")]
+    public GameObject worldObjectPrefab;
+
     private int seed;
     private System.Random pseudoRandom;
     // [신규] 왜곡 노이즈를 위한 오프셋
     private float warpOffsetX, warpOffsetY;
+    private Transform objectContainer;
+    private ObjectDatabase objectDatabase;
 
     [System.Serializable]
     public class TileInfo
@@ -56,6 +62,19 @@ public class MapManager : MonoBehaviour
         public string name;
         [Tooltip("이 바이옴에서 사용될 타일 리스트입니다.")]
         public List<TileInfo> terrainTiles;
+        [Tooltip("이 바이옴에서 생성될 오브젝트 리스트입니다.")]
+        public List<ObjectInfo> spawnableObjects;
+    }
+
+    [System.Serializable]
+    public class ObjectInfo
+    {
+        public Object objectData;
+        [Range(0f, 1f)]
+        [Tooltip("타일 하나당 생성될 확률입니다.")]
+        public float density;
+        [Tooltip("이 오브젝트가 생성될 수 있는 타일 리스트입니다. 비어있으면 바이옴 내 모든 타일에 생성 가능합니다.")]
+        public List<TileBase> canSpawnOn;
     }
 
 
@@ -70,6 +89,14 @@ public class MapManager : MonoBehaviour
         if (biomes == null || biomes.Count == 0)
         {
             Debug.LogError("[MapManager] 'Biomes' 리스트가 비어있습니다. 맵을 생성할 수 없습니다.");
+            return;
+        }
+
+        // [신규] 오브젝트 데이터베이스 로드
+        objectDatabase = Resources.Load<ObjectDatabase>("Objects/GlobalObjectDatabase");
+        if (objectDatabase == null)
+        {
+            Debug.LogError("[MapManager] ObjectDatabase를 'Resources/Objects/GlobalObjectDatabase' 경로에서 찾을 수 없습니다.");
             return;
         }
 
@@ -97,6 +124,8 @@ public class MapManager : MonoBehaviour
         InitializeRandom(this.seed);
         StampBaseMap();
         GenerateSurroundingTerrain();
+        Debug.Log($"[MapManager] GenerateSurroundingTerrain 완료 후 targetTilemap.cellBounds: {targetTilemap.cellBounds}");
+        SpawnObjects();
         Debug.Log($"[MapManager] 맵 생성 완료. (시드: {this.seed})");
     }
 
@@ -110,7 +139,12 @@ public class MapManager : MonoBehaviour
 
     private void StampBaseMap()
     {
-        if (baseMapPrefab == null) return;
+        if (baseMapPrefab == null)
+        {
+            Debug.LogWarning("[MapManager] baseMapPrefab이 할당되지 않았습니다. 베이스맵 스탬프를 건너뜁니다.");
+            return;
+        }
+        Debug.Log($"[MapManager] baseMapPrefab.cellBounds: {baseMapPrefab.cellBounds}");
         BoundsInt bounds = baseMapPrefab.cellBounds;
         for (int x = bounds.xMin; x < bounds.xMax; x++)
         {
@@ -126,11 +160,13 @@ public class MapManager : MonoBehaviour
             }
         }
         Debug.Log("[MapManager] 베이스맵 스탬프 완료.");
+        Debug.Log($"[MapManager] StampBaseMap 완료 후 targetTilemap.cellBounds: {targetTilemap.cellBounds}");
     }
 
     // [수정] 경계 왜곡을 포함한 바이옴 결정 로직으로 변경
     private void GenerateSurroundingTerrain()
     {
+        int tilesSetCount = 0;
         // 지형을 위한 노이즈 오프셋 생성
         float terrainOffsetX = pseudoRandom.Next(-20000, 20000);
         float terrainOffsetY = pseudoRandom.Next(-20000, 20000);
@@ -162,9 +198,11 @@ public class MapManager : MonoBehaviour
                 if (tileToSet != null)
                 {
                     targetTilemap.SetTile(tilePosition, tileToSet);
+                    tilesSetCount++;
                 }
             }
         }
+        Debug.Log($"[MapManager] GenerateSurroundingTerrain에서 설정된 타일 수: {tilesSetCount}");
     }
 
     // [신규] Perlin Noise를 사용하여 좌표를 왜곡하는 함수
@@ -218,9 +256,87 @@ public class MapManager : MonoBehaviour
         int clampedRow = Mathf.Clamp(row, 0, gridRows - 1);
         int clampedCol = Mathf.Clamp(col, 0, gridCols - 1);
         int clampedIndex = clampedRow * gridCols + clampedCol;
-        
+
         return biomes[Mathf.Min(clampedIndex, biomeCount - 1)];
     }
+
+    private void SpawnObjects()
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log("[MapManager] 마스터 클라이언트가 아니므로 오브젝트 생성을 건너뜁니다.");
+            return;
+        }
+
+        if (worldObjectPrefab == null)
+        {
+            Debug.LogError("[MapManager] 'World Object Prefab'이 할당되지 않았습니다. 오브젝트를 생성할 수 없습니다.");
+            return;
+        }
+
+        if (objectContainer == null)
+        {
+            objectContainer = new GameObject("ObjectContainer").transform;
+            objectContainer.SetParent(this.transform);
+        }
+
+        // 기존 오브젝트 삭제 (마스터 클라이언트에서만)
+        foreach (Transform child in objectContainer)
+        {
+            PhotonNetwork.Destroy(child.gameObject);
+        }
+
+                Debug.Log("[MapManager] 오브젝트 생성을 시작합니다.");
+        
+                int startX = -mapWidth / 2;
+                int startY = -mapHeight / 2;
+        
+                for (int x = startX; x < startX + mapWidth; x++)
+                {
+                    for (int y = startY; y < startY + mapHeight; y++)
+                    {
+                        Vector3Int tilePosition = new Vector3Int(x, y, 0);
+                        if (!targetTilemap.HasTile(tilePosition))
+                        {
+                            continue;
+                        }
+        
+                        TileBase currentTile = targetTilemap.GetTile(tilePosition);
+                        Biome currentBiome = GetBiomeAt(tilePosition);
+        
+                        if (currentBiome == null || currentBiome.spawnableObjects == null)
+                        {
+                            continue;
+                        }
+        
+                        foreach (var objectInfo in currentBiome.spawnableObjects)
+                        {
+                            if (objectInfo.objectData == null) continue;
+        
+                            if (objectInfo.canSpawnOn.Count > 0 && !objectInfo.canSpawnOn.Contains(currentTile))
+                            {
+                                continue;
+                            }
+        
+                            if (pseudoRandom.NextDouble() < objectInfo.density)
+                            {
+                                int objectIndex = objectDatabase.GetIndex(objectInfo.objectData);
+                                if (objectIndex == -1)
+                                {
+                                    Debug.LogWarning($"[MapManager] 데이터베이스에서 오브젝트 '{objectInfo.objectData.name}'를 찾을 수 없습니다. 생성을 건너뜁니다.");
+                                    continue;
+                                }
+        
+                                Vector3 spawnPos = targetTilemap.GetCellCenterWorld(tilePosition);
+                                object[] instantiationData = { objectIndex };
+                                
+                                GameObject newObj = PhotonNetwork.Instantiate(worldObjectPrefab.name, spawnPos, Quaternion.identity, 0, instantiationData);
+                                newObj.transform.SetParent(objectContainer);
+                            }
+                        }
+                    }
+                }
+                Debug.Log("[MapManager] 오브젝트 생성 완료.");    }
 
     // [수정 없음] 특정 타일 리스트 내에서 값에 따라 타일을 선택하는 함수
     private TileBase GetTileForValue(float value, List<TileInfo> tiles)
@@ -244,6 +360,14 @@ public class MapManager : MonoBehaviour
         if (targetTilemap != null)
         {
             targetTilemap.ClearAllTiles();
+        }
+
+        if (PhotonNetwork.IsMasterClient && objectContainer != null)
+        {
+            foreach (Transform child in objectContainer)
+            {
+                PhotonNetwork.Destroy(child.gameObject);
+            }
         }
     }
 

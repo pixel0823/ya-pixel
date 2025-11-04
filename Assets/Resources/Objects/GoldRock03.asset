@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5946e4728044942469485d159ac527b9, type: 3}
-  m_Name: IronOreBlock
+  m_Name: GoldRock03
   m_EditorClassIdentifier: 
-  objectName: IronOreBlock
-  description: IronOreBlock
-  icon: {fileID: -1328021616, guid: d8d49fc2efdf1da4aa416d57e4bed025, type: 3}
+  objectName: Rock03
+  description: Rock03
+  icon: {fileID: 21300000, guid: d4fd9a785b43f4479a077f9adbaf5a47, type: 3}
   maxHealth: 100
-  itemToDrop: {fileID: 11400000, guid: c132217783ba2ea4cb53dcc5ef91fb2d, type: 2}
+  itemToDrop: {fileID: 11400000, guid: 9b3cbe5a54ddaf341a9c344641b2745f, type: 2}
   minDropAmount: 1
-  maxDropAmount: 5
+  maxDropAmount: 3
   requiredTool: {fileID: 0}
   toolDurabilityCost: 1
