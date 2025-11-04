@@ -15,7 +15,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         if (playerPrefab != null && PhotonNetwork.InRoom)
         {
             // 플레이어 캐릭터 생성
-            PhotonNetwork.Instantiate(playerPrefab.name, Vector3.zero, Quaternion.identity);
+            PhotonNetwork.Instantiate(playerPrefab.name, new Vector3(0, 0, -3), Quaternion.identity);
             Debug.Log("플레이어 생성 완료.");
 
             // PlayerManager는 플레이어 생성 역할만 하고 파괴되어도 괜찮습니다.
