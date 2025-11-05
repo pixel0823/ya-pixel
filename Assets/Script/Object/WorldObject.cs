@@ -136,7 +136,7 @@ public class WorldObject : BaseWorldEntity<Object, ObjectDatabase>, IInteractabl
         {
             Debug.Log($"[Master] Dropping {dropAmount} of '{objectData.itemToDrop.itemName}' at {transform.position}.");
             object[] instantiationData = { itemIndex, dropAmount };
-            PhotonNetwork.Instantiate("Prefabs/WorldItem", transform.position, Quaternion.identity, 0, instantiationData);
+            PhotonNetwork.Instantiate("Prefabs/WorldItem", new Vector3(transform.position.x, transform.position.y, -1f), Quaternion.identity, 0, instantiationData);
         }
     }
 }

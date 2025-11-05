@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 0f33c5220af07424ea28aeb1add31c71
+guid: ed92fa506320fa940b3ed50f5ac027dd
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -34,7 +34,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -53,7 +53,7 @@ TextureImporter:
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
-  spriteTessellationDetail: 0
+  spriteTessellationDetail: -1
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
@@ -72,7 +72,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,19 +100,19 @@ TextureImporter:
       name: Rock_0
       rect:
         serializedVersion: 2
-        x: 4
-        y: 5
-        width: 38
-        height: 31
+        x: 6
+        y: 7
+        width: 34
+        height: 27
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 4de9dda082cabf74d8d8857d1a3dbc5f
-      internalID: -1104166244
+      spriteID: 27a5343f306f5f74fbd194a2afe497a9
+      internalID: 1941361528
       vertices: []
       indices: 
       edges: []
@@ -121,44 +121,36 @@ TextureImporter:
       name: Rock_1
       rect:
         serializedVersion: 2
-        x: 46
-        y: 11
-        width: 25
-        height: 21
+        x: 48
+        y: 12
+        width: 21
+        height: 19
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7894921ce1928d04cb27b249392e9a90
-      internalID: -922692726
+      spriteID: 80236a2ddadbf6e41ad48d59d2fa7618
+      internalID: 1287181709
       vertices: []
       indices: 
       edges: []
       weights: []
     outline: []
-    physicsShape:
-    - - {x: -33.5, y: -16}
-      - {x: -33.5, y: 17}
-      - {x: 4.5, y: 17}
-      - {x: 4.5, y: -16}
-    - - {x: 8.5, y: -16}
-      - {x: 8.5, y: 13}
-      - {x: 34.5, y: 13}
-      - {x: 34.5, y: -16}
+    physicsShape: []
     bones: []
     spriteID: 5e97eb03825dee720800000000000000
-    internalID: 1537655665
+    internalID: 0
     vertices: []
     indices: 
     edges: []
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Rock_0: -1104166244
-      Rock_1: -922692726
+      Rock_0: 1941361528
+      Rock_1: 1287181709
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
