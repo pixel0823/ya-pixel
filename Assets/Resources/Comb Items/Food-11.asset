@@ -20,7 +20,7 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 539c5b44b146fdd4bbd2de6778dc891c, type: 2}
     requiredAmount: 1
   result:
-    item: {fileID: 11400000, guid: 6cec4ba16820493448ce838a9263ce26, type: 2}
+    item: {fileID: 11400000, guid: f7cc773b55ede034bae1f321a8377198, type: 2}
     resultAmount: 1
   requiresCraftingTable: 1
   requiredTool: 

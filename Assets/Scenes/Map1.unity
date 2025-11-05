@@ -2753,8 +2753,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   smoothing: 0.2
-  minCameraBoundary: {x: 1.16, y: 0.26}
-  maxCameraBoundary: {x: 1000, y: 1000}
+  minCameraBoundary: {x: -260, y: -260}
+  maxCameraBoundary: {x: 260, y: 260}
 --- !u!114 &519420034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14066,6 +14066,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 325486126599373632, guid: 8b593c7c366ee88468bb7f3cba6b7f03, type: 3}
+      propertyPath: m_TileSpriteArray.Array.data[0].m_Data
+      value: 
+      objectReference: {fileID: 1696547630, guid: 3c37825c2ac5e4a42aa89df5e9b4143d, type: 3}
+    - target: {fileID: 325486126599373632, guid: 8b593c7c366ee88468bb7f3cba6b7f03, type: 3}
+      propertyPath: m_TileSpriteArray.Array.data[4].m_Data
+      value: 
+      objectReference: {fileID: 1938371134, guid: 3c37825c2ac5e4a42aa89df5e9b4143d, type: 3}
+    - target: {fileID: 325486126599373632, guid: 8b593c7c366ee88468bb7f3cba6b7f03, type: 3}
+      propertyPath: m_TileSpriteArray.Array.data[0].m_RefCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 325486126599373632, guid: 8b593c7c366ee88468bb7f3cba6b7f03, type: 3}
+      propertyPath: m_TileSpriteArray.Array.data[4].m_RefCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 325486126599373632, guid: 8b593c7c366ee88468bb7f3cba6b7f03, type: 3}
+      propertyPath: m_TileSpriteArray.Array.data[6].m_RefCount
+      value: 205
+      objectReference: {fileID: 0}
+    - target: {fileID: 325486126599373632, guid: 8b593c7c366ee88468bb7f3cba6b7f03, type: 3}
+      propertyPath: m_Tiles.Array.data[8].second.m_TileSpriteIndex
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 1091078765728447255, guid: 8b593c7c366ee88468bb7f3cba6b7f03, type: 3}
       propertyPath: m_LocalPosition.z
       value: -1

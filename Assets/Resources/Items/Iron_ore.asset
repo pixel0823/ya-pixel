@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: Iron_ore
   description: Item Description
-  icon: {fileID: 227964187, guid: 45a6d30ea3b7cbf47be380ae4801c37f, type: 3}
+  icon: {fileID: -1217445369, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
   isStackable: 1
   maxStackSize: 99
   amount: 1
