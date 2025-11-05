@@ -8,18 +8,66 @@ using YAPixel;
 /// </summary>
 public class ItemSpawnTester : MonoBehaviour
 {
+    [Header("오브젝트 스폰 설정")]
     [Tooltip("오브젝트 데이터베이스 (Resources/Objects/GlobalObjectDatabase)")]
     public ObjectDatabase objectDatabase;
 
     [Tooltip("데이터베이스에서 생성할 오브젝트의 인덱스")]
     public int objectIndexToSpawn = 0;
 
+    [Header("아이템 지급 설정")]
+    [Tooltip("플레이어에게 지급할 아이템")]
+    public Item itemToGive;
+
+    [Tooltip("지급할 아이템의 수량")]
+    public int amountToGive = 1;
+
+
     void Update()
     {
-        // 'T' 키를 누르면 오브젝트 생성 시도
+        // 'T' 키를 누르면 아이템을 주고 오브젝트 생성 시도
         if (Input.GetKeyDown(KeyCode.T))
         {
+            GiveItemToPlayer();
             SpawnObject();
+        }
+    }
+
+    /// <summary>
+    /// 플레이어에게 지정된 아이템을 지급합니다.
+    /// </summary>
+    public void GiveItemToPlayer()
+    {
+        if (itemToGive == null)
+        {
+            Debug.LogWarning("지급할 아이템이 Inspector에서 설정되지 않았습니다.");
+            return;
+        }
+
+        // "Player" 태그를 가진 게임 오브젝트를 찾아 인벤토리를 가져옵니다.
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject == null)
+        {
+            Debug.LogError("Player 태그를 가진 플레이어 오브젝트를 찾을 수 없습니다.");
+            return;
+        }
+
+        Inventory playerInventory = playerObject.GetComponent<Inventory>();
+        if (playerInventory == null)
+        {
+            Debug.LogError("플레이어 오브젝트에서 Inventory 컴포넌트를 찾을 수 없습니다.");
+            return;
+        }
+
+        // 인벤토리에 아이템 추가
+        bool added = playerInventory.Add(itemToGive, amountToGive);
+        if (added)
+        {
+            Debug.Log($"플레이어에게 {itemToGive.itemName} 아이템 {amountToGive}개를 지급했습니다.");
+        }
+        else
+        {
+            Debug.LogWarning($"플레이어의 인벤토리가 가득 차서 {itemToGive.itemName} 아이템을 지급하지 못했습니다.");
         }
     }
 

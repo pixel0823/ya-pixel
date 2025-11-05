@@ -153,6 +153,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectDatabase: {fileID: 11400000, guid: 91b1c833f260d6047864dbe89cbaeeea, type: 2}
   objectIndexToSpawn: 0
+  itemToGive: {fileID: 0}
+  amountToGive: 1
 --- !u!4 &284925368
 Transform:
   m_ObjectHideFlags: 0
@@ -319,7 +321,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2963319173984840880, guid: 80607e79f9f1a6a48bbc415c0cfae4da, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 80607e79f9f1a6a48bbc415c0cfae4da, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

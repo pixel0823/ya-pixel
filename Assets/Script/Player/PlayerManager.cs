@@ -15,7 +15,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         if (playerPrefab != null && PhotonNetwork.InRoom)
         {
             // 플레이어 캐릭터 생성
-            GameObject player = PhotonNetwork.Instantiate(playerPrefab.name, Vector3.zero, Quaternion.identity);
+            GameObject player = PhotonNetwork.Instantiate(playerPrefab.name, new Vector3(0, 0, -2), Quaternion.identity);
             Debug.Log("플레이어 생성 완료.");
 
             // 닉네임 설정

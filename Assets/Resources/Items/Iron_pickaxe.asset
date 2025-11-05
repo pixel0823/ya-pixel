@@ -10,11 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63329583e483c1d43911bacbffc1029e, type: 3}
-  m_Name: Iron_pickax
+  m_Name: Iron_pickaxe
   m_EditorClassIdentifier: 
-  itemName: Ironpickax
+  itemName: Ironpickaxe
   description: Item Description
-  icon: {fileID: 483172698, guid: 45a6d30ea3b7cbf47be380ae4801c37f, type: 3}
-  isStackable: 1
+  icon: {fileID: 948139083, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
+  isTool: 1
+  toolSpriteLibrary: {fileID: 7108339969198208228, guid: 7214ee5e0f9409447a1b633db828941d, type: 3}
+  toolCategory: Pickaxe
+  isStackable: 0
   maxStackSize: 99
   amount: 1

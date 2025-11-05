@@ -18,7 +18,7 @@ public class InventoryUI : MonoBehaviour
     private Inventory inventory;
     private InventorySlot[] hotbarSlots;
     private InventorySlot[] inventorySlots;
-    private int selectedSlot = 0;
+    public int selectedSlot = 0;
 
     // 다른 스크립트에서 inventory에 접근할 수 있도록 프로퍼티 추가
     public Inventory GetInventory()
