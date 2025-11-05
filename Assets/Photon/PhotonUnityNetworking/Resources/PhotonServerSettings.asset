@@ -50,6 +50,10 @@ MonoBehaviour:
   - RPC_TakeDamage
   - RPC_SetMining
   - TakeDamage
+  - MarkAsOpenedRPC
+  - RequestDamageFromServer
+  - SyncHealth
+  - TakeDamageRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

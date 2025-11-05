@@ -114,6 +114,12 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
                     Debug.Log($"{hit.name}에게 {GetComponent<PlayerStats>().attackDamage}의 데미지를 입혔습니다.");
                 }
             }
+            else if (hit.GetComponent<HarvestableObject>() != null)
+            {
+                HarvestableObject harvestable = hit.GetComponent<HarvestableObject>();
+                harvestable.TakeDamage((int)GetComponent<PlayerStats>().attackDamage);
+                Debug.Log($"{hit.name}에게 {GetComponent<PlayerStats>().attackDamage}의 데미지를 입혔습니다.");
+            }
         }
     }
 
