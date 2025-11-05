@@ -9,12 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 63329583e483c1d43911bacbffc1029e, type: 3}
-  m_Name: Iron_pickax
+  m_Script: {fileID: 11500000, guid: 7deede7a57c6c064e85bc9f4eb72ad0d, type: 3}
+  m_Name: Food-13
   m_EditorClassIdentifier: 
-  itemName: Ironpickax
-  description: Item Description
-  icon: {fileID: 948139083, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
-  isStackable: 1
-  maxStackSize: 99
-  amount: 1
+  recipeName: New Recipe
+  description: 
+  ingredients: []
+  result:
+    item: {fileID: 0}
+    resultAmount: 0
+  requiresCraftingTable: 0
+  requiredTool: 

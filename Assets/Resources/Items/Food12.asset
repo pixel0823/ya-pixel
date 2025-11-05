@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: Food12
   description: Item Description
-  icon: {fileID: 1757856487, guid: 45a6d30ea3b7cbf47be380ae4801c37f, type: 3}
+  icon: {fileID: -382725113, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
   isStackable: 1
   maxStackSize: 99
   amount: 1

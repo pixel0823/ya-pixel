@@ -2753,8 +2753,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   smoothing: 0.2
-  minCameraBoundary: {x: 1.16, y: 0.26}
-  maxCameraBoundary: {x: 1000, y: 1000}
+  minCameraBoundary: {x: -260, y: -260}
+  maxCameraBoundary: {x: 260, y: 260}
 --- !u!114 &519420034
 MonoBehaviour:
   m_ObjectHideFlags: 0

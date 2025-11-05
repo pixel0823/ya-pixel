@@ -53,4 +53,22 @@ public class PlayerCamera : MonoBehaviour
 
         transform.position = Vector3.Lerp(transform.position, targetPos, smoothing);
     }
+
+    void OnDrawGizmos()
+    {
+        // 빨간색으로 boundary 박스 그리기
+        Gizmos.color = Color.red;
+
+        // 박스의 네 모서리 좌표 계산
+        Vector3 bottomLeft = new Vector3(minCameraBoundary.x, minCameraBoundary.y, transform.position.z);
+        Vector3 bottomRight = new Vector3(maxCameraBoundary.x, minCameraBoundary.y, transform.position.z);
+        Vector3 topLeft = new Vector3(minCameraBoundary.x, maxCameraBoundary.y, transform.position.z);
+        Vector3 topRight = new Vector3(maxCameraBoundary.x, maxCameraBoundary.y, transform.position.z);
+
+        // 박스의 네 변 그리기
+        Gizmos.DrawLine(bottomLeft, bottomRight);  // 아래
+        Gizmos.DrawLine(bottomRight, topRight);    // 오른쪽
+        Gizmos.DrawLine(topRight, topLeft);        // 위
+        Gizmos.DrawLine(topLeft, bottomLeft);      // 왼쪽
+    }
 }
