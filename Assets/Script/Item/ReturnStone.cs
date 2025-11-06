@@ -14,6 +14,28 @@ public class ReturnStone : Item
     public float cooldownTime = 5f;
 
     /// <summary>
+    /// ReturnStone의 복사본을 생성합니다. (타입 유지)
+    /// </summary>
+    public override Item GetCopy()
+    {
+        ReturnStone copy = CreateInstance<ReturnStone>();
+        copy.itemName = itemName;
+        copy.description = description;
+        copy.icon = icon;
+        copy.isTool = isTool;
+        copy.toolType = toolType;
+        copy.attackPower = attackPower;
+        copy.toolSpriteLibrary = toolSpriteLibrary;
+        copy.toolCategory = toolCategory;
+        copy.isStackable = isStackable;
+        copy.maxStackSize = maxStackSize;
+        copy.amount = amount;
+        copy.isConsumable = isConsumable;
+        copy.cooldownTime = cooldownTime;
+        return copy;
+    }
+
+    /// <summary>
     /// 귀환석을 사용합니다.
     /// </summary>
     /// <param name="player">사용하는 플레이어</param>

@@ -12,9 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b57915cba6abd5b42a543ac2f6c17b03, type: 3}
   m_Name: Return_item
   m_EditorClassIdentifier: 
-  itemName: New Item
+  itemName: ReturnItem
   description: Item Description
   icon: {fileID: -280123196, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
+  isTool: 0
+  toolType: 0
+  attackPower: 0
+  toolSpriteLibrary: {fileID: 0}
+  toolCategory: 
   isStackable: 0
   maxStackSize: 1
   amount: 1
