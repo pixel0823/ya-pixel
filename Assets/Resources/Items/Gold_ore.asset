@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: Gold_ore
   description: Item Description
-  icon: {fileID: 905427749, guid: 45a6d30ea3b7cbf47be380ae4801c37f, type: 3}
+  icon: {fileID: 317809630, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
   isStackable: 1
   maxStackSize: 99
   amount: 1

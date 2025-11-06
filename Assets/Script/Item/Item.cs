@@ -2,6 +2,9 @@ using UnityEngine;
 using YAPixel;
 using UnityEngine.U2D.Animation; // 2D Animation 패키지 사용
 
+// 도구의 종류를 나타내는 열거형
+public enum ToolType { None, Axe, Pickaxe, Shovel }
+
 // 아이템 정보를 담는 ScriptableObject. Asset 메뉴에서 생성하여 사용합니다.
 [CreateAssetMenu(fileName = "New Item", menuName = "Inventory/Item")]
 public class Item : ScriptableObject, IDatabaseItem
@@ -14,6 +17,8 @@ public class Item : ScriptableObject, IDatabaseItem
     public Sprite icon = null; // 아이템 아이콘
 
     public bool isTool = false; // 이 아이템이 도구인지 여부
+    public ToolType toolType = ToolType.None; // 도구의 종류
+    public int attackPower = 0; // 도구의 공격력
 
     [Tooltip("도구일 경우, 이 도구의 스프라이트 라이브러리 에셋을 할당하세요.")]
     public SpriteLibraryAsset toolSpriteLibrary; // 도구 전용 스프라이트 라이브러리
@@ -33,6 +38,8 @@ public class Item : ScriptableObject, IDatabaseItem
         copy.description = description;
         copy.icon = icon;
         copy.isTool = isTool;
+        copy.toolType = toolType;
+        copy.attackPower = attackPower;
         copy.toolSpriteLibrary = toolSpriteLibrary;
         copy.toolCategory = toolCategory;
         copy.isStackable = isStackable;

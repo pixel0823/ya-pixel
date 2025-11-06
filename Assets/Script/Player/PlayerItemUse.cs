@@ -76,7 +76,7 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
                         if (spriteLibrary.spriteLibraryAsset != selectedItem.toolSpriteLibrary)
                         {
                             spriteLibrary.spriteLibraryAsset = selectedItem.toolSpriteLibrary;
-                            Debug.Log($"PlayerItemUse: SpriteLibraryAsset을 '{selectedItem.toolSpriteLibrary.name}' (으)로 변경했습니다.");
+
                         }
 
                         // 2. 카테고리 설정
@@ -91,16 +91,16 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
                                 if (toolAnimationResolver.GetCategory() != selectedItem.toolCategory)
                                 {
                                     toolAnimationResolver.SetCategoryAndLabel(selectedItem.toolCategory, currentLabel);
-                                    Debug.Log($"PlayerItemUse: Resolver 카테고리를 '{selectedItem.toolCategory}', 레이블을 '{currentLabel}' (으)로 설정 시도.");
+
 
                                     string newCategory = toolAnimationResolver.GetCategory();
                                     if (newCategory == selectedItem.toolCategory)
                                     {
-                                        Debug.Log("PlayerItemUse: 카테고리 변경 성공!");
+    
                                     }
                                     else
                                     {
-                                        Debug.LogWarning($"PlayerItemUse: 카테고리 변경 실패! 원인: '{selectedItem.toolCategory}' 카테고리 안에 '{currentLabel}' 레이블이 없는 것 같습니다. SpriteLibraryAsset 편집기에서 레이블 이름을 직접 확인해주세요.");
+    
                                     }
                                 }
                             }
@@ -108,26 +108,23 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
                         }
                         else
                         {
-                            Debug.LogWarning("PlayerItemUse: Item의 toolCategory가 비어있거나 설정되지 않았습니다. Inspector를 확인해주세요!");
+    
                         }
                     }
                     else
                     {
-                        Debug.LogWarning("PlayerItemUse: toolAnimationResolver 오브젝트에 SpriteLibrary 컴포넌트가 없습니다!");
+    
                     }
                 }
             }
         }
-        else
-        {
-            Debug.LogWarning("PlayerItemUse: Inspector에서 toolAnimationResolver가 할당되지 않았습니다!");
-        }
+
     }
 
     /// <summary>
     /// 현재 선택된 슬롯의 아이템 정보를 가져옵니다.
     /// </summary>
-    Item GetSelectedItem()
+    public Item GetSelectedItem()
     {
         if (inventory == null || selectedSlot < 0 || selectedSlot >= inventory.items.Count)
         {

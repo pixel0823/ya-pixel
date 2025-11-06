@@ -16,6 +16,8 @@ MonoBehaviour:
   description: Item Description
   icon: {fileID: 948139083, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
   isTool: 1
+  toolType: 2
+  attackPower: 10
   toolSpriteLibrary: {fileID: 7108339969198208228, guid: 7214ee5e0f9409447a1b633db828941d, type: 3}
   toolCategory: Pickaxe
   isStackable: 0

@@ -17,7 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: f6f051dac88f64d738e91b4f27aaaacd, type: 3}
   maxHealth: 100
   itemToDrop: {fileID: 11400000, guid: 9b3cbe5a54ddaf341a9c344641b2745f, type: 2}
-  minDropAmount: 3
-  maxDropAmount: 6
-  requiredTool: {fileID: 0}
+  minDropAmount: 1
+  maxDropAmount: 3
+  requiredToolType: 2
   toolDurabilityCost: 1

@@ -14,7 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: Oxystonepickax
   description: Item Description
-  icon: {fileID: -1492458466, guid: 45a6d30ea3b7cbf47be380ae4801c37f, type: 3}
-  isStackable: 1
+  icon: {fileID: -682564872, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
+  isTool: 0
+  toolType: 0
+  attackPower: 0
+  toolSpriteLibrary: {fileID: 0}
+  toolCategory: 
+  isStackable: 0
   maxStackSize: 99
   amount: 1
