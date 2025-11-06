@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using Photon.Pun;
 
 // 인벤토리 UI를 관리하는 클래스.
 public class InventoryUI : MonoBehaviour
@@ -62,7 +63,17 @@ public class InventoryUI : MonoBehaviour
     {
         if (inventory != null) return;
 
-        inventory = FindObjectOfType<Inventory>();
+        Inventory[] inventories = FindObjectsOfType<Inventory>();
+        foreach (var inv in inventories)
+        {
+            var pv = inv.GetComponent<PhotonView>();
+            if (pv != null && pv.IsMine)
+            {
+                inventory = inv;
+                break;
+            }
+        }
+
         if (inventory != null)
         {
             Debug.Log($"[InventoryUI] Inventory 찾기 완료! 인스턴스 ID: {inventory.GetInstanceID()}");
