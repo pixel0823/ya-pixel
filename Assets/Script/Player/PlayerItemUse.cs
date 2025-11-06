@@ -7,6 +7,13 @@ using UnityEngine.U2D.Animation; // SpriteResolver와 SpriteLibraryAsset을 사�
 /// </summary>
 public class PlayerItemUse : MonoBehaviourPunCallbacks
 {
+    [Header("테스트 설정")]
+    [Tooltip("게임 시작 시 자동으로 귀환석을 추가할지 여부")]
+    public bool addReturnStoneOnStart = true;
+
+    [Tooltip("귀환석 아이템 (ScriptableObject)")]
+    public ReturnStone returnStoneItem;
+
     private Animator animator;
     private Inventory inventory;
     private InventoryUI inventoryUI;
@@ -96,11 +103,11 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
                                     string newCategory = toolAnimationResolver.GetCategory();
                                     if (newCategory == selectedItem.toolCategory)
                                     {
-    
+
                                     }
                                     else
                                     {
-    
+
                                     }
                                 }
                             }
@@ -108,12 +115,12 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
                         }
                         else
                         {
-    
+
                         }
                     }
                     else
                     {
-    
+
                     }
                 }
             }

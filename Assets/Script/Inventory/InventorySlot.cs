@@ -165,6 +165,60 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
                 combManager.TryAddItemToCrafting(item);
             }
         }
+        // 우클릭 - 아이템 사용 (귀환석 등)
+        else if (eventData.button == PointerEventData.InputButton.Right && item != null)
+        {
+            UseItem();
+        }
+    }
+
+    /// <summary>
+    /// 아이템을 사용합니다. (우클릭 시 호출)
+    /// </summary>
+    private void UseItem()
+    {
+        Debug.Log($"[InventorySlot] UseItem() 호출됨! 아이템: {item.itemName}, 타입: {item.GetType().Name}");
+
+        // ReturnStone인지 확인
+        if (item is ReturnStone returnStone)
+        {
+            Debug.Log($"[InventorySlot] ✅ ReturnStone으로 인식됨!");
+
+            // 플레이어 찾기
+            GameObject player = inventory.gameObject;
+            Debug.Log($"[InventorySlot] 플레이어: {player.name}");
+
+            // 귀환석 사용
+            bool success = returnStone.Use(player);
+
+            if (success)
+            {
+                Debug.Log($"[InventorySlot] 귀환석 사용 성공!");
+
+                // 소모품이면 아이템 제거
+                if (returnStone.isConsumable)
+                {
+                    item.amount--;
+                    if (item.amount <= 0)
+                    {
+                        inventory.Remove(slotIndex);
+                    }
+                    else
+                    {
+                        UpdateSlotUI();
+                    }
+                    inventory.onItemChangedCallback?.Invoke();
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[InventorySlot] 귀환석 사용 실패!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[InventorySlot] ❌ {item.itemName} (타입: {item.GetType().Name})은(는) ReturnStone이 아닙니다. 사용할 수 없습니다.");
+        }
     }
 
     public void OnPointerEnter(PointerEventData eventData)

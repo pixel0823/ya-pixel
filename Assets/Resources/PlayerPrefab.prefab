@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: -902526628826898475}
   - component: {fileID: 1862307650720140872}
   - component: {fileID: 6453001203602537353}
+  - component: {fileID: 3619057231133387202}
   m_Layer: 0
   m_Name: PlayerPrefab
   m_TagString: Player
@@ -168,6 +169,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   heldItemRenderer: {fileID: 2037039225967686230}
   toolAnimationResolver: {fileID: 1907935661739703309}
+  addReturnStoneOnStart: 1
+  returnStoneItem: {fileID: 0}
 --- !u!50 &4932690465973268159
 Rigidbody2D:
   serializedVersion: 4
@@ -494,6 +497,20 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &3619057231133387202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 961787380297230084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7578c0aa3fecd694ab516e1b4f59938f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  addReturnStoneOnStart: 1
+  returnStoneItem: {fileID: 11400000, guid: 0dec2795ee53d0e4a84f9bcf9d527edd, type: 2}
 --- !u!1 &2963319173984840880
 GameObject:
   m_ObjectHideFlags: 0
