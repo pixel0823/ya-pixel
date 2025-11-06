@@ -14,6 +14,7 @@ public class Object : ScriptableObject, IDatabaseItem
     public Sprite icon = null; // 오브젝트 아이콘
     public int maxHealth = 100; // 오브젝트의 체력
 
+
     [Header("오브젝트 파괴시 드랍 아이템")]
     public Item itemToDrop; // 오브젝트가 파괴될 때 드랍할 아이템
     public int minDropAmount = 1; // 최소 드랍 개수
