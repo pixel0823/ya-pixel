@@ -114,11 +114,11 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
                     Debug.Log($"{hit.name}에게 {GetComponent<PlayerStats>().attackDamage}의 데미지를 입혔습니다.");
                 }
             }
-            else if (hit.GetComponent<HarvestableObject>() != null)
+            else if (hit.GetComponent<WorldObject>() != null)
             {
-                HarvestableObject harvestable = hit.GetComponent<HarvestableObject>();
-                harvestable.TakeDamage((int)GetComponent<PlayerStats>().attackDamage);
-                Debug.Log($"{hit.name}에게 {GetComponent<PlayerStats>().attackDamage}의 데미지를 입혔습니다.");
+                WorldObject harvestable = hit.GetComponent<WorldObject>();
+                // Interact 메소드를 호출하여 도구에 따른 데미지 계산 로직을 사용합니다.
+                harvestable.Interact(gameObject);
             }
         }
     }

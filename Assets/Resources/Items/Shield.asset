@@ -15,6 +15,11 @@ MonoBehaviour:
   itemName: Shield
   description: Item Description
   icon: {fileID: 1680819501, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
-  isStackable: 1
+  isTool: 0
+  toolType: 0
+  attackPower: 0
+  toolSpriteLibrary: {fileID: 0}
+  toolCategory: 
+  isStackable: 0
   maxStackSize: 99
   amount: 1

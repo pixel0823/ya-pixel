@@ -33,11 +33,35 @@ public class WorldObject : BaseWorldEntity<Object, ObjectDatabase>, IInteractabl
         var playerPhotonView = interactor.GetComponent<PhotonView>();
         if (playerPhotonView != null && playerPhotonView.IsMine)
         {
-            // TODO: 플레이어가 필요한 도구를 가지고 있는지 확인
-            // TODO: 도구 내구도 감소 로직
-            Debug.Log($"[WorldObject] Interact by me (ViewID: {playerPhotonView.ViewID}). Sending damage request to MasterClient.");
+            // 플레이어의 아이템 사용 컴포넌트를 가져옵니다.
+            var playerItemUse = interactor.GetComponent<PlayerItemUse>();
+            if (playerItemUse == null) return;
+
+            Item currentItem = playerItemUse.GetSelectedItem();
+            int damage = 1; // 기본 데미지 (맨손)
+
+            if (currentItem != null && currentItem.isTool)
+            {
+                // 올바른 종류의 도구일 경우
+                if (objectData.requiredToolType != ToolType.None && currentItem.toolType == objectData.requiredToolType)
+                {
+                    damage = 25; // 큰 데미지
+                }
+                else
+                {
+                    damage = 2; // 도구이지만, 잘못된 종류의 도구일 경우
+                }
+            }
+
+            // 도구 내구도 감소 로직 (필요 시 추가)
+            if (currentItem != null && currentItem.isTool && objectData.requiredToolType != ToolType.None)
+            {
+                // currentItem.durability -= objectData.toolDurabilityCost;
+            }
+
+            Debug.Log($"[WorldObject] Interact by me (ViewID: {playerPhotonView.ViewID}). Sending damage request to MasterClient with damage: {damage}");
             // 마스터 클라이언트에게 이 오브젝트에 데미지를 입혀달라고 요청
-            this.photonView.RPC("RequestDamageFromServer", RpcTarget.MasterClient, 10); // 임시 데미지 10
+            this.photonView.RPC("RequestDamageFromServer", RpcTarget.MasterClient, damage);
         }
     }
     #endregion
@@ -136,7 +160,7 @@ public class WorldObject : BaseWorldEntity<Object, ObjectDatabase>, IInteractabl
         {
             Debug.Log($"[Master] Dropping {dropAmount} of '{objectData.itemToDrop.itemName}' at {transform.position}.");
             object[] instantiationData = { itemIndex, dropAmount };
-            PhotonNetwork.Instantiate("Prefabs/WorldItem", new Vector3(transform.position.x, transform.position.y, -1f), Quaternion.identity, 0, instantiationData);
+            PhotonNetwork.Instantiate("WorldItem", new Vector3(transform.position.x, transform.position.y, -1f), Quaternion.identity, 0, instantiationData);
         }
     }
 }

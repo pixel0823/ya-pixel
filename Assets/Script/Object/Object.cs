@@ -20,7 +20,7 @@ public class Object : ScriptableObject, IDatabaseItem
     public int maxDropAmount = 5; // 최대 드랍 개수
 
     [Header("필요 도구")]
-    public Item requiredTool; // 오브젝트를 채집하는 데 필요한 도구 아이템
+    public ToolType requiredToolType; // 오브젝트를 채집하는 데 필요한 도구 종류
     public int toolDurabilityCost = 1; // 도구 사용 시 감소하는 내구도
 
     public Object GetCopy()
@@ -33,7 +33,7 @@ public class Object : ScriptableObject, IDatabaseItem
         copy.itemToDrop = itemToDrop;
         copy.minDropAmount = minDropAmount;
         copy.maxDropAmount = maxDropAmount;
-        copy.requiredTool = requiredTool;
+        copy.requiredToolType = requiredToolType;
         copy.toolDurabilityCost = toolDurabilityCost;
         return copy;
     }

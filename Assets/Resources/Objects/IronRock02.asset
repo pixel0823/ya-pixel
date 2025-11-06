@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectName: Rock02
   description: Rock02
-  icon: {fileID: -922692726, guid: 0f33c5220af07424ea28aeb1add31c71, type: 3}
+  icon: {fileID: 1287181709, guid: ed92fa506320fa940b3ed50f5ac027dd, type: 3}
   maxHealth: 100
   itemToDrop: {fileID: 11400000, guid: c132217783ba2ea4cb53dcc5ef91fb2d, type: 2}
-  minDropAmount: 3
-  maxDropAmount: 6
-  requiredTool: {fileID: 0}
+  minDropAmount: 1
+  maxDropAmount: 3
+  requiredToolType: 2
   toolDurabilityCost: 1
