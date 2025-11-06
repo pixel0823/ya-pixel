@@ -10,9 +10,40 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     [Tooltip("Resources 폴더에 있는 플레이어 프리팹")]
     public GameObject playerPrefab;
 
+    private void Awake()
+    {
+        if (playerPrefab == null)
+        {
+            playerPrefab = Resources.Load<GameObject>("PlayerPrefab");
+        }
+    }
+
     private void Start()
     {
-        if (playerPrefab != null && PhotonNetwork.InRoom)
+        // PlayerManager는 플레이어 생성 역할만 하고 파괴되어도 괜찮습니다.
+        // 만약 게임 내내 유지되어야 하는 로직이 있다면 이 코드를 제거하세요.
+        if (playerPrefab == null)
+        {
+            Debug.LogError("PlayerManager: Player prefab이 할당되지 않았습니다.");
+            return;
+        }
+
+        // PlayerManager가 방에 참여한 후 인스턴스화된 경우를 대비합니다.
+        if (PhotonNetwork.InRoom)
+        {
+            CreatePlayer();
+        }
+    }
+
+    public override void OnJoinedRoom()
+    {
+        base.OnJoinedRoom();
+        CreatePlayer();
+    }
+
+    private void CreatePlayer()
+    {
+        if (playerPrefab != null)
         {
             // 플레이어 캐릭터 생성
             GameObject player = PhotonNetwork.Instantiate(playerPrefab.name, new Vector3(0, 0, -2), Quaternion.identity);
@@ -37,14 +68,12 @@ public class PlayerManager : MonoBehaviourPunCallbacks
                 Debug.LogWarning("UserDataManager에서 닉네임을 가져올 수 없습니다.");
             }
 
-
             // PlayerManager는 플레이어 생성 역할만 하고 파괴되어도 괜찮습니다.
-            // 만약 게임 내내 유지되어야 하는 로직이 있다면 이 코드를 제거하세요.
-            Destroy(gameObject);
+            // Destroy(gameObject); // 이 라인을 제거하여 PlayerManager가 계속 유지되도록 합니다.
         }
         else
         {
-            Debug.LogError("PlayerManager: Player prefab이 할당되지 않았거나, 방에 연결되지 않았습니다.");
+            Debug.LogError("PlayerManager: Player prefab이 할당되지 않았습니다.");
         }
     }
 }
