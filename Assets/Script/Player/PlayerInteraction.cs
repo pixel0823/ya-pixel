@@ -40,9 +40,18 @@ public class PlayerInteraction : MonoBehaviourPunCallbacks
         UpdateInteractPromptUI();
 
         // 상호작용 키('F')를 눌렀을 때, 가장 가까운 객체와 상호작용합니다.
-        if (Input.GetKeyDown(KeyCode.F) && closestInteractable != null)
+        if (Input.GetKeyDown(KeyCode.F))
         {
-            closestInteractable.Interact(gameObject);
+            Debug.Log($"[PlayerInteraction] F키 눌림! closestInteractable: {closestInteractable?.GetType().Name ?? "null"}");
+
+            if (closestInteractable != null)
+            {
+                closestInteractable.Interact(gameObject);
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerInteraction] 주변에 상호작용 가능한 오브젝트가 없습니다.");
+            }
         }
     }
 
@@ -97,19 +106,33 @@ public class PlayerInteraction : MonoBehaviourPunCallbacks
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        Debug.Log($"[PlayerInteraction] OnTriggerEnter2D 호출! 충돌 오브젝트: {other.gameObject.name}");
+
         // 내 캐릭터가 아니면 감지하지 않습니다.
-        if (photonView != null && !photonView.IsMine) return;
+        if (photonView != null && !photonView.IsMine)
+        {
+            Debug.Log("[PlayerInteraction] 내 캐릭터가 아니므로 감지 중단");
+            return;
+        }
 
         // 충돌한 오브젝트에서 IInteractable 컴포넌트를 찾습니다.
         IInteractable interactable = other.GetComponent<IInteractable>();
         if (interactable != null && !nearbyInteractables.Contains(interactable))
         {
             nearbyInteractables.Add(interactable);
+            Debug.Log($"[PlayerInteraction] ✅ IInteractable 감지: {other.gameObject.name} (타입: {interactable.GetType().Name})");
+            Debug.Log($"[PlayerInteraction] 현재 nearbyInteractables 개수: {nearbyInteractables.Count}");
+        }
+        else if (interactable == null)
+        {
+            Debug.Log($"[PlayerInteraction] {other.gameObject.name}에는 IInteractable이 없습니다.");
         }
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
+        Debug.Log($"[PlayerInteraction] OnTriggerExit2D 호출! 충돌 종료 오브젝트: {other.gameObject.name}");
+
         // 내 캐릭터가 아니면 감지하지 않습니다.
         if (photonView != null && !photonView.IsMine) return;
 
@@ -118,6 +141,8 @@ public class PlayerInteraction : MonoBehaviourPunCallbacks
         if (interactable != null)
         {
             nearbyInteractables.Remove(interactable);
+            Debug.Log($"[PlayerInteraction] ❌ IInteractable 제거: {other.gameObject.name}");
+            Debug.Log($"[PlayerInteraction] 현재 nearbyInteractables 개수: {nearbyInteractables.Count}");
         }
     }
 }
