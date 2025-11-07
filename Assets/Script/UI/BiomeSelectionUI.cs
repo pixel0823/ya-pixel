@@ -25,6 +25,18 @@ public class BiomeSelectionUI : MonoBehaviour
     [Tooltip("두 번째 버튼에 할당할 Biome 인덱스")]
     public int biome2Index = 1;
 
+    [Tooltip("세 번째 Biome 버튼")]
+    public Button biomeButton3;
+
+    [Tooltip("세 번째 버튼에 할당할 Biome 인덱스")]
+    public int biome3Index = 2;
+
+    [Tooltip("네 번째 Biome 버튼")]
+    public Button biomeButton4;
+
+    [Tooltip("네 번째 버튼에 할당할 Biome 인덱스")]
+    public int biome4Index = 3;
+
 
     [Header("설정")]
     [Tooltip("MapManager 참조")]
@@ -57,6 +69,16 @@ public class BiomeSelectionUI : MonoBehaviour
         if (biomeButton2 != null)
         {
             biomeButton2.onClick.AddListener(() => OnBiomeSelected(biome2Index));
+        }
+
+        if (biomeButton3 != null)
+        {
+            biomeButton3.onClick.AddListener(() => OnBiomeSelected(biome3Index));
+        }
+
+        if (biomeButton4 != null)
+        {
+            biomeButton4.onClick.AddListener(() => OnBiomeSelected(biome4Index));
         }
 
 
@@ -156,6 +178,26 @@ public class BiomeSelectionUI : MonoBehaviour
             if (buttonText != null)
             {
                 buttonText.text = mapManager.biomes[biome2Index].name;
+            }
+        }
+
+        // 세 번째 버튼 텍스트 업데이트
+        if (biomeButton3 != null && biome3Index >= 0 && biome3Index < mapManager.biomes.Count)
+        {
+            TextMeshProUGUI buttonText = biomeButton3.GetComponentInChildren<TextMeshProUGUI>();
+            if (buttonText != null)
+            {
+                buttonText.text = mapManager.biomes[biome3Index].name;
+            }
+        }
+
+        // 네 번째 버튼 텍스트 업데이트
+        if (biomeButton4 != null && biome4Index >= 0 && biome4Index < mapManager.biomes.Count)
+        {
+            TextMeshProUGUI buttonText = biomeButton4.GetComponentInChildren<TextMeshProUGUI>();
+            if (buttonText != null)
+            {
+                buttonText.text = mapManager.biomes[biome4Index].name;
             }
         }
     }
