@@ -7,13 +7,6 @@ using UnityEngine.U2D.Animation; // SpriteResolver와 SpriteLibraryAsset을 사�
 /// </summary>
 public class PlayerItemUse : MonoBehaviourPunCallbacks
 {
-    [Header("테스트 설정")]
-    [Tooltip("게임 시작 시 자동으로 귀환석을 추가할지 여부")]
-    public bool addReturnStoneOnStart = true;
-
-    [Tooltip("귀환석 아이템 (ScriptableObject)")]
-    public ReturnStone returnStoneItem;
-
     private Animator animator;
     private Inventory inventory;
     private InventoryUI inventoryUI;
@@ -52,6 +45,65 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
 
         // 매 프레임 장착된 아이템 표시를 업데이트하여 애니메이션과 동기화합니다.
         UpdateEquippedItem();
+
+        // 우클릭으로 아이템 사용 (귀환석 등)
+        HandleItemUse();
+    }
+
+    /// <summary>
+    /// 우클릭으로 들고 있는 아이템을 사용합니다.
+    /// </summary>
+    void HandleItemUse()
+    {
+        // 우클릭 감지
+        if (Input.GetMouseButtonDown(1)) // 1 = 우클릭
+        {
+            Item selectedItem = GetSelectedItem();
+
+            if (selectedItem == null)
+            {
+                return; // 아이템을 들고 있지 않음
+            }
+
+            Debug.Log($"[PlayerItemUse] 우클릭! 현재 아이템: {selectedItem.itemName} (타입: {selectedItem.GetType().Name})");
+
+            // ReturnStone인지 확인
+            if (selectedItem is ReturnStone returnStone)
+            {
+                Debug.Log($"[PlayerItemUse] ✅ ReturnStone 감지!");
+
+                // 귀환석 사용
+                bool success = returnStone.Use(gameObject);
+
+                if (success)
+                {
+                    Debug.Log($"[PlayerItemUse] 귀환석 사용 성공!");
+
+                    // 소모품이면 인벤토리에서 제거
+                    if (returnStone.isConsumable && inventory != null && selectedSlot >= 0)
+                    {
+                        Item slotItem = inventory.items[selectedSlot];
+                        if (slotItem != null)
+                        {
+                            slotItem.amount--;
+                            if (slotItem.amount <= 0)
+                            {
+                                inventory.Remove(selectedSlot);
+                            }
+                            inventory.onItemChangedCallback?.Invoke();
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[PlayerItemUse] 귀환석 사용 실패!");
+                }
+            }
+            else
+            {
+                Debug.Log($"[PlayerItemUse] {selectedItem.itemName}은(는) 우클릭으로 사용할 수 없는 아이템입니다.");
+            }
+        }
     }
 
     /// <summary>
