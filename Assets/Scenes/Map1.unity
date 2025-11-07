@@ -7624,15 +7624,33 @@ MonoBehaviour:
   biomes:
   - name: Forest
     terrainTiles:
-    - name: Grass1
-      tileAsset: {fileID: 11400000, guid: c1d883ddd00f121419dec41d55d83844, type: 2}
+    - name: Tile1
+      tileAsset: {fileID: 11400000, guid: 15321092f95f90d40809b88a179d8acf, type: 2}
+      threshold: 0.743
+    - name: Tile2
+      tileAsset: {fileID: 11400000, guid: 310ad914273a31943acbc4ef0613d07b, type: 2}
       threshold: 0.3
-    - name: Grass2
-      tileAsset: {fileID: 11400000, guid: b63b61e465cb3a44dab8ac379ce22f26, type: 2}
+    - name: Tile3
+      tileAsset: {fileID: 11400000, guid: f40ded60225132e4a8d58f9957d231ac, type: 2}
       threshold: 0.3
-    - name: Grass3
-      tileAsset: {fileID: 11400000, guid: adfc5b7f2d7ad594cb4a7f75471f774b, type: 2}
-      threshold: 0.4
+    - name: Tile4
+      tileAsset: {fileID: 11400000, guid: bdc34bb5922987a4e93052a5e1847800, type: 2}
+      threshold: 0.3
+    - name: Tile5
+      tileAsset: {fileID: 11400000, guid: 76bc6bcb813c1374c874146ded192e9f, type: 2}
+      threshold: 0.3
+    - name: Tile6
+      tileAsset: {fileID: 11400000, guid: 047db889f2bce174594ecdcee9bd4132, type: 2}
+      threshold: 0.3
+    - name: Tile7
+      tileAsset: {fileID: 11400000, guid: cce1a558ff0b80a4aa796df6346d3e95, type: 2}
+      threshold: 0.3
+    - name: Tile8
+      tileAsset: {fileID: 11400000, guid: e0d0fbb0d54632d44a0bcdd2e32bf358, type: 2}
+      threshold: 0.3
+    - name: Tile9
+      tileAsset: {fileID: 11400000, guid: 74eed00e7b32d634cb1bdd763345291b, type: 2}
+      threshold: 0.3
     spawnableObjects:
     - objectData: {fileID: 11400000, guid: aa398566e70a3204d8cdcdef713006db, type: 2}
       density: 0.0001
