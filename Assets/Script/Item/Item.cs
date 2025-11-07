@@ -31,7 +31,7 @@ public class Item : ScriptableObject, IDatabaseItem
 
     public int amount = 1; // 현재 아이템의 개수 (인벤토리 내에서 사용)
 
-    public Item GetCopy()
+    public virtual Item GetCopy()
     {
         Item copy = CreateInstance<Item>();
         copy.itemName = itemName;

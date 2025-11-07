@@ -23,9 +23,8 @@ public class MapManager : MonoBehaviour
     [Tooltip("베이스맵의 위치 오프셋입니다.")]
     public Vector2Int baseMapOffset;
 
-    // [수정] 단일 지형 설정 대신 바이옴 기반 설정으로 변경
     [Header("바이옴 및 지형 설정")]
-    [Tooltip("생성될 바이옴 리스트입니다. 리스트 순서대로 그리드에 배치됩니다.")]
+    [Tooltip("생성될 바이옴 리스트입니다. 생성 시 순서가 무작위로 섞입니다.")]
     public List<Biome> biomes;
     [Tooltip("바이옴 내 세부 지형을 위한 Perlin Noise 스케일 값입니다.")]
     public float terrainNoiseScale = 0.1f;
@@ -36,15 +35,17 @@ public class MapManager : MonoBehaviour
     public float biomeWarpIntensity = 20f;
 
     [Header("오브젝트 생성 설정")]
-    [Tooltip("생성될 월드 오브젝트의 프리팹입니다. (WorldObject 스크립트 포함)")]
+    [Tooltip("생성될 월드 오브젝트의 프리팹입니다. (WorldObject 스크rip트 포함)")]
     public GameObject worldObjectPrefab;
 
     private int seed;
     private System.Random pseudoRandom;
-    // [신규] 왜곡 노이즈를 위한 오프셋
     private float warpOffsetX, warpOffsetY;
     private Transform objectContainer;
     private ObjectDatabase objectDatabase;
+
+    // [신규] 맵 생성 시 순서가 섞인 바이옴 리스트
+    private List<Biome> shuffledBiomes;
 
     [System.Serializable]
     public class TileInfo
@@ -55,7 +56,6 @@ public class MapManager : MonoBehaviour
         public float threshold;
     }
 
-    // [수정] 바이옴 클래스에서 threshold 제거
     [System.Serializable]
     public class Biome
     {
@@ -85,14 +85,12 @@ public class MapManager : MonoBehaviour
             Debug.LogError("[MapManager] 'Target Tilemap'이 할당되지 않았습니다.");
             return;
         }
-        // [수정] 바이옴 리스트 유효성 검사
         if (biomes == null || biomes.Count == 0)
         {
             Debug.LogError("[MapManager] 'Biomes' 리스트가 비어있습니다. 맵을 생성할 수 없습니다.");
             return;
         }
 
-        // [신규] 오브젝트 데이터베이스 로드
         objectDatabase = Resources.Load<ObjectDatabase>("Objects/GlobalObjectDatabase");
         if (objectDatabase == null)
         {
@@ -100,10 +98,11 @@ public class MapManager : MonoBehaviour
             return;
         }
 
-        // [수정] 각 바이옴의 타일 리스트를 임계값 기준으로 정렬
+        // [수정] 각 바이옴의 타일 리스트를 임계값 기준으로 '내림차순' 정렬합니다.
+        // 이렇게 하면 GetTileForValue에서 높은 임계값의 타일부터 확인할 수 있습니다.
         foreach (var biome in biomes)
         {
-            biome.terrainTiles.Sort((a, b) => a.threshold.CompareTo(b.threshold));
+            biome.terrainTiles.Sort((a, b) => b.threshold.CompareTo(a.threshold));
         }
 
         if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("mapSeed", out object mapSeedValue))
@@ -122,9 +121,10 @@ public class MapManager : MonoBehaviour
     {
         ClearMap();
         InitializeRandom(this.seed);
+        // [신규] 바이옴 순서를 섞습니다.
+        ShuffleBiomes();
         StampBaseMap();
         GenerateSurroundingTerrain();
-        Debug.Log($"[MapManager] GenerateSurroundingTerrain 완료 후 targetTilemap.cellBounds: {targetTilemap.cellBounds}");
         SpawnObjects();
         Debug.Log($"[MapManager] 맵 생성 완료. (시드: {this.seed})");
     }
@@ -132,9 +132,25 @@ public class MapManager : MonoBehaviour
     private void InitializeRandom(int syncedSeed)
     {
         pseudoRandom = new System.Random(syncedSeed);
-        // [신규] 왜곡 노이즈 오프셋 초기화
         warpOffsetX = pseudoRandom.Next(-30000, 30000);
         warpOffsetY = pseudoRandom.Next(-30000, 30000);
+    }
+
+    // [신규] 바이옴 리스트의 순서를 무작위로 섞는 함수
+    private void ShuffleBiomes()
+    {
+        shuffledBiomes = new List<Biome>(biomes);
+        // Fisher-Yates shuffle 알고리즘을 사용하여 리스트를 섞습니다.
+        int n = shuffledBiomes.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = pseudoRandom.Next(n + 1);
+            Biome value = shuffledBiomes[k];
+            shuffledBiomes[k] = shuffledBiomes[n];
+            shuffledBiomes[n] = value;
+        }
+        Debug.Log("[MapManager] 바이옴 순서를 섞었습니다.");
     }
 
     private void StampBaseMap()
@@ -144,7 +160,6 @@ public class MapManager : MonoBehaviour
             Debug.LogWarning("[MapManager] baseMapPrefab이 할당되지 않았습니다. 베이스맵 스탬프를 건너뜁니다.");
             return;
         }
-        Debug.Log($"[MapManager] baseMapPrefab.cellBounds: {baseMapPrefab.cellBounds}");
         BoundsInt bounds = baseMapPrefab.cellBounds;
         for (int x = bounds.xMin; x < bounds.xMax; x++)
         {
@@ -160,14 +175,11 @@ public class MapManager : MonoBehaviour
             }
         }
         Debug.Log("[MapManager] 베이스맵 스탬프 완료.");
-        Debug.Log($"[MapManager] StampBaseMap 완료 후 targetTilemap.cellBounds: {targetTilemap.cellBounds}");
     }
 
-    // [수정] 경계 왜곡을 포함한 바이옴 결정 로직으로 변경
     private void GenerateSurroundingTerrain()
     {
         int tilesSetCount = 0;
-        // 지형을 위한 노이즈 오프셋 생성
         float terrainOffsetX = pseudoRandom.Next(-20000, 20000);
         float terrainOffsetY = pseudoRandom.Next(-20000, 20000);
 
@@ -179,17 +191,16 @@ public class MapManager : MonoBehaviour
             for (int y = startY; y < startY + mapHeight; y++)
             {
                 Vector3Int tilePosition = new Vector3Int(x, y, 0);
+                // 베이스맵 등 이미 타일이 있는 곳은 건너뜁니다.
                 if (targetTilemap.HasTile(tilePosition))
                 {
                     continue;
                 }
 
-                // 1. 좌표를 왜곡하여 바이옴 결정
                 Vector2Int warpedPos = GetWarpedPosition(x, y);
                 Biome currentBiome = GetBiomeForGridPosition(warpedPos.x, warpedPos.y);
                 if (currentBiome == null) continue;
 
-                // 2. 바이옴 내에서 세부 타일 결정
                 float terrainSampleX = (x + terrainOffsetX) * terrainNoiseScale;
                 float terrainSampleY = (y + terrainOffsetY) * terrainNoiseScale;
                 float terrainValue = Mathf.PerlinNoise(terrainSampleX, terrainSampleY);
@@ -202,18 +213,16 @@ public class MapManager : MonoBehaviour
                 }
             }
         }
-        Debug.Log($"[MapManager] GenerateSurroundingTerrain에서 설정된 타일 수: {tilesSetCount}");
+        Debug.Log($"[MapManager] 주변 지형 생성 완료. 설정된 타일 수: {tilesSetCount}");
     }
 
-    // [신규] Perlin Noise를 사용하여 좌표를 왜곡하는 함수
     private Vector2Int GetWarpedPosition(int x, int y)
     {
         float warpSampleX = (x + warpOffsetX) * biomeWarpScale;
         float warpSampleY = (y + warpOffsetY) * biomeWarpScale;
 
-        // Perlin Noise 결과값을 [-1, 1] 범위로 변환
         float warpNoiseX = (Mathf.PerlinNoise(warpSampleX, warpSampleY) * 2) - 1;
-        float warpNoiseY = (Mathf.PerlinNoise(warpSampleY, warpSampleX) * 2) - 1; // X, Y를 반대로 넣어 비대칭적인 왜곡 생성
+        float warpNoiseY = (Mathf.PerlinNoise(warpSampleY, warpSampleX) * 2) - 1;
 
         int warpedX = x + Mathf.RoundToInt(warpNoiseX * biomeWarpIntensity);
         int warpedY = y + Mathf.RoundToInt(warpNoiseY * biomeWarpIntensity);
@@ -221,43 +230,36 @@ public class MapManager : MonoBehaviour
         return new Vector2Int(warpedX, warpedY);
     }
 
-    // [수정] 이름 변경: GetBiomeForGridPosition
     private Biome GetBiomeForGridPosition(int worldX, int worldY)
     {
-        int biomeCount = biomes.Count;
+        // [수정] 원본 바이옴 리스트 대신 섞인 바이옴 리스트를 사용합니다.
+        int biomeCount = shuffledBiomes.Count;
         if (biomeCount == 0) return null;
 
-        // 그리드 차원 계산 (가급적 정사각형에 가깝게)
         int gridCols = Mathf.CeilToInt(Mathf.Sqrt(biomeCount));
         int gridRows = Mathf.CeilToInt((float)biomeCount / gridCols);
 
-        // 각 그리드 셀의 크기
         float cellWidth = (float)mapWidth / gridCols;
         float cellHeight = (float)mapHeight / gridRows;
 
-        // 월드 좌표를 [0, mapWidth/mapHeight] 범위로 정규화
         float normalizedX = worldX + (float)mapWidth / 2;
         float normalizedY = worldY + (float)mapHeight / 2;
 
-        // 정규화된 좌표를 그리드 인덱스로 변환
         int col = Mathf.FloorToInt(normalizedX / cellWidth);
         int row = Mathf.FloorToInt(normalizedY / cellHeight);
 
-        // 1D 인덱스로 변환
         int biomeIndex = row * gridCols + col;
 
-        // 인덱스가 바이옴 리스트 범위 내에 있는지 확인
         if (biomeIndex >= 0 && biomeIndex < biomeCount)
         {
-            return biomes[biomeIndex];
+            return shuffledBiomes[biomeIndex];
         }
 
-        // 범위를 벗어나는 경우 가장 가까운 그리드 셀의 바이옴으로 대체
         int clampedRow = Mathf.Clamp(row, 0, gridRows - 1);
         int clampedCol = Mathf.Clamp(col, 0, gridCols - 1);
         int clampedIndex = clampedRow * gridCols + clampedCol;
 
-        return biomes[Mathf.Min(clampedIndex, biomeCount - 1)];
+        return shuffledBiomes[Mathf.Min(clampedIndex, biomeCount - 1)];
     }
 
     private void SpawnObjects()
@@ -280,74 +282,90 @@ public class MapManager : MonoBehaviour
             objectContainer.SetParent(this.transform);
         }
 
-        // 기존 오브젝트 삭제 (마스터 클라이언트에서만)
         foreach (Transform child in objectContainer)
         {
             PhotonNetwork.Destroy(child.gameObject);
         }
 
-                Debug.Log("[MapManager] 오브젝트 생성을 시작합니다.");
+        Debug.Log("[MapManager] 오브젝트 생성을 시작합니다.");
         
-                int startX = -mapWidth / 2;
-                int startY = -mapHeight / 2;
+        // [신규] 오브젝트가 생성된 위치를 기록하여 중복 생성을 방지합니다.
+        HashSet<Vector3Int> occupiedPositions = new HashSet<Vector3Int>();
         
-                for (int x = startX; x < startX + mapWidth; x++)
+        int startX = -mapWidth / 2;
+        int startY = -mapHeight / 2;
+
+        for (int x = startX; x < startX + mapWidth; x++)
+        {
+            for (int y = startY; y < startY + mapHeight; y++)
+            {
+                Vector3Int tilePosition = new Vector3Int(x, y, 0);
+                if (!targetTilemap.HasTile(tilePosition))
                 {
-                    for (int y = startY; y < startY + mapHeight; y++)
+                    continue;
+                }
+
+                TileBase currentTile = targetTilemap.GetTile(tilePosition);
+                Biome currentBiome = GetBiomeAt(tilePosition);
+
+                if (currentBiome == null || currentBiome.spawnableObjects == null)
+                {
+                    continue;
+                }
+
+                foreach (var objectInfo in currentBiome.spawnableObjects)
+                {
+                    if (objectInfo.objectData == null) continue;
+
+                    if (objectInfo.canSpawnOn.Count > 0 && !objectInfo.canSpawnOn.Contains(currentTile))
                     {
-                        Vector3Int tilePosition = new Vector3Int(x, y, 0);
-                        if (!targetTilemap.HasTile(tilePosition))
+                        continue;
+                    }
+
+                    if (pseudoRandom.NextDouble() < objectInfo.density)
+                    {
+                        // [수정] 이 타일에 이미 오브젝트가 생성되었는지 확인합니다.
+                        if (occupiedPositions.Contains(tilePosition))
                         {
+                            continue; // 이미 오브젝트가 있으면 건너뜁니다.
+                        }
+
+                        int objectIndex = objectDatabase.GetIndex(objectInfo.objectData);
+                        if (objectIndex == -1)
+                        {
+                            Debug.LogWarning($"[MapManager] 데이터베이스에서 오브젝트 '{objectInfo.objectData.name}'를 찾을 수 없습니다. 생성을 건너뜁니다.");
                             continue;
                         }
-        
-                        TileBase currentTile = targetTilemap.GetTile(tilePosition);
-                        Biome currentBiome = GetBiomeAt(tilePosition);
-        
-                        if (currentBiome == null || currentBiome.spawnableObjects == null)
-                        {
-                            continue;
-                        }
-        
-                        foreach (var objectInfo in currentBiome.spawnableObjects)
-                        {
-                            if (objectInfo.objectData == null) continue;
-        
-                            if (objectInfo.canSpawnOn.Count > 0 && !objectInfo.canSpawnOn.Contains(currentTile))
-                            {
-                                continue;
-                            }
-        
-                            if (pseudoRandom.NextDouble() < objectInfo.density)
-                            {
-                                int objectIndex = objectDatabase.GetIndex(objectInfo.objectData);
-                                if (objectIndex == -1)
-                                {
-                                    Debug.LogWarning($"[MapManager] 데이터베이스에서 오브젝트 '{objectInfo.objectData.name}'를 찾을 수 없습니다. 생성을 건너뜁니다.");
-                                    continue;
-                                }
-        
-                                Vector3 spawnPos = targetTilemap.GetCellCenterWorld(tilePosition);
-                                object[] instantiationData = { objectIndex };
-                                
-                                GameObject newObj = PhotonNetwork.Instantiate(worldObjectPrefab.name, spawnPos, Quaternion.identity, 0, instantiationData);
-                                newObj.transform.SetParent(objectContainer);
-                            }
-                        }
+
+                        Vector3 spawnPos = targetTilemap.GetCellCenterWorld(tilePosition);
+                        object[] instantiationData = { objectIndex };
+                        
+                        GameObject newObj = PhotonNetwork.Instantiate(worldObjectPrefab.name, spawnPos, Quaternion.identity, 0, instantiationData);
+                        newObj.transform.SetParent(objectContainer);
+
+                        // [수정] 생성된 위치를 기록하고, 이 타일에는 더 이상 다른 오브젝트를 생성하지 않도록 루프를 빠져나갑니다.
+                        occupiedPositions.Add(tilePosition);
+                        break; 
                     }
                 }
-                Debug.Log("[MapManager] 오브젝트 생성 완료.");    }
+            }
+        }
+        Debug.Log("[MapManager] 오브젝트 생성 완료.");
+    }
 
-    // [수정 없음] 특정 타일 리스트 내에서 값에 따라 타일을 선택하는 함수
+    // [수정] 타일 선택 로직 변경
     private TileBase GetTileForValue(float value, List<TileInfo> tiles)
     {
+        // 리스트가 임계값(threshold)의 '내림차순'으로 정렬되어 있다고 가정합니다.
+        // 노이즈 값이 임계값보다 크거나 같은 첫 번째 타일을 반환합니다.
         foreach (var tileInfo in tiles)
         {
-            if (value <= tileInfo.threshold)
+            if (value >= tileInfo.threshold)
             {
                 return tileInfo.tileAsset;
             }
         }
+        // 모든 임계값보다 낮은 경우, 가장 낮은 임계값의 타일(리스트의 마지막)을 반환합니다.
         if (tiles.Count > 0)
         {
             return tiles[tiles.Count - 1].tileAsset;
@@ -371,7 +389,6 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    // [수정] 외부용 GetBiomeAt 함수도 왜곡 로직을 사용하도록 변경
     public Biome GetBiomeAt(Vector3Int worldPosition)
     {
         Vector2Int warpedPos = GetWarpedPosition(worldPosition.x, worldPosition.y);

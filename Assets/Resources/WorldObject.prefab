@@ -70,6 +70,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entityData: {fileID: 0}
+  interactAnimationTime: 1
 --- !u!212 &-5878169888202042049
 SpriteRenderer:
   m_ObjectHideFlags: 0
