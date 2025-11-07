@@ -172,8 +172,8 @@ public class InventoryUI : MonoBehaviour
             float scroll = Input.GetAxisRaw("Mouse ScrollWheel");
             if (scroll != 0)
             {
-                if (scroll > 0f) selectedSlot++;
-                else selectedSlot--;
+                if (scroll > 0f) selectedSlot--;
+                else selectedSlot++;
 
                 if (hotbarSlots.Length > 0)
                 {
