@@ -2,15 +2,19 @@ using UnityEngine;
 using Photon.Pun;
 using YAPixel;
 using YAPixel.World;
+using System.Collections;
 
 /// <summary>
 /// 월드에 배치된 상호작용 가능한 오브젝트 (예: 나무, 돌)
 /// </summary>
 [RequireComponent(typeof(PhotonView))]
-public class WorldObject : BaseWorldEntity<Object, ObjectDatabase>, IInteractable
+public class WorldObject : BaseWorldEntity<Object, ObjectDatabase>
 {
     [Tooltip("오브젝트의 현재 체력")]
     private int currentHealth;
+
+    [Tooltip("상호작용 애니메이션 시간(데미지 주는 간격)")]
+    public float interactAnimationTime = 1.0f;
 
     // BaseWorldEntity에서 상속받은 entityData를 Object 타입으로 쉽게 접근할 수 있도록 프로퍼티를 추가합니다.
     public Object objectData
@@ -20,13 +24,6 @@ public class WorldObject : BaseWorldEntity<Object, ObjectDatabase>, IInteractabl
     }
 
     protected override string DatabasePath => "Objects/GlobalObjectDatabase";
-
-    #region IInteractable 구현
-    public string GetInteractText()
-    {
-        // TODO: 플레이어가 필요한 도구를 가지고 있는지 확인하는 로직 추가
-        return $"'F' 키를 눌러 {objectData.objectName} 채집";
-    }
 
     public void Interact(GameObject interactor)
     {
@@ -38,20 +35,8 @@ public class WorldObject : BaseWorldEntity<Object, ObjectDatabase>, IInteractabl
             if (playerItemUse == null) return;
 
             Item currentItem = playerItemUse.GetSelectedItem();
-            int damage = 1; // 기본 데미지 (맨손)
-
-            if (currentItem != null && currentItem.isTool)
-            {
-                // 올바른 종류의 도구일 경우
-                if (objectData.requiredToolType != ToolType.None && currentItem.toolType == objectData.requiredToolType)
-                {
-                    damage = 25; // 큰 데미지
-                }
-                else
-                {
-                    damage = 2; // 도구이지만, 잘못된 종류의 도구일 경우
-                }
-            }
+            // PlayerItemUse에서 데미지 값을 가져옵니다.
+            int damage = playerItemUse.GetToolDamage(currentItem, objectData.requiredToolType);
 
             // 도구 내구도 감소 로직 (필요 시 추가)
             if (currentItem != null && currentItem.isTool && objectData.requiredToolType != ToolType.None)
@@ -64,7 +49,6 @@ public class WorldObject : BaseWorldEntity<Object, ObjectDatabase>, IInteractabl
             this.photonView.RPC("RequestDamageFromServer", RpcTarget.MasterClient, damage);
         }
     }
-    #endregion
 
     #region Photon RPC
     /// <summary>

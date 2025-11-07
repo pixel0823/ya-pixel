@@ -1,9 +1,10 @@
 using UnityEngine;
 using Photon.Pun;
 using UnityEngine.U2D.Animation; // SpriteResolver와 SpriteLibraryAsset을 사용하기 위해 추가
+using System.Collections;
 
 /// <summary>
-/// 아이템 사용 및 장착된 아이템 표시 로직을 담당합니다.
+/// 아이템 사용 및 장착된 아이템 표시, 도구 사용(공격/채집) 로직을 담당합니다.
 /// </summary>
 public class PlayerItemUse : MonoBehaviourPunCallbacks
 {
@@ -17,7 +18,43 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
     [Tooltip("도구 애니메이션에 사용될 SpriteResolver. 도구를 렌더링하는 자식 오브젝트에 있어야 합니다.")]
     public SpriteResolver toolAnimationResolver;
 
+    [Header("도구 설정")]
+    [Tooltip("도구의 히트 판정 반경")]
+    public float toolHitRadius = 0.5f;
+    [Tooltip("공격(채집) 애니메이션의 길이(초)")]
+    public float attackAnimationTime = 0.5f;
+    [Tooltip("올바른 도구 사용 시 데미지")]
+    public int toolDamageCorrect = 5;
+    [Tooltip("잘못된 도구 사용 시 데미지")]
+    public int toolDamageIncorrect = 1;
+    [Tooltip("맨손 공격 시 데미지")]
+    public int toolDamageBareHand = 1;
+
     private int selectedSlot = -1;
+    private Coroutine _attackCoroutine;
+    private bool _isAttacking = false;
+
+    /// <summary>
+    /// 현재 아이템과 요구 도구 타입에 따라 적절한 데미지 값을 반환합니다.
+    /// </summary>
+    public int GetToolDamage(Item currentItem, ToolType requiredToolType)
+    {
+        int damage = toolDamageBareHand; // 기본 데미지 (맨손)
+
+        if (currentItem != null && currentItem.isTool)
+        {
+            // 올바른 종류의 도구일 경우
+            if (requiredToolType != ToolType.None && currentItem.toolType == requiredToolType)
+            {
+                damage = toolDamageCorrect; // 큰 데미지
+            }
+            else
+            {
+                damage = toolDamageIncorrect; // 도구이지만, 잘못된 종류의 도구일 경우
+            }
+        }
+        return damage;
+    }
 
     void Awake()
     {
@@ -46,8 +83,110 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
         // 매 프레임 장착된 아이템 표시를 업데이트하여 애니메이션과 동기화합니다.
         UpdateEquippedItem();
 
+        // 좌클릭으로 도구 사용
+        HandleToolUse();
+        
         // 우클릭으로 아이템 사용 (귀환석 등)
         HandleItemUse();
+    }
+
+    /// <summary>
+    /// 좌클릭으로 들고 있는 도구를 사용합니다. (공격/채집)
+    /// </summary>
+    void HandleToolUse()
+    {
+        Item selectedItem = GetSelectedItem();
+        if (selectedItem == null || !selectedItem.isTool)
+        {
+            // 도구를 들고 있지 않으면 공격 중단
+            if (_isAttacking)
+            {
+                _isAttacking = false;
+                if (_attackCoroutine != null)
+                {
+                    StopCoroutine(_attackCoroutine);
+                    _attackCoroutine = null;
+                }
+                // 애니메이션 상태 초기화 (필요 시)
+                // animator.SetBool("IsAttacking", false);
+            }
+            return;
+        }
+
+        // 좌클릭 시작
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (!_isAttacking)
+            {
+                _isAttacking = true;
+                _attackCoroutine = StartCoroutine(AttackCoroutine());
+            }
+        }
+        // 좌클릭 끝
+        else if (Input.GetMouseButtonUp(0))
+        {
+            if (_isAttacking)
+            {
+                _isAttacking = false;
+                if (_attackCoroutine != null)
+                {
+                    StopCoroutine(_attackCoroutine);
+                    _attackCoroutine = null;
+                }
+                // 애니메이션 상태 초기화 (필요 시)
+                // animator.SetBool("IsAttacking", false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 마우스를 누르고 있는 동안 주기적으로 공격/채집을 처리하는 코루틴입니다.
+    /// </summary>
+    private IEnumerator AttackCoroutine()
+    {
+        Debug.Log("[PlayerItemUse] 공격 코루틴 시작.");
+        while (_isAttacking)
+        {
+            // TODO: "Attack" 트리거가 실제 애니메이터에 설정된 이름과 일치하는지 확인해야 합니다.
+            animator.SetTrigger("Attack");
+            Debug.Log("[PlayerItemUse] Attack 애니메이션 트리거 실행.");
+
+            // 애니메이션 시간만큼 대기
+            yield return new WaitForSeconds(attackAnimationTime);
+
+            // 히트 판정 실행
+            PerformHitDetection();
+            
+            // 다음 프레임까지 대기 (무한 반복 방지)
+            yield return null;
+        }
+        Debug.Log("[PlayerItemUse] 공격 코루틴 종료.");
+    }
+
+    /// <summary>
+    /// toolAnimationResolver 위치에서 원형으로 충돌을 감지하여 WorldObject에 데미지를 줍니다.
+    /// </summary>
+    private void PerformHitDetection()
+    {
+        if (toolAnimationResolver == null)
+        {
+            Debug.LogError("[PlayerItemUse] toolAnimationResolver가 설정되지 않았습니다! 히트 판정을 수행할 수 없습니다.");
+            return;
+        }
+
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(toolAnimationResolver.transform.position, toolHitRadius);
+        Debug.Log($"[PlayerItemUse] 히트 판정! {hitColliders.Length}개의 콜라이더 감지.");
+
+        foreach (var hitCollider in hitColliders)
+        {
+            WorldObject worldObject = hitCollider.GetComponent<WorldObject>();
+            if (worldObject != null)
+            {
+                Debug.Log($"[PlayerItemUse] WorldObject '{worldObject.objectData.objectName}' 발견! Interact 호출.");
+                // WorldObject의 Interact 메서드를 호출하여 데미지를 입힙니다.
+                worldObject.Interact(this.gameObject);
+            }
+        }
     }
 
     /// <summary>
@@ -190,5 +329,14 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
             return null;
         }
         return inventory.items[selectedSlot];
+    }
+
+    // Gizmos를 사용하여 히트 판정 범위를 시각적으로 표시합니다.
+    private void OnDrawGizmosSelected()
+    {
+        if (toolAnimationResolver == null) return;
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(toolAnimationResolver.transform.position, toolHitRadius);
     }
 }
