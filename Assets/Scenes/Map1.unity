@@ -7747,7 +7747,7 @@ MonoBehaviour:
   baseMapPrefab: {fileID: 0}
   baseMapOffset: {x: -30, y: 20}
   biomes:
-  - name: A
+  - name: Rock
     terrainTiles:
     - name: Tile1
       tileAsset: {fileID: 11400000, guid: fae41a3a3cf17a24cb51f8ced308f99f, type: 2}
@@ -7769,7 +7769,7 @@ MonoBehaviour:
       density: 0.001
       canSpawnOn:
       - {fileID: 11400000, guid: fae41a3a3cf17a24cb51f8ced308f99f, type: 2}
-  - name: B
+  - name: Lava
     terrainTiles:
     - name: Tile3
       tileAsset: {fileID: 11400000, guid: 1e89e9a5bce5c444c91e264a7c36aa8b, type: 2}
@@ -7786,7 +7786,7 @@ MonoBehaviour:
       prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
-  - name: C
+  - name: Swamp
     terrainTiles:
     - name: Tile5
       tileAsset: {fileID: 11400000, guid: 657523056f9b6d34ba026cee357894fb, type: 2}
@@ -7803,7 +7803,7 @@ MonoBehaviour:
       prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
-  - name: D
+  - name: Desert
     terrainTiles:
     - name: Tile7
       tileAsset: {fileID: 11400000, guid: c86751ac1ff324b43b750134ad45bfea, type: 2}
@@ -12565,7 +12565,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectDatabase: {fileID: 0}
   objectIndexToSpawn: 2
-  itemToGive: {fileID: 11400000, guid: e70d6b1670c07604c93e256aac85085e, type: 2}
+  itemToGive: {fileID: 11400000, guid: 5db2d871c93c4b74ba06316abfe1abfc, type: 2}
   amountToGive: 1
 --- !u!4 &1804539775
 Transform:

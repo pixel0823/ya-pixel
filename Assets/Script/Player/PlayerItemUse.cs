@@ -71,9 +71,20 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
     /// </summary>
     public float GetDamageToMonster(Item currentItem)
     {
+        // 규칙:
+        // - 도구이고 ToolType.Sword인 경우: attackPower 전부
+        // - 도구이지만 Sword가 아닌 경우: attackPower의 절반 (최소 1)
+        // - 비도구(맨손 혹은 기타 아이템): 1
         if (currentItem != null && currentItem.isTool)
         {
-            return Mathf.Max(1f, currentItem.attackPower * 0.5f);
+            if (currentItem.toolType == ToolType.Sword)
+            {
+                return Mathf.Max(1f, (float)currentItem.attackPower);
+            }
+            else
+            {
+                return Mathf.Max(1f, currentItem.attackPower * 0.5f);
+            }
         }
         return 1f;
     }

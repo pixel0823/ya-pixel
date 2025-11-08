@@ -155,51 +155,68 @@ public class BiomeSelectionUI : MonoBehaviour
     /// </summary>
     private void UpdateButtonTexts()
     {
-        if (mapManager == null || mapManager.biomes == null)
+        if (mapManager == null)
         {
-            Debug.LogWarning("[BiomeSelectionUI] MapManager 또는 Biome 목록이 없습니다. 버튼 텍스트를 업데이트할 수 없습니다.");
+            Debug.LogWarning("[BiomeSelectionUI] MapManager가 없습니다. 버튼 텍스트를 업데이트할 수 없습니다.");
+            return;
+        }
+
+        var activeBiomes = GetActiveBiomeList();
+        if (activeBiomes == null || activeBiomes.Count == 0)
+        {
+            Debug.LogWarning("[BiomeSelectionUI] Biome 목록이 비어있습니다. 버튼 텍스트를 업데이트할 수 없습니다.");
             return;
         }
 
         // 첫 번째 버튼 텍스트 업데이트
-        if (biomeButton1 != null && biome1Index >= 0 && biome1Index < mapManager.biomes.Count)
+        if (biomeButton1 != null && biome1Index >= 0 && biome1Index < activeBiomes.Count)
         {
             TextMeshProUGUI buttonText = biomeButton1.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null)
             {
-                buttonText.text = mapManager.biomes[biome1Index].name;
+                buttonText.text = activeBiomes[biome1Index].name;
             }
         }
 
         // 두 번째 버튼 텍스트 업데이트
-        if (biomeButton2 != null && biome2Index >= 0 && biome2Index < mapManager.biomes.Count)
+        if (biomeButton2 != null && biome2Index >= 0 && biome2Index < activeBiomes.Count)
         {
             TextMeshProUGUI buttonText = biomeButton2.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null)
             {
-                buttonText.text = mapManager.biomes[biome2Index].name;
+                buttonText.text = activeBiomes[biome2Index].name;
             }
         }
 
         // 세 번째 버튼 텍스트 업데이트
-        if (biomeButton3 != null && biome3Index >= 0 && biome3Index < mapManager.biomes.Count)
+        if (biomeButton3 != null && biome3Index >= 0 && biome3Index < activeBiomes.Count)
         {
             TextMeshProUGUI buttonText = biomeButton3.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null)
             {
-                buttonText.text = mapManager.biomes[biome3Index].name;
+                buttonText.text = activeBiomes[biome3Index].name;
             }
         }
 
         // 네 번째 버튼 텍스트 업데이트
-        if (biomeButton4 != null && biome4Index >= 0 && biome4Index < mapManager.biomes.Count)
+        if (biomeButton4 != null && biome4Index >= 0 && biome4Index < activeBiomes.Count)
         {
             TextMeshProUGUI buttonText = biomeButton4.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null)
             {
-                buttonText.text = mapManager.biomes[biome4Index].name;
+                buttonText.text = activeBiomes[biome4Index].name;
             }
         }
+    }
+
+    /// <summary>
+    /// MapManager에서 섞인 Biome 리스트를 반환합니다. 섞인 리스트가 없으면 원본 리스트를 반환합니다.
+    /// </summary>
+    private System.Collections.Generic.List<MapManager.Biome> GetActiveBiomeList()
+    {
+        var shuffled = mapManager.GetShuffledBiomes();
+        if (shuffled != null && shuffled.Count > 0) return shuffled;
+        return mapManager.biomes;
     }
 
     /// <summary>
