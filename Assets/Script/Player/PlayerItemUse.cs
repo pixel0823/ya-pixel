@@ -11,6 +11,8 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
     private Animator animator;
     private Inventory inventory;
     private InventoryUI inventoryUI;
+    private PlayerMovement playerMovement;
+    private PlayerStats playerStats;
 
     [Header("오브젝트 레퍼런스")]
     [Tooltip("도구가 아닐 때 아이템 아이콘을 표시할 SpriteRenderer")]
@@ -31,29 +33,60 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
     public int toolDamageBareHand = 1;
 
     private int selectedSlot = -1;
-    private Coroutine _attackCoroutine;
-    private bool _isAttacking = false;
+    private bool _isAttackReady = true; // 공격 가능 상태를 나타내는 플래그
 
     /// <summary>
     /// 현재 아이템과 요구 도구 타입에 따라 적절한 데미지 값을 반환합니다.
     /// </summary>
     public int GetToolDamage(Item currentItem, ToolType requiredToolType)
     {
-        int damage = toolDamageBareHand; // 기본 데미지 (맨손)
-
-        if (currentItem != null && currentItem.isTool)
+        // 규칙:
+        // - currentItem == null 또는 비도구: 1 데미지
+        // - 도구이고 requiredToolType과 일치: 도구의 attackPower 전부
+        // - 도구이고 requiredToolType과 불일치(다른 도구): 도구 attackPower의 절반(최소 1)
+        if (currentItem == null || !currentItem.isTool)
         {
-            // 올바른 종류의 도구일 경우
-            if (requiredToolType != ToolType.None && currentItem.toolType == requiredToolType)
+            return 1;
+        }
+
+        // 도구인 경우
+        if (requiredToolType != ToolType.None)
+        {
+            if (currentItem.toolType == requiredToolType)
             {
-                damage = toolDamageCorrect; // 큰 데미지
+                return Mathf.Max(1, currentItem.attackPower);
             }
             else
             {
-                damage = toolDamageIncorrect; // 도구이지만, 잘못된 종류의 도구일 경우
+                return Mathf.Max(1, Mathf.FloorToInt(currentItem.attackPower / 2f));
             }
         }
-        return damage;
+
+        // requiredToolType가 None인 경우(대상에 특정 도구가 요구되지 않음)에는 도구의 전체 공격력을 적용
+        return Mathf.Max(1, currentItem.attackPower);
+    }
+
+    /// <summary>
+    /// 몬스터에 대한 데미지 계산: 도구이면 attackPower의 절반, 아니면 1
+    /// </summary>
+    public float GetDamageToMonster(Item currentItem)
+    {
+        // 규칙:
+        // - 도구이고 ToolType.Sword인 경우: attackPower 전부
+        // - 도구이지만 Sword가 아닌 경우: attackPower의 절반 (최소 1)
+        // - 비도구(맨손 혹은 기타 아이템): 1
+        if (currentItem != null && currentItem.isTool)
+        {
+            if (currentItem.toolType == ToolType.Sword)
+            {
+                return Mathf.Max(1f, (float)currentItem.attackPower);
+            }
+            else
+            {
+                return Mathf.Max(1f, currentItem.attackPower * 0.5f);
+            }
+        }
+        return 1f;
     }
 
     void Awake()
@@ -65,6 +98,9 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
         // 초기 상태 설정
         if (heldItemRenderer != null) heldItemRenderer.sprite = null;
         if (toolAnimationResolver != null) toolAnimationResolver.gameObject.SetActive(false);
+        // 플레이어 컴포넌트 참조
+        playerMovement = GetComponent<PlayerMovement>();
+        playerStats = GetComponent<PlayerStats>();
     }
 
     void LateUpdate()
@@ -85,7 +121,7 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
 
         // 좌클릭으로 도구 사용
         HandleToolUse();
-        
+
         // 우클릭으로 아이템 사용 (귀환석 등)
         HandleItemUse();
     }
@@ -96,71 +132,32 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
     void HandleToolUse()
     {
         Item selectedItem = GetSelectedItem();
-        if (selectedItem == null || !selectedItem.isTool)
-        {
-            // 도구를 들고 있지 않으면 공격 중단
-            if (_isAttacking)
-            {
-                _isAttacking = false;
-                if (_attackCoroutine != null)
-                {
-                    StopCoroutine(_attackCoroutine);
-                    _attackCoroutine = null;
-                }
-                // 애니메이션 상태 초기화 (필요 시)
-                // animator.SetBool("IsAttacking", false);
-            }
-            return;
-        }
 
-        // 좌클릭 시작
-        if (Input.GetMouseButtonDown(0))
+        // 무기(도구)가 있든 없든 공격 동작을 허용합니다 (맨손 공격 포함)
+        if (Input.GetMouseButton(0) && _isAttackReady)
         {
-            if (!_isAttacking)
-            {
-                _isAttacking = true;
-                _attackCoroutine = StartCoroutine(AttackCoroutine());
-            }
-        }
-        // 좌클릭 끝
-        else if (Input.GetMouseButtonUp(0))
-        {
-            if (_isAttacking)
-            {
-                _isAttacking = false;
-                if (_attackCoroutine != null)
-                {
-                    StopCoroutine(_attackCoroutine);
-                    _attackCoroutine = null;
-                }
-                // 애니메이션 상태 초기화 (필요 시)
-                // animator.SetBool("IsAttacking", false);
-            }
+            StartCoroutine(PerformAttack());
         }
     }
 
     /// <summary>
-    /// 마우스를 누르고 있는 동안 주기적으로 공격/채집을 처리하는 코루틴입니다.
+    /// 공격 애니메이션, 히트 판정, 재공격 딜레이를 처리하는 코루틴입니다.
     /// </summary>
-    private IEnumerator AttackCoroutine()
+    private IEnumerator PerformAttack()
     {
-        Debug.Log("[PlayerItemUse] 공격 코루틴 시작.");
-        while (_isAttacking)
-        {
-            // TODO: "Attack" 트리거가 실제 애니메이터에 설정된 이름과 일치하는지 확인해야 합니다.
-            animator.SetTrigger("Attack");
-            Debug.Log("[PlayerItemUse] Attack 애니메이션 트리거 실행.");
+        _isAttackReady = false; // 공격 중에는 다시 공격할 수 없도록 설정
 
-            // 애니메이션 시간만큼 대기
-            yield return new WaitForSeconds(attackAnimationTime);
+        animator.SetTrigger("Attack");
+        Debug.Log("[PlayerItemUse] Attack 애니메이션 트리거 실행.");
 
-            // 히트 판정 실행
-            PerformHitDetection();
-            
-            // 다음 프레임까지 대기 (무한 반복 방지)
-            yield return null;
-        }
-        Debug.Log("[PlayerItemUse] 공격 코루틴 종료.");
+        // 애니메이션 시간만큼 대기
+        yield return new WaitForSeconds(attackAnimationTime);
+
+        // 히트 판정 실행
+        PerformHitDetection();
+
+        // 공격이 끝났으므로 다시 공격 가능 상태로 변경
+        _isAttackReady = true;
     }
 
     /// <summary>
@@ -168,24 +165,81 @@ public class PlayerItemUse : MonoBehaviourPunCallbacks
     /// </summary>
     private void PerformHitDetection()
     {
-        if (toolAnimationResolver == null)
+        // 공격 기준 위치: 툴 애니메이터 위치가 활성화되어 있으면 그 위치 사용, 아니면 플레이어의 바라보는 방향 기준으로 앞을 사용
+        Vector2 attackOrigin;
+        if (toolAnimationResolver != null && toolAnimationResolver.gameObject.activeInHierarchy)
         {
-            Debug.LogError("[PlayerItemUse] toolAnimationResolver가 설정되지 않았습니다! 히트 판정을 수행할 수 없습니다.");
-            return;
+            attackOrigin = toolAnimationResolver.transform.position;
+        }
+        else
+        {
+            Vector2 dir = Vector2.down; // 기본값
+            if (playerMovement != null)
+            {
+                dir = new Vector2(playerMovement.LastMoveX, playerMovement.LastMoveY);
+                if (dir == Vector2.zero) dir = Vector2.down;
+            }
+            attackOrigin = (Vector2)transform.position + dir.normalized * 0.3f;
         }
 
-        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(toolAnimationResolver.transform.position, toolHitRadius);
-        Debug.Log($"[PlayerItemUse] 히트 판정! {hitColliders.Length}개의 콜라이더 감지.");
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(attackOrigin, toolHitRadius);
+        Debug.Log($"[PlayerItemUse] 히트 판정! {hitColliders.Length}개의 콜라이더 감지. origin={attackOrigin}");
+
+        Item selectedItem = GetSelectedItem();
+        bool anyHit = false;
 
         foreach (var hitCollider in hitColliders)
         {
+            if (hitCollider == null) continue;
+
+            // 몬스터 처리
+            MonsterAI monster = hitCollider.GetComponent<MonsterAI>();
+            if (monster != null && monster.photonView != null)
+            {
+                float damageToDeal = GetDamageToMonster(selectedItem);
+
+                // 마스터 클라이언트에서 실제 체력 처리하도록 요청
+                monster.photonView.RPC("TakeDamage", RpcTarget.MasterClient, damageToDeal);
+                Debug.Log($"[PlayerItemUse] 몬스터 {monster.name}에게 {damageToDeal} 데미지 요청");
+                anyHit = true;
+                continue; // 한 콜라이더에서 몬스터와 오브젝트가 동시에 있는 경우를 피함
+            }
+
+            // 월드 오브젝트(채광 등)
+            HarvestableObject harvest = hitCollider.GetComponent<HarvestableObject>();
+            if (harvest != null)
+            {
+                int damageToDeal = 1;
+                if (selectedItem != null && selectedItem.isTool)
+                {
+                    // 도구로 채광하면 도구 공격력 전부 적용
+                    damageToDeal = selectedItem.attackPower;
+                }
+                else
+                {
+                    damageToDeal = 1; // 맨손은 1
+                }
+
+                harvest.TakeDamage(damageToDeal);
+                Debug.Log($"[PlayerItemUse] 월드 오브젝트 '{harvest.name}'에 {damageToDeal} 데미지 적용");
+                anyHit = true;
+                continue;
+            }
+
+            // 일반 WorldObject 인터랙션
             WorldObject worldObject = hitCollider.GetComponent<WorldObject>();
             if (worldObject != null)
             {
-                Debug.Log($"[PlayerItemUse] WorldObject '{worldObject.objectData.objectName}' 발견! Interact 호출.");
-                // WorldObject의 Interact 메서드를 호출하여 데미지를 입힙니다.
+                Debug.Log($"[PlayerItemUse] WorldObject '{worldObject.name}' 발견! Interact 호출.");
                 worldObject.Interact(this.gameObject);
+                anyHit = true;
             }
+        }
+
+        // 공격 성공시 배고픔 감소 (StatusManager를 통해 처리)
+        if (anyHit && StatusManager.Instance != null)
+        {
+            StatusManager.Instance.OnAttack();
         }
     }
 

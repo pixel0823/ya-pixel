@@ -21,6 +21,7 @@ public class MonsterAI : MonoBehaviourPunCallbacks, IPunObservable
         // --- 체력 --
         public float maxHealth = 100f;
         public float currentHealth;
+        public float attackDamage = 10f; // 몬스터의 공격력
     
         // --- 타겟 (플레이어) ---
         public Transform targetPlayer; // AI가 추적할 대상
@@ -189,6 +190,32 @@ public class MonsterAI : MonoBehaviourPunCallbacks, IPunObservable
 
         // 모든 클라이언트에서 공격 애니메이션을 재생하도록 RPC 호출
         photonView.RPC("RPC_Attack", RpcTarget.All, lastMoveDirection.x, lastMoveDirection.y);
+
+        // 0.35초 후에 데미지를 적용하는 코루틴 시작 (애니메이션 중간쯤)
+        StartCoroutine(ApplyDamageAfterDelay(0.35f));
+    }
+
+    private IEnumerator ApplyDamageAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // 마스터 클라이언트이고, 타겟이 여전히 공격 범위 내에 있는지 확인
+        if (photonView.IsMine && targetPlayer != null)
+        {
+            float distanceToPlayer = Vector2.Distance(transform.position, targetPlayer.position);
+            if (distanceToPlayer <= attackRange)
+            {
+                // 플레이어 오브젝트의 PhotonView를 통해 RPC를 호출해야 합니다.
+                PhotonView playerPhotonView = targetPlayer.GetComponent<PhotonView>();
+                if (playerPhotonView != null)
+                {
+                    // 모든 클라이언트에게 TakeDamage RPC를 호출합니다.
+                    // 실제 데미지 처리는 PlayerStats의 IsMine 체크를 통해 소유자 클라이언트에서만 이루어집니다.
+                    playerPhotonView.RPC("TakeDamage", RpcTarget.All, attackDamage);
+                    Debug.Log($"[MonsterAI] {targetPlayer.name}에게 {attackDamage} 데미지 입힘!");
+                }
+            }
+        }
     }
 
     [PunRPC]
