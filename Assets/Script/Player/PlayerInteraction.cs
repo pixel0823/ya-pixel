@@ -2,6 +2,7 @@ using UnityEngine;
 using Photon.Pun;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro; // TextMeshPro 네임스페이스 추가
 
 /// <summary>
 /// 1. 모든 플레이어에게 항상 보이는 npc (예: 상점 npc)
@@ -18,23 +19,59 @@ using System.Linq;
 /// </summary>
 public class PlayerInteraction : MonoBehaviourPunCallbacks
 {
+    [Header("UI")]
+    [Tooltip("상호작용 안내 문구를 표시할 TextMeshPro UI")]
+    public TextMeshProUGUI interactPromptUI;
+
     // 감지 범위 내에 있는 상호작용 가능한 오브젝트들
     private List<IInteractable> nearbyInteractables = new List<IInteractable>();
+    // 현재 상호작용 가능한 가장 가까운 오브젝트
+    private IInteractable closestInteractable;
 
     void Update()
     {
-        // 내 캐릭터가 아니면 입력을 처리하지 않음
+        // 내 캐릭터가 아니면 처리를 중단합니다.
         if (photonView != null && !photonView.IsMine) return;
 
-        // 상호작용 키를 눌렀고, 주변에 상호작용할 오브젝트가 있다면
-        if (Input.GetKeyDown(KeyCode.E) && nearbyInteractables.Count > 0)
+        // 가장 가까운 상호작용 가능 객체를 찾습니다.
+        closestInteractable = FindClosestInteractable();
+
+        // UI를 업데이트합니다.
+        UpdateInteractPromptUI();
+
+        // 상호작용 키('F')를 눌렀을 때, 가장 가까운 객체와 상호작용합니다.
+        if (Input.GetKeyDown(KeyCode.F))
         {
-            // 가장 가까운 오브젝트를 찾아서 상호작용 실행
-            IInteractable closest = FindClosestInteractable();
-            if (closest != null)
+            Debug.Log($"[PlayerInteraction] F키 눌림! closestInteractable: {closestInteractable?.GetType().Name ?? "null"}");
+
+            if (closestInteractable != null)
             {
-                closest.Interact(gameObject); // '나(플레이어)'를 상호작용의 주체로 전달
+                closestInteractable.Interact(gameObject);
             }
+            else
+            {
+                Debug.LogWarning("[PlayerInteraction] 주변에 상호작용 가능한 오브젝트가 없습니다.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// 상호작용 안내 UI를 업데이트합니다.
+    /// </summary>
+    private void UpdateInteractPromptUI()
+    {
+        if (interactPromptUI == null) return;
+
+        if (closestInteractable != null)
+        {
+            // 상호작용 가능한 객체가 있으면, 텍스트를 표시합니다.
+            interactPromptUI.text = closestInteractable.GetInteractText();
+            interactPromptUI.gameObject.SetActive(true);
+        }
+        else
+        {
+            // 상호작용 가능한 객체가 없으면, UI를 숨깁니다.
+            interactPromptUI.gameObject.SetActive(false);
         }
     }
 
@@ -43,15 +80,18 @@ public class PlayerInteraction : MonoBehaviourPunCallbacks
     /// </summary>
     private IInteractable FindClosestInteractable()
     {
-        // 리스트에서 비활성화된(null) 오브젝트들을 먼저 정리
-        nearbyInteractables.RemoveAll(item => item == null || (item as MonoBehaviour) == null);
+        // 리스트에서 비활성화된(null) 오브젝트들을 먼저 정리합니다.
+        nearbyInteractables.RemoveAll(item => item == null || (item as MonoBehaviour) == null || !(item as MonoBehaviour).gameObject.activeInHierarchy);
+
+        if (nearbyInteractables.Count == 0) return null;
+        if (nearbyInteractables.Count == 1) return nearbyInteractables[0];
 
         IInteractable closest = null;
         float minDistance = float.MaxValue;
 
         foreach (var interactable in nearbyInteractables)
         {
-            // IInteractable을 구현한 MonoBehaviour의 transform을 가져옴
+            // IInteractable을 구현한 MonoBehaviour의 transform을 가져옵니다.
             Transform interactableTransform = (interactable as MonoBehaviour).transform;
             float distance = Vector2.Distance(transform.position, interactableTransform.position);
 
@@ -66,27 +106,43 @@ public class PlayerInteraction : MonoBehaviourPunCallbacks
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // 내 캐릭터가 아니면 감지하지 않음
-        if (photonView != null && !photonView.IsMine) return;
+        Debug.Log($"[PlayerInteraction] OnTriggerEnter2D 호출! 충돌 오브젝트: {other.gameObject.name}");
 
-        // 충돌한 오브젝트에서 IInteractable 컴포넌트를 찾음
+        // 내 캐릭터가 아니면 감지하지 않습니다.
+        if (photonView != null && !photonView.IsMine)
+        {
+            Debug.Log("[PlayerInteraction] 내 캐릭터가 아니므로 감지 중단");
+            return;
+        }
+
+        // 충돌한 오브젝트에서 IInteractable 컴포넌트를 찾습니다.
         IInteractable interactable = other.GetComponent<IInteractable>();
         if (interactable != null && !nearbyInteractables.Contains(interactable))
         {
             nearbyInteractables.Add(interactable);
+            Debug.Log($"[PlayerInteraction] ✅ IInteractable 감지: {other.gameObject.name} (타입: {interactable.GetType().Name})");
+            Debug.Log($"[PlayerInteraction] 현재 nearbyInteractables 개수: {nearbyInteractables.Count}");
+        }
+        else if (interactable == null)
+        {
+            Debug.Log($"[PlayerInteraction] {other.gameObject.name}에는 IInteractable이 없습니다.");
         }
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        // 내 캐릭터가 아니면 감지하지 않음
+        Debug.Log($"[PlayerInteraction] OnTriggerExit2D 호출! 충돌 종료 오브젝트: {other.gameObject.name}");
+
+        // 내 캐릭터가 아니면 감지하지 않습니다.
         if (photonView != null && !photonView.IsMine) return;
 
-        // 충돌이 끝난 오브젝트에서 IInteractable 컴포넌트를 찾음
+        // 충돌이 끝난 오브젝트에서 IInteractable 컴포넌트를 찾습니다.
         IInteractable interactable = other.GetComponent<IInteractable>();
-        if (interactable != null && nearbyInteractables.Contains(interactable))
+        if (interactable != null)
         {
             nearbyInteractables.Remove(interactable);
+            Debug.Log($"[PlayerInteraction] ❌ IInteractable 제거: {other.gameObject.name}");
+            Debug.Log($"[PlayerInteraction] 현재 nearbyInteractables 개수: {nearbyInteractables.Count}");
         }
     }
 }

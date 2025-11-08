@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 
+[RequireComponent(typeof(PlayerStats))]
 public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
 {
-    private PhotonView photonView;
+    //private PhotonView photonView;
     private Animator animator; // 애니메이터 컴포넌트
     public float moveSpeed = 5f;
     private Vector3 networkPosition;
@@ -17,10 +18,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
     private float networkLastMoveX = 0f;
     private float networkLastMoveY = -1f; // 기본값은 정면(아래)을 보도록 설정
     private bool networkIsWalking = false;
+    private bool networkIsMining = false;
+
+    // 외부에서 마지막 이동 방향을 읽을 수 있도록 public 프로퍼티 추가
+    public float LastMoveX => networkLastMoveX;
+    public float LastMoveY => networkLastMoveY;
 
     void Awake()
     {
-        photonView = GetComponent<PhotonView>();
         animator = GetComponent<Animator>(); // 애니메이터 컴포넌트 가져오기
         if (photonView == null)
         {
@@ -34,7 +39,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
 
     void Update()
     {
-        if (photonView != null && photonView.IsMine)
+        // photonView.IsMine이 true일 때만 키보드 입력을 받아서 직접 캐릭터를 움직입니다.
+        // 이렇게 하면 다른 사람의 캐릭터가 내 키보드 입력에 반응하지 않습니다.
+        if (photonView.IsMine)
         {
             // 로컬 플레이어의 입력 및 이동 처리
             float moveX = Input.GetAxisRaw("Horizontal");
@@ -54,26 +61,79 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             {
                 animator.SetFloat("LastMoveX", moveX);
                 animator.SetFloat("LastMoveY", moveY);
+                networkLastMoveX = moveX;
+                networkLastMoveY = moveY;
+            }
+
+            // 마우스 좌클릭으로 공격
+            if (Input.GetMouseButtonDown(0))
+            {
+                photonView.RPC("RPC_SetMining", RpcTarget.All, true);
+                Attack();
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                photonView.RPC("RPC_SetMining", RpcTarget.All, false);
             }
         }
         else
         {
+            // 원격 플레이어(다른 사람 캐릭터)의 위치를 부드럽게 보간하여 움직임을 표현합니다.
+            transform.position = Vector3.Lerp(transform.position, networkPosition, Time.deltaTime * 10);
             // 원격 플레이어의 애니메이션 파라미터 적용
             animator.SetBool("IsWalking", networkIsWalking);
             animator.SetFloat("MoveX", networkMoveX);
             animator.SetFloat("MoveY", networkMoveY);
             animator.SetFloat("LastMoveX", networkLastMoveX);
             animator.SetFloat("LastMoveY", networkLastMoveY);
+            animator.SetBool("IsMining", networkIsMining);
         }
     }
 
-    void LateUpdate()
+    private void Attack()
     {
-        if (photonView != null && !photonView.IsMine)
+        // 공격 방향 결정
+        Vector2 attackDirection = new Vector2(networkLastMoveX, networkLastMoveY).normalized;
+        if (attackDirection == Vector2.zero) attackDirection = Vector2.down; // 기본값
+
+        // 공격 위치 계산
+        Vector2 attackPosition = (Vector2)transform.position + attackDirection * 0.3f; // 사거리
+
+        // 해당 위치에 있는 모든 몬스터를 감지
+        Collider2D[] hits = Physics2D.OverlapBoxAll(attackPosition, new Vector2(0.5f, 0.5f), 0);
+
+        foreach (var hit in hits)
         {
-            // 원격 플레이어의 위치를 부드럽게 보간
-            transform.position = Vector3.Lerp(transform.position, networkPosition, Time.deltaTime * 10);
-            transform.rotation = Quaternion.Lerp(transform.rotation, networkRotation, Time.deltaTime * 10);
+            if (hit.CompareTag("Monster"))
+            {
+                MonsterAI monster = hit.GetComponent<MonsterAI>();
+                if (monster != null && monster.photonView != null)
+                {
+                    // Master Client를 통해 데미지 처리 요청
+                    monster.photonView.RPC("TakeDamage", RpcTarget.MasterClient, GetComponent<PlayerStats>().attackDamage);
+                    Debug.Log($"{hit.name}에게 {GetComponent<PlayerStats>().attackDamage}의 데미지를 입혔습니다.");
+                }
+            }
+            else if (hit.GetComponent<WorldObject>() != null)
+            {
+                WorldObject harvestable = hit.GetComponent<WorldObject>();
+                // Interact 메소드를 호출하여 도구에 따른 데미지 계산 로직을 사용합니다.
+                harvestable.Interact(gameObject);
+            }
+        }
+    }
+
+    [PunRPC]
+    private void RPC_SetMining(bool isMining)
+    {
+        animator.SetBool("IsMining", isMining);
+    }
+
+    public void Teleport(Vector3 destination)
+    {
+        if (photonView.IsMine)
+        {
+            transform.position = destination;
         }
     }
 
@@ -89,6 +149,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             stream.SendNext(animator.GetFloat("MoveY"));
             stream.SendNext(animator.GetFloat("LastMoveX"));
             stream.SendNext(animator.GetFloat("LastMoveY"));
+            stream.SendNext(animator.GetBool("IsMining"));
         }
         else
         {
@@ -100,6 +161,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
             networkMoveY = (float)stream.ReceiveNext();
             networkLastMoveX = (float)stream.ReceiveNext();
             networkLastMoveY = (float)stream.ReceiveNext();
+            networkIsMining = (bool)stream.ReceiveNext();
         }
     }
 }

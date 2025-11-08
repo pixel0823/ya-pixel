@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63329583e483c1d43911bacbffc1029e, type: 3}
+  m_Name: Fish01
+  m_EditorClassIdentifier: 
+  itemName: Fish01
+  description: Item Description
+  icon: {fileID: -1108569336, guid: 973f7f0cce2494744aae95765180a7e1, type: 3}
+  isStackable: 1
+  maxStackSize: 99
+  amount: 1
