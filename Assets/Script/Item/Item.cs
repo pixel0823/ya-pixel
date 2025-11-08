@@ -3,7 +3,7 @@ using YAPixel;
 using UnityEngine.U2D.Animation; // 2D Animation 패키지 사용
 
 // 도구의 종류를 나타내는 열거형
-public enum ToolType { None, Axe, Pickaxe, Shovel }
+public enum ToolType { None, Axe, Pickaxe, Shovel, Sword }
 
 // 아이템 정보를 담는 ScriptableObject. Asset 메뉴에서 생성하여 사용합니다.
 [CreateAssetMenu(fileName = "New Item", menuName = "Inventory/Item")]

@@ -203,6 +203,7 @@ MonoBehaviour:
   moveSpeed: 3
   maxHealth: 100
   currentHealth: 0
+  attackDamage: 10
   targetPlayer: {fileID: 0}
   detectionRange: 10
   attackRange: 1.5

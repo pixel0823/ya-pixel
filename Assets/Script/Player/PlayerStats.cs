@@ -1,10 +1,13 @@
 using UnityEngine;
+using Photon.Pun; // 포톤 네임스페이스 추가
 
 /// <summary>
 /// 플레이어의 주요 스탯(체력, 배고픔, 체온, 산소 등)을 관리하는 클래스입니다.
 /// </summary>
-public class PlayerStats : MonoBehaviour
+public class PlayerStats : MonoBehaviourPunCallbacks // MonoBehaviourPunCallbacks 상속
 {
+    // PhotonView는 MonoBehaviourPun에서 제공되므로 별도 필드를 두지 않습니다.
+
     [Header("스탯")]
     [SerializeField] private float maxHealth = 100f;
     private float currentHealth;
@@ -43,11 +46,15 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
-    /// 플레이어가 데미지를 입었을 때 호출됩니다.
+    /// 플레이어가 데미지를 입었을 때 호출됩니다. (RPC로 네트워크 동기화)
     /// </summary>
     /// <param name="amount">데미지 양</param>
+    [PunRPC]
     public void TakeDamage(float amount)
     {
+        // 이 RPC를 수신한 클라이언트 중, 이 플레이어의 소유자만 데미지 로직을 실행합니다.
+        if (!photonView.IsMine) return;
+
         if (amount <= 0) return;
 
         currentHealth = Mathf.Max(0, currentHealth - amount);

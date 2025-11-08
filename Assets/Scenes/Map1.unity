@@ -7783,6 +7783,7 @@ MonoBehaviour:
       density: 0.0001
       canSpawnOn: []
     - objectData: {fileID: 11400000, guid: 048aa03a571133f48b1c050a8bf51e76, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
   - name: C
@@ -7795,9 +7796,11 @@ MonoBehaviour:
       threshold: 0.3
     spawnableObjects:
     - objectData: {fileID: 11400000, guid: 8990c86b979a5e741bb3d8a557ccac62, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
     - objectData: {fileID: 11400000, guid: 048aa03a571133f48b1c050a8bf51e76, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
   - name: D
@@ -7810,9 +7813,11 @@ MonoBehaviour:
       threshold: 0.3
     spawnableObjects:
     - objectData: {fileID: 11400000, guid: 8990c86b979a5e741bb3d8a557ccac62, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
     - objectData: {fileID: 11400000, guid: 048aa03a571133f48b1c050a8bf51e76, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
   terrainNoiseScale: 0.05
@@ -12558,7 +12563,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2531d59435f2d8d4da5239851d94c76a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectDatabase: {fileID: 11400000, guid: 91b1c833f260d6047864dbe89cbaeeea, type: 2}
+  objectDatabase: {fileID: 0}
   objectIndexToSpawn: 2
   itemToGive: {fileID: 11400000, guid: e70d6b1670c07604c93e256aac85085e, type: 2}
   amountToGive: 1

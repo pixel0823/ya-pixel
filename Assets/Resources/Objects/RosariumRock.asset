@@ -19,5 +19,5 @@ MonoBehaviour:
   itemToDrop: {fileID: 11400000, guid: b95c9ee100c850c41b0ae24d8de81b85, type: 2}
   minDropAmount: 1
   maxDropAmount: 5
-  requiredToolType: 0
+  requiredToolType: 2
   toolDurabilityCost: 1
