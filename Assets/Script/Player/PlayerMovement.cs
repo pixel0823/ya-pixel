@@ -129,6 +129,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
         animator.SetBool("IsMining", isMining);
     }
 
+    public void Teleport(Vector3 destination)
+    {
+        if (photonView.IsMine)
+        {
+            transform.position = destination;
+        }
+    }
+
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.IsWriting)

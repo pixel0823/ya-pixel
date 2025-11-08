@@ -37,15 +37,21 @@ public class MapManager : MonoBehaviour
     [Header("오브젝트 생성 설정")]
     [Tooltip("생성될 월드 오브젝트의 프리팹입니다. (WorldObject 스크rip트 포함)")]
     public GameObject worldObjectPrefab;
+    [Tooltip("생성될 몬스터의 프리팹입니다.")]
+    public GameObject worldMonsterPrefab;
 
     private int seed;
     private System.Random pseudoRandom;
     private float warpOffsetX, warpOffsetY;
     private Transform objectContainer;
+    private Transform monsterContainer;
     private ObjectDatabase objectDatabase;
 
     // [신규] 맵 생성 시 순서가 섞인 바이옴 리스트
     private List<Biome> shuffledBiomes;
+
+    // [신규] 맵 생성이 완료되었음을 알리는 이벤트
+    public static event System.Action OnMapGenerated;
 
     [System.Serializable]
     public class TileInfo
@@ -69,7 +75,10 @@ public class MapManager : MonoBehaviour
     [System.Serializable]
     public class ObjectInfo
     {
+        // 기존의 Object 데이터(데이터베이스 참조)
         public Object objectData;
+        // 새로 추가: 직접 인스턴스화할 수 있는 프리팹(있다면 이 프리팹을 사용하여 생성합니다)
+        public GameObject prefab;
         [Range(0f, 1f)]
         [Tooltip("타일 하나당 생성될 확률입니다.")]
         public float density;
@@ -281,17 +290,25 @@ public class MapManager : MonoBehaviour
             objectContainer = new GameObject("ObjectContainer").transform;
             objectContainer.SetParent(this.transform);
         }
+        if (monsterContainer == null)
+        {
+            monsterContainer = new GameObject("MonsterContainer").transform;
+            monsterContainer.SetParent(this.transform);
+        }
 
         foreach (Transform child in objectContainer)
         {
             PhotonNetwork.Destroy(child.gameObject);
         }
+        foreach (Transform child in monsterContainer)
+        {
+            PhotonNetwork.Destroy(child.gameObject);
+        }
 
         Debug.Log("[MapManager] 오브젝트 생성을 시작합니다.");
-        
-        // [신규] 오브젝트가 생성된 위치를 기록하여 중복 생성을 방지합니다.
+
         HashSet<Vector3Int> occupiedPositions = new HashSet<Vector3Int>();
-        
+
         int startX = -mapWidth / 2;
         int startY = -mapHeight / 2;
 
@@ -315,37 +332,64 @@ public class MapManager : MonoBehaviour
 
                 foreach (var objectInfo in currentBiome.spawnableObjects)
                 {
-                    if (objectInfo.objectData == null) continue;
+                    if (objectInfo.objectData == null && objectInfo.prefab == null) continue;
 
-                    if (objectInfo.canSpawnOn.Count > 0 && !objectInfo.canSpawnOn.Contains(currentTile))
+                    if (objectInfo.canSpawnOn != null && objectInfo.canSpawnOn.Count > 0 && !objectInfo.canSpawnOn.Contains(currentTile))
                     {
                         continue;
                     }
 
                     if (pseudoRandom.NextDouble() < objectInfo.density)
                     {
-                        // [수정] 이 타일에 이미 오브젝트가 생성되었는지 확인합니다.
                         if (occupiedPositions.Contains(tilePosition))
                         {
-                            continue; // 이미 오브젝트가 있으면 건너뜁니다.
-                        }
-
-                        int objectIndex = objectDatabase.GetIndex(objectInfo.objectData);
-                        if (objectIndex == -1)
-                        {
-                            Debug.LogWarning($"[MapManager] 데이터베이스에서 오브젝트 '{objectInfo.objectData.name}'를 찾을 수 없습니다. 생성을 건너뜁니다.");
                             continue;
                         }
 
                         Vector3 spawnPos = targetTilemap.GetCellCenterWorld(tilePosition);
-                        object[] instantiationData = { objectIndex };
-                        
-                        GameObject newObj = PhotonNetwork.Instantiate(worldObjectPrefab.name, spawnPos, Quaternion.identity, 0, instantiationData);
-                        newObj.transform.SetParent(objectContainer);
+                        GameObject newObj = null;
 
-                        // [수정] 생성된 위치를 기록하고, 이 타일에는 더 이상 다른 오브젝트를 생성하지 않도록 루프를 빠져나갑니다.
-                        occupiedPositions.Add(tilePosition);
-                        break; 
+                        if (objectInfo.prefab != null)
+                        {
+                            // 몬스터 프리팹이면 monsterContainer에 생성
+                            if (objectInfo.prefab.CompareTag("Monster"))
+                            {
+                                newObj = PhotonNetwork.Instantiate(objectInfo.prefab.name, spawnPos, Quaternion.identity, 0);
+                                if (newObj != null)
+                                {
+                                    newObj.transform.SetParent(monsterContainer);
+                                }
+                            }
+                            else
+                            {
+                                newObj = PhotonNetwork.Instantiate(objectInfo.prefab.name, spawnPos, Quaternion.identity, 0);
+                                if (newObj != null)
+                                {
+                                    newObj.transform.SetParent(objectContainer);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            int objectIndex = objectDatabase.GetIndex(objectInfo.objectData);
+                            if (objectIndex == -1)
+                            {
+                                Debug.LogWarning($"[MapManager] 데이터베이스에서 오브젝트 '{objectInfo.objectData?.name}'를 찾을 수 없습니다. 생성을 건너뜁니다.");
+                                continue;
+                            }
+                            object[] instantiationData = { objectIndex };
+                            newObj = PhotonNetwork.Instantiate(worldObjectPrefab.name, spawnPos, Quaternion.identity, 0, instantiationData);
+                            if (newObj != null)
+                            {
+                                newObj.transform.SetParent(objectContainer);
+                            }
+                        }
+
+                        if (newObj != null)
+                        {
+                            occupiedPositions.Add(tilePosition);
+                        }
+                        if (occupiedPositions.Contains(tilePosition)) break;
                     }
                 }
             }
@@ -387,11 +431,47 @@ public class MapManager : MonoBehaviour
                 PhotonNetwork.Destroy(child.gameObject);
             }
         }
+
+        if (PhotonNetwork.IsMasterClient && monsterContainer != null)
+        {
+            foreach (Transform child in monsterContainer)
+            {
+                PhotonNetwork.Destroy(child.gameObject);
+            }
+        }
     }
 
     public Biome GetBiomeAt(Vector3Int worldPosition)
     {
         Vector2Int warpedPos = GetWarpedPosition(worldPosition.x, worldPosition.y);
         return GetBiomeForGridPosition(warpedPos.x, warpedPos.y);
+    }
+
+    public List<Biome> GetShuffledBiomes()
+    {
+        return shuffledBiomes;
+    }
+
+    public Vector2 GetBiomeCenter(int biomeIndex)
+    {
+        int biomeCount = shuffledBiomes.Count;
+        if (biomeCount == 0 || biomeIndex < 0 || biomeIndex >= biomeCount)
+        {
+            return Vector2.zero;
+        }
+
+        int gridCols = Mathf.CeilToInt(Mathf.Sqrt(biomeCount));
+        int gridRows = Mathf.CeilToInt((float)biomeCount / gridCols);
+
+        float cellWidth = (float)mapWidth / gridCols;
+        float cellHeight = (float)mapHeight / gridRows;
+
+        int row = biomeIndex / gridCols;
+        int col = biomeIndex % gridCols;
+
+        float centerX = (col * cellWidth) + (cellWidth / 2) - ((float)mapWidth / 2);
+        float centerY = (row * cellHeight) + (cellHeight / 2) - ((float)mapHeight / 2);
+
+        return new Vector2(centerX, centerY);
     }
 }

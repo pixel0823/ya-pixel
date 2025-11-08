@@ -121,6 +121,33 @@ public class TeleportManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 플레이어를 선택한 Biome 이름으로 해당 Biome 내의 랜덤한 위치로 순간이동시킵니다.
+    /// </summary>
+    /// <param name="player">순간이동할 플레이어</param>
+    /// <param name="biomeName">목표 Biome의 이름</param>
+    public void TeleportToBiomeByName(GameObject player, string biomeName)
+    {
+        if (mapManager == null || mapManager.biomes == null)
+        {
+            Debug.LogError("[TeleportManager] MapManager 또는 Biome 목록이 없습니다.");
+            return;
+        }
+
+        // 이름으로 Biome 인덱스 찾기
+        int biomeIndex = mapManager.biomes.FindIndex(b => b.name == biomeName);
+
+        if (biomeIndex != -1)
+        {
+            // 찾은 인덱스로 기존 순간이동 함수 호출
+            TeleportToRandomBiomePosition(player, biomeIndex);
+        }
+        else
+        {
+            Debug.LogError($"[TeleportManager] '{biomeName}'이라는 이름을 가진 Biome을 찾을 수 없습니다.");
+        }
+    }
+
+    /// <summary>
     /// Biome의 월드 좌표 범위를 계산합니다.
     /// MapManager의 GetBiomeForGridPosition 로직을 참고합니다.
     /// </summary>

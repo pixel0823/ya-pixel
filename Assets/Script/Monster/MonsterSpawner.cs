@@ -1,32 +1,45 @@
 using UnityEngine;
-using Photon.Pun;
 
 public class MonsterSpawner : MonoBehaviour
 {
-    public GameObject monsterPrefab; // 유니티 에디터에서 할당할 몬스터 프리팹
+    [SerializeField]
+    private GameObject monsterPrefab; // 몬스터 프리팹
 
-    // 몬스터를 생성하는 메서드
-    public void SpawnMonster()
+    [SerializeField]
+    private int numberOfMonsters = 5; // 생성할 몬스터 수
+
+    private BoxCollider2D spawnArea;
+
+    void Start()
     {
-        if (PhotonNetwork.IsConnectedAndReady)
+        // 이 스크립트가 붙어있는 게임 오브젝트의 BoxCollider2D 컴포넌트를 가져옵니다.
+        spawnArea = GetComponent<BoxCollider2D>();
+        if (spawnArea == null)
         {
-            // PhotonNetwork.Instantiate를 사용하여 네트워크 상에 몬스터 프리팹을 생성합니다.
-            // monsterPrefab 변수에 직접 할당하는 경우, Resources 폴더에 없어도 됩니다.
-            PhotonNetwork.Instantiate(monsterPrefab.name, transform.position, Quaternion.identity);
-            Debug.Log("Monster spawned via PhotonNetwork.Instantiate!");
-        }
-        else
-        {
-            Debug.LogWarning("Photon is not connected or ready. Cannot spawn monster.");
+            Debug.LogError("스폰 지역을 정의하기 위한 BoxCollider2D 컴포넌트가 필요합니다.");
+            return;
         }
     }
 
-    // 테스트를 위해 특정 키를 누르면 몬스터를 생성하도록 할 수 있습니다.
-    void Update()
+    public void SpawnMonsters()
     {
-        if (Input.GetKeyDown(KeyCode.M)) // 'M' 키를 누르면 몬스터 생성
+        if (spawnArea == null)
         {
-            SpawnMonster();
+            Debug.LogError("BoxCollider2D가 설정되지 않아 스폰할 수 없습니다.");
+            return;
+        }
+        
+        Bounds bounds = spawnArea.bounds;
+
+        for (int i = 0; i < numberOfMonsters; i++)
+        {
+            // 스폰 지역 내에서 랜덤한 위치를 계산합니다.
+            float randomX = Random.Range(bounds.min.x, bounds.max.x);
+            float randomY = Random.Range(bounds.min.y, bounds.max.y);
+            Vector2 spawnPosition = new Vector2(randomX, randomY);
+
+            // 몬스터를 생성합니다.
+            Instantiate(monsterPrefab, spawnPosition, Quaternion.identity);
         }
     }
 }

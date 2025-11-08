@@ -7757,11 +7757,18 @@ MonoBehaviour:
       threshold: 0.5
     spawnableObjects:
     - objectData: {fileID: 11400000, guid: aa398566e70a3204d8cdcdef713006db, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
     - objectData: {fileID: 11400000, guid: 04080e97a82f82e4ba764274ef0cc600, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
+    - objectData: {fileID: 0}
+      prefab: {fileID: 8902041675140126048, guid: 569979cb2b3034ea48597313fba2621a, type: 3}
+      density: 0.001
+      canSpawnOn:
+      - {fileID: 11400000, guid: fae41a3a3cf17a24cb51f8ced308f99f, type: 2}
   - name: B
     terrainTiles:
     - name: Tile3
@@ -7772,9 +7779,11 @@ MonoBehaviour:
       threshold: 0.5
     spawnableObjects:
     - objectData: {fileID: 11400000, guid: 8990c86b979a5e741bb3d8a557ccac62, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
     - objectData: {fileID: 11400000, guid: 048aa03a571133f48b1c050a8bf51e76, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
   - name: C
@@ -7787,9 +7796,11 @@ MonoBehaviour:
       threshold: 0.3
     spawnableObjects:
     - objectData: {fileID: 11400000, guid: 8990c86b979a5e741bb3d8a557ccac62, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
     - objectData: {fileID: 11400000, guid: 048aa03a571133f48b1c050a8bf51e76, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
   - name: D
@@ -7802,15 +7813,18 @@ MonoBehaviour:
       threshold: 0.3
     spawnableObjects:
     - objectData: {fileID: 11400000, guid: 8990c86b979a5e741bb3d8a557ccac62, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
     - objectData: {fileID: 11400000, guid: 048aa03a571133f48b1c050a8bf51e76, type: 2}
+      prefab: {fileID: 0}
       density: 0.0001
       canSpawnOn: []
   terrainNoiseScale: 0.05
   biomeWarpScale: 0.05
   biomeWarpIntensity: 20
   worldObjectPrefab: {fileID: 129078855554562259, guid: 93b6ade01ca2506439e47cd843796d92, type: 3}
+  worldMonsterPrefab: {fileID: 0}
 --- !u!4 &1151815189
 Transform:
   m_ObjectHideFlags: 0
@@ -12611,7 +12625,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26ae95b9925c2df41ae655631b232411, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapManager: {fileID: 1151815188}
+  mapManager: {fileID: 0}
   targetTilemap: {fileID: 1017346082}
   maxAttempts: 100
   spawnCenterBias: 0.3
