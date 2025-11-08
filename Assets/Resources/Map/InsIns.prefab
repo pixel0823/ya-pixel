@@ -1696,6 +1696,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6307334855986624423}
   - component: {fileID: 2781782512978384815}
+  - component: {fileID: 3485563546525790209}
   m_Layer: 0
   m_Name: Entrance
   m_TagString: Untagged
@@ -1747,7 +1748,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
@@ -1763,6 +1764,22 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 3, y: 1.55}
   m_EdgeRadius: 0
+--- !u!114 &3485563546525790209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4621013154893189514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11e886e17dcf2c64da0dbc6bd4c79e41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isRoomEntrance: 1
+  roomEntrance: {fileID: 0}
+  forcedReturnPoint: {fileID: 0}
+  destination: "\uC5B4\uB518\uAC00"
 --- !u!1 &6225100027150330229
 GameObject:
   m_ObjectHideFlags: 0
