@@ -96,6 +96,12 @@ public class PortalReturnManager : MonoBehaviour
         player.transform.position = finalPosition;
         Debug.Log($"[PortalReturnManager] ✅ 귀환 완료: {finalPosition}");
 
+        // 도시로 돌아왔으므로 온도 감소 비활성화
+        if (StatusManager.Instance != null)
+        {
+            StatusManager.Instance.DisableTemperatureDecrease();
+        }
+
         return true;
     }
 

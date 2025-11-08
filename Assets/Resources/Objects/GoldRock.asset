@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5946e4728044942469485d159ac527b9, type: 3}
-  m_Name: GoldRock04
+  m_Name: GoldRock
   m_EditorClassIdentifier: 
-  objectName: Rock04
-  description: Rock04
-  icon: {fileID: 21300000, guid: f6f051dac88f64d738e91b4f27aaaacd, type: 3}
+  objectName: GoldRock
+  description: "\uAE08\uAD11\uC11D"
+  icon: {fileID: -134136345, guid: 3283ff3651907b54a8ad6b9b48775890, type: 3}
   maxHealth: 100
   itemToDrop: {fileID: 11400000, guid: 9b3cbe5a54ddaf341a9c344641b2745f, type: 2}
-  minDropAmount: 1
-  maxDropAmount: 3
+  minDropAmount: 3
+  maxDropAmount: 6
   requiredToolType: 2
   toolDurabilityCost: 1
