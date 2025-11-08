@@ -106,12 +106,24 @@ public class TeleportManager : MonoBehaviour
             {
                 player.transform.position = randomPosition;
                 Debug.Log($"[TeleportManager] ✅ {player.name}이(가) \"{biomeName}\"로 순간이동했습니다. 위치: {randomPosition}");
+
+                // 야외로 나갔으므로 온도 감소 활성화
+                if (StatusManager.Instance != null)
+                {
+                    StatusManager.Instance.EnableTemperatureDecrease();
+                }
             }
             else if (pv == null)
             {
                 // Photon이 없는 경우 (싱글플레이)
                 player.transform.position = randomPosition;
                 Debug.Log($"[TeleportManager] ✅ {player.name}이(가) \"{biomeName}\"로 순간이동했습니다. 위치: {randomPosition}");
+
+                // 야외로 나갔으므로 온도 감소 활성화
+                if (StatusManager.Instance != null)
+                {
+                    StatusManager.Instance.EnableTemperatureDecrease();
+                }
             }
         }
         else

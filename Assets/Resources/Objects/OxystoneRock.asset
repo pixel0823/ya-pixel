@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5946e4728044942469485d159ac527b9, type: 3}
-  m_Name: IronRock02
+  m_Name: OxystoneRock
   m_EditorClassIdentifier: 
-  objectName: Rock02
-  description: Rock02
-  icon: {fileID: 1287181709, guid: ed92fa506320fa940b3ed50f5ac027dd, type: 3}
+  objectName: OxystoneRock
+  description: "\uC0B0\uC18C\uC11D"
+  icon: {fileID: 666650481, guid: 3283ff3651907b54a8ad6b9b48775890, type: 3}
   maxHealth: 100
-  itemToDrop: {fileID: 11400000, guid: c132217783ba2ea4cb53dcc5ef91fb2d, type: 2}
+  itemToDrop: {fileID: 11400000, guid: 9c4fa6c08c6a87441af208b425e3db72, type: 2}
   minDropAmount: 1
   maxDropAmount: 3
   requiredToolType: 2

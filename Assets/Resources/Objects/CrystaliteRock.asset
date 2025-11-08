@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5946e4728044942469485d159ac527b9, type: 3}
-  m_Name: GoldRock03
+  m_Name: CrystaliteRock
   m_EditorClassIdentifier: 
-  objectName: Rock03
-  description: Rock03
-  icon: {fileID: 21300000, guid: d4fd9a785b43f4479a077f9adbaf5a47, type: 3}
+  objectName: CrystaliteRock
+  description: "\uD06C\uB9AC\uC2A4\uD0C8"
+  icon: {fileID: 1857874255, guid: 3283ff3651907b54a8ad6b9b48775890, type: 3}
   maxHealth: 100
-  itemToDrop: {fileID: 11400000, guid: 9b3cbe5a54ddaf341a9c344641b2745f, type: 2}
-  minDropAmount: 3
-  maxDropAmount: 6
+  itemToDrop: {fileID: 11400000, guid: 75b9700246d85d04db99a2490a017476, type: 2}
+  minDropAmount: 1
+  maxDropAmount: 3
   requiredToolType: 2
   toolDurabilityCost: 1

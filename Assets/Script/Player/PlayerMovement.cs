@@ -65,11 +65,23 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IPunObservable
                 networkLastMoveY = moveY;
             }
 
+            // StatusManager에 걷기 상태 전달
+            if (StatusManager.Instance != null)
+            {
+                StatusManager.Instance.UpdateWalkingState(isWalking);
+            }
+
             // 마우스 좌클릭으로 공격
             if (Input.GetMouseButtonDown(0))
             {
                 photonView.RPC("RPC_SetMining", RpcTarget.All, true);
                 Attack();
+
+                // StatusManager에 채광/공격 알림
+                if (StatusManager.Instance != null)
+                {
+                    StatusManager.Instance.OnMining();
+                }
             }
             else if (Input.GetMouseButtonUp(0))
             {
