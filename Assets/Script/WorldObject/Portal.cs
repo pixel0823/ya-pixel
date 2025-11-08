@@ -61,6 +61,12 @@ public class Portal : MonoBehaviour, IInteractable
             returnManager.RegisterPortalUsage(interactor, transform.position);
         }
 
+        // Portal과 상호작용 중 = 도시에 있음 = 온도 감소 비활성화
+        if (StatusManager.Instance != null)
+        {
+            StatusManager.Instance.DisableTemperatureDecrease();
+        }
+
         if (biomeUI != null)
         {
             // UI를 토글 (열려있으면 닫고, 닫혀있으면 열기)
