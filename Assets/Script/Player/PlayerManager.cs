@@ -69,7 +69,12 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             }
 
             // PlayerManager는 플레이어 생성 역할만 하고 파괴되어도 괜찮습니다.
+<<<<<<< Updated upstream
             // Destroy(gameObject); // 이 라인을 제거하여 PlayerManager가 계속 유지되도록 합니다.
+=======
+            // 만약 게임 내내 유지되어야 하는 로직이 있다면 이 코드를 제거하세요.
+            //Destroy(gameObject);
+>>>>>>> Stashed changes
         }
         else
         {

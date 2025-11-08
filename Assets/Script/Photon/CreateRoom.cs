@@ -18,6 +18,8 @@ public class CreateRoom : MonoBehaviourPunCallbacks
     public GameObject passwordPanel;
     public TMP_InputField passwordInput;
     public Button[] playerCountButtons;
+    public GameObject loadingUI; // 로딩 UI 캔버스
+    public LoadingUI loadingUIScript; // LoadingUI 스크립트 참조
 
     [Header("Button Colors")]
     public Color selectedColor = Color.green;
@@ -65,6 +67,11 @@ public class CreateRoom : MonoBehaviourPunCallbacks
 
     public void OnCreateRoomButtonClicked()
     {
+        if (loadingUI != null && loadingUIScript != null)
+        {
+            loadingUIScript.StartLoading();
+        }
+
         if (GameModeManager.Instance.CurrentMode == GameMode.Single)
         {
             CreateSinglePlayerWorld();
@@ -169,6 +176,33 @@ public class CreateRoom : MonoBehaviourPunCallbacks
             string json = JsonUtility.ToJson(worldList);
             PlayerPrefs.SetString(SaveKey, json);
             PlayerPrefs.Save();
+        }
+    }
+
+    public override void OnCreatedRoom()
+    {
+        base.OnCreatedRoom();
+        if (loadingUI != null && loadingUIScript != null)
+        {
+            loadingUIScript.StopLoading();
+        }
+    }
+
+    public override void OnCreateRoomFailed(short returnCode, string message)
+    {
+        base.OnCreateRoomFailed(returnCode, message);
+        if (loadingUI != null && loadingUIScript != null)
+        {
+            loadingUIScript.StopLoading();
+        }
+    }
+
+    public override void OnJoinedRoom()
+    {
+        base.OnJoinedRoom();
+        if (loadingUI != null && loadingUIScript != null)
+        {
+            loadingUIScript.StopLoading();
         }
     }
 
