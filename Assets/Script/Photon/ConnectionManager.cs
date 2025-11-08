@@ -73,15 +73,6 @@ public class ConnectionManager : MonoBehaviourPunCallbacks
     {
         base.OnJoinedLobby();
         Debug.Log("<color=green>OnJoinedLobby:</color> 로비에 접속했습니다. 이제 방 목록을 받을 수 있습니다.");
-        
-        if (mainMenuManager != null)
-        {
-            mainMenuManager.OnJoinedLobby();
-        }
-        else
-        {
-            Debug.LogError("mainMenuManager가 할당되지 않았습니다!");
-        }
     }
 
     public override void OnCreatedRoom()
