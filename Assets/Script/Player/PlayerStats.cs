@@ -60,6 +60,12 @@ public class PlayerStats : MonoBehaviourPunCallbacks // MonoBehaviourPunCallback
         currentHealth = Mathf.Max(0, currentHealth - amount);
         Debug.Log($"플레이어가 {amount}의 데미지를 입었습니다. 현재 체력: {currentHealth}");
 
+        // StatusManager UI 업데이트
+        if (StatusManager.Instance != null)
+        {
+            StatusManager.Instance.TakeDamage(amount);
+        }
+
         if (currentHealth <= 0)
         {
             Die();
@@ -76,6 +82,12 @@ public class PlayerStats : MonoBehaviourPunCallbacks // MonoBehaviourPunCallback
 
         currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
         Debug.Log($"플레이어가 {amount}만큼 회복했습니다. 현재 체력: {currentHealth}");
+
+        // StatusManager UI 업데이트
+        if (StatusManager.Instance != null)
+        {
+            StatusManager.Instance.RestoreHealth(amount);
+        }
     }
 
     /// <summary>
