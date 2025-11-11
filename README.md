@@ -14,9 +14,8 @@
 ---
 
 ## 📷 **스크린샷**
-
-> <div><img width="961" height="538" alt="스크린샷 2025-11-11 오후 6 40 15" src="https://github.com/user-attachments/assets/7fba9bcc-f9a1-4409-8645-665127a9547d" />
-<img width="189" height="109" alt="image" src="https://github.com/user-attachments/assets/6aff6606-0b4b-4f96-aa28-179da9370627" /></div>
+> <img width="961" height="538" alt="스크린샷 2025-11-11 오후 6 40 15" src="https://github.com/user-attachments/assets/7fba9bcc-f9a1-4409-8645-665127a9547d" />
+> <img width="189" height="109" alt="image" src="https://github.com/user-attachments/assets/6aff6606-0b4b-4f96-aa28-179da9370627" />
 
 
 ---
