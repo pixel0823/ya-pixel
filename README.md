@@ -78,7 +78,7 @@
 
 
 **발표자료 PPT**
-[졸업작품 발표.pdf](https://github.com/user-attachments/files/23479082/default.pdf)
+[졸업작품 발표.pdf](https://github.com/user-attachments/files/23479759/default.pdf)
 
 
 
