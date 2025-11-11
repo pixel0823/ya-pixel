@@ -78,7 +78,7 @@
 
 
 **발표자료 PPT**
-[pixel.pptx](https://github.com/user-attachments/files/20685539/pixel.pptx)
+[졸업작품 발표.pdf](https://github.com/user-attachments/files/23475500/default.pdf)
 
 
 **시연영상**
