@@ -82,7 +82,7 @@
 
 
 **시연영상**
-https://youtu.be/_d9NowQWINE
+[https://youtu.be/_d9NowQWINE](https://youtu.be/znAAr8cbFc8)
 
 ---
 
