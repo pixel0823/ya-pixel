@@ -81,6 +81,8 @@
 [졸업작품 발표.pdf](https://github.com/user-attachments/files/23479759/default.pdf)
 
 
+**졸업논문 PDF**
+[졸업논문.pdf](https://github.com/user-attachments/files/24194469/default.pdf)
 
 
 **시연영상**
